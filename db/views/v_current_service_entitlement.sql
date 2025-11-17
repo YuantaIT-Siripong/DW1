@@ -1,0 +1,3 @@
+-- Placeholder view logic (to be implemented once source tables populated)
+-- create view dim.v_current_service_entitlement as
+-- SELECT ... expansion logic described in docs/service_hierarchy_and_subscription.md;

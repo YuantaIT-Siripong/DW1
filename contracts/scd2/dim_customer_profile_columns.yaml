@@ -1,0 +1,54 @@
+entity: dim_customer_profile
+business_key: customer_id
+surrogate_key: customer_profile_version_sk
+effective_fields:
+  start: effective_start_date
+  end: effective_end_date
+  current_flag: is_current
+versioning:
+  hash_fields:
+    - marital_status_id
+    - nationality_id
+    - occupation_id
+    - education_level_id
+    - birthdate
+    - income_source_list_hash
+    - investment_purpose_list_hash
+  granularity: date
+  change_detection:
+    method: attribute_hash_diff
+scd2_attributes:
+  - marital_status_id
+  - nationality_id
+  - occupation_id
+  - education_level_id
+  - birthdate
+  - income_source_set
+  - investment_purpose_set
+type1_attributes:
+  - thai_first_name
+  - thai_last_name
+  - english_first_name
+  - english_last_name
+  - email_address
+  - mobile_phone
+  - home_phone
+  - fax_number
+  - evidence_unique_key
+multi_valued_sets:
+  - name: income_source
+    table: dim_customer_income_source_version
+    source_constant_type: SourceOfIncome
+  - name: investment_purpose
+    table: dim_customer_investment_purpose_version
+    source_constant_type: PurposeOfInvestment
+audit:
+  table: customer_profile_audit
+  fields_logged:
+    - old_attribute_hash
+    - new_attribute_hash
+    - change_timestamp
+    - changed_by
+status:
+  initial_version_num: 1
+  allow_overlap: false

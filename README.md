@@ -1,4 +1,19 @@
-# DW1: Data Warehouse Foundation
+# DW1 Data Warehouse (Phase 1 Initialization)
+
+## Phase 1 Scope
+- Customer Profile (SCD2) demographics
+- Service taxonomy & subscription events
+- Multi-valued income source & investment purpose linked to profile versions
+- Audit of profile changes
+
+## Layers
+- dim: Conformed dimensions (including SCD2)
+- fact: Events and requests
+- audit: Change tracking (customer profile)
+- contracts: Modeling contracts driving SCD2 logic
+- docs: Modeling decisions & hierarchy descriptions
+
+See docs/modeling_decisions.md and docs/service_hierarchy_and_subscription.md for details.
 
 ## Overview
 This repository serves as a conceptual and experimental space for designing and documenting a Data Warehouse (DW) foundation using an **AI-first approach**. The goal is to create a structured, scalable, and consistent knowledge base that will later expand into full enterprise-level documentation.
@@ -13,6 +28,13 @@ This repository serves as a conceptual and experimental space for designing and 
 
 ```
 DW1/
+├── contracts/
+│   └── scd2/                # SCD2 modeling contracts
+├── db/
+│   ├── dim/                 # Dimension tables
+│   ├── fact/                # Fact tables
+│   ├── audit/               # Audit tables
+│   └── views/               # View definitions
 ├── docs/
 │   ├── architecture/          # Data warehouse architecture documentation
 │   ├── data-modeling/         # Data modeling standards and guidelines
