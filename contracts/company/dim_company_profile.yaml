@@ -1,0 +1,160 @@
+entity_name: dim_company_profile
+domain: company
+table_type: dimension
+scd_type: 2
+grain_description: One record per historical company profile version (company_id + profile_version_id); profile_version_id globally unique.
+primary_keys:
+  - company_id
+  - profile_version_id
+surrogate_keys:
+  - company_profile_sk
+natural_keys:
+  - company_id
+versioning_attributes:
+  - legal_name
+  - trade_name
+  - incorporation_date
+  - country_of_incorporation_id
+  - legal_form_code
+  - industry_code
+  - ownership_risk_rating
+  - funding_source_set_hash
+  - investment_objective_set_hash
+non_versioning_immutable_attributes:
+  - tax_id
+  - registration_number
+multi_valued_sets:
+  - funding_source
+  - investment_objective
+hash_spec:
+  algorithm: SHA256
+  ordered_attribute_list:
+    - legal_name
+    - trade_name
+    - incorporation_date
+    - country_of_incorporation_id
+    - legal_form_code
+    - industry_code
+    - ownership_risk_rating
+    - funding_source_set_hash
+    - investment_objective_set_hash
+  delimiter: "|"
+  null_token: "__NULL__"
+  empty_set_hash: SHA256("") # e3b0c44298fc1c149afbf4c8996fb924...
+change_detection_logic: |
+  1. Sort set codes ascending; join with "|" (empty -> "") then hash -> *_set_hash.
+  2. Concatenate ordered scalar + set hash attributes with delimiter.
+  3. SHA256(concatenated string) = profile_hash.
+  4. If profile_hash differs from prior version for company_id: close previous (effective_end_ts = new_start - microsecond) and insert new row.
+attributes:
+  - name: company_id
+    datatype: string
+    business_definition: Stable company identity key
+    hash_participation: false
+  - name: profile_version_id
+    datatype: integer
+    business_definition: Globally unique company profile version id
+    hash_participation: false
+  - name: company_profile_sk
+    datatype: bigint
+    business_definition: Surrogate warehouse key
+    hash_participation: false
+  - name: legal_name
+    datatype: string
+    business_definition: Registered legal name
+    hash_participation: true
+  - name: trade_name
+    datatype: string
+    business_definition: Operating or brand name
+    hash_participation: true
+  - name: tax_id
+    datatype: string
+    business_definition: Tax identifier (immutable Phase 1)
+    hash_participation: false
+  - name: registration_number
+    datatype: string
+    business_definition: Government registration number (immutable Phase 1)
+    hash_participation: false
+  - name: incorporation_date
+    datatype: date
+    business_definition: Date company was legally incorporated
+    hash_participation: true
+  - name: country_of_incorporation_id
+    datatype: integer
+    business_definition: Country code of incorporation
+    hash_participation: true
+  - name: legal_form_code
+    datatype: string
+    business_definition: Legal organizational form code
+    hash_participation: true
+  - name: industry_code
+    datatype: string
+    business_definition: Industry classification code
+    hash_participation: true
+  - name: ownership_risk_rating
+    datatype: integer
+    business_definition: Internal risk rating (1–5)
+    hash_participation: true
+  - name: funding_source_set_hash
+    datatype: string
+    business_definition: Hash of sorted funding source codes (empty -> SHA256(""))
+    hash_participation: true
+  - name: investment_objective_set_hash
+    datatype: string
+    business_definition: Hash of sorted investment objective codes (empty -> SHA256(""))
+    hash_participation: true
+  - name: profile_hash
+    datatype: string
+    business_definition: Hash representing entire versioning attribute set
+    hash_participation: false
+  - name: effective_start_ts
+    datatype: timestamp
+    business_definition: Version validity start (UTC)
+    hash_participation: false
+  - name: effective_end_ts
+    datatype: timestamp
+    business_definition: Version validity end (null=current)
+    hash_participation: false
+  - name: load_ts
+    datatype: timestamp
+    business_definition: Ingestion timestamp
+    hash_participation: false
+foreign_keys:
+  - column: legal_form_code
+    references: dim_legal_form.legal_form_code
+  - column: industry_code
+    references: dim_industry.industry_code
+data_quality_rules:
+  - "No overlapping intervals per company_id"
+  - "incorporation_date <= current_date"
+  - "legal_name NOT NULL"
+  - "legal_form_code valid in dim_legal_form"
+  - "industry_code valid in dim_industry"
+  - "profile_version_id globally unique"
+  - "At least one of (funding_source_set_hash, investment_objective_set_hash) represents a non-empty set"
+  - "profile_hash length = 64 and recomputation deterministic"
+  - "tax_id immutable Phase 1"
+  - "registration_number immutable Phase 1"
+  - "Empty set membership produces SHA256("")"
+open_questions:
+  - "Need country dimension separate from nationality?"
+  - "Risk rating scale expansion?"
+sample_rows:
+  - company_id: CO123456
+    profile_version_id: 15001
+    company_profile_sk: 550001
+    legal_name: "Alpha Fintech Co., Ltd."
+    trade_name: "AlphaFin"
+    tax_id: "1234567890"
+    registration_number: "REG-TH-998877"
+    incorporation_date: 2012-04-15
+    country_of_incorporation_id: 66
+    legal_form_code: PLC
+    industry_code: FIN_SERV
+    ownership_risk_rating: 3
+    funding_source_set_hash: "a3c1d1e5..."
+    investment_objective_set_hash: "f2b4c8aa..."
+    profile_hash: "2c26b46b68ffc68ff99b453c1d304134..."
+    effective_start_ts: "2024-10-01T08:00:00Z"
+    effective_end_ts: null
+    load_ts: "2024-10-01T08:02:30Z"

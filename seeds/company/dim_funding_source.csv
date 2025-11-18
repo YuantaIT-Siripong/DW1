@@ -1,0 +1,5 @@
+funding_source_code,name_en,capital_nature,introduced_date
+EQUITY,Equity Capital,EXTERNAL,2010-01-01
+DEBT,Debt Financing,EXTERNAL,2010-01-01
+VC,Venture Capital,EXTERNAL,2010-01-01
+INTERNAL_CASH,Internal Cash,INTERNAL,2010-01-01

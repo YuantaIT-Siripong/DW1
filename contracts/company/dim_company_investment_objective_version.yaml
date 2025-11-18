@@ -1,0 +1,50 @@
+entity_name: dim_company_investment_objective_version
+domain: company
+table_type: bridge
+grain_description: One row per investment objective membership for a company profile version.
+primary_keys:
+  - profile_version_id
+  - investment_objective_code
+foreign_keys:
+  - column: profile_version_id
+    references: dim_company_profile.profile_version_id
+  - column: investment_objective_code
+    references: dim_investment_objective.investment_objective_code
+attributes:
+  - name: profile_version_id
+    datatype: integer
+    business_definition: Linked company profile version id
+  - name: company_id
+    datatype: string
+    business_definition: Denormalized company identity for convenience
+  - name: investment_objective_code
+    datatype: string
+    business_definition: Investment objective code
+  - name: primary_flag
+    datatype: boolean
+    business_definition: Indicates primary objective (at most one TRUE per profile_version_id)
+  - name: load_ts
+    datatype: timestamp
+    business_definition: Ingestion timestamp
+set_membership_behavior: Full set re-materialized only when membership changes.
+hash_dependency:
+  parent_set_hash_column: investment_objective_set_hash
+  recomputation_logic: |
+    SELECT SHA256(STRING_AGG(investment_objective_code, '|' ORDER BY investment_objective_code))
+    FROM dim_company_investment_objective_version
+    WHERE profile_version_id = :pv_id;
+data_quality_rules:
+  - "No duplicate (profile_version_id, investment_objective_code)"
+  - "All investment_objective_code values valid in dim_investment_objective"
+  - "At most one primary_flag = TRUE per profile_version_id"
+open_questions:
+  - "Is primary_flag mandatory?"
+sample_rows:
+  - profile_version_id: 15001
+    company_id: CO123456
+    investment_objective_code: TREASURY_MANAGEMENT
+    primary_flag: true
+  - profile_version_id: 15001
+    company_id: CO123456
+    investment_objective_code: CASH_PRESERVATION
+    primary_flag: false

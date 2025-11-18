@@ -1,0 +1,39 @@
+entity_name: dim_industry
+domain: company
+table_type: lookup
+grain_description: One row per industry classification code.
+primary_keys:
+  - industry_code
+attributes:
+  - name: industry_code
+    datatype: string
+    business_definition: Internal industry classification code (maps to NAICS/NACE)
+  - name: name_en
+    datatype: string
+    business_definition: English industry name
+  - name: sector_group
+    datatype: string
+    business_definition: High-level sector grouping
+  - name: introduced_date
+    datatype: date
+    business_definition: Date code introduced
+  - name: deprecated_date
+    datatype: date
+    business_definition: Date code deprecated (null if active)
+  - name: active_flag
+    datatype: boolean
+    business_definition: Active indicator (deprecated_date IS NULL)
+data_quality_rules:
+  - "industry_code NOT NULL"
+  - "active_flag = (deprecated_date IS NULL)"
+open_questions:
+  - "Do we need multi-level hierarchy (sector/subsector)?"
+sample_rows:
+  - industry_code: FIN_SERV
+    name_en: Financial Services
+    sector_group: Finance
+    active_flag: true
+  - industry_code: RETAIL
+    name_en: Retail Trade
+    sector_group: Commerce
+    active_flag: true

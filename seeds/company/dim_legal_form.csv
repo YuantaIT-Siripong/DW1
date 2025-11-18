@@ -1,0 +1,4 @@
+legal_form_code,name_en,requires_trade_name_flag,introduced_date
+PLC,Public Limited Company,false,2010-01-01
+LLC,Limited Liability Company,false,2010-01-01
+SOLE,Single Proprietorship,true,2010-01-01

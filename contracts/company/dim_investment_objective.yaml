@@ -1,0 +1,36 @@
+entity_name: dim_investment_objective
+domain: company
+table_type: lookup
+grain_description: One row per investment objective code.
+primary_keys:
+  - investment_objective_code
+attributes:
+  - name: investment_objective_code
+    datatype: string
+    business_definition: Objective code (TREASURY_MANAGEMENT, STRATEGIC_ASSET_ALLOCATION, CASH_PRESERVATION)
+  - name: name_en
+    datatype: string
+    business_definition: English display name
+  - name: strategic_flag
+    datatype: boolean
+    business_definition: True if long-term strategic objective
+  - name: introduced_date
+    datatype: date
+  - name: deprecated_date
+    datatype: date
+  - name: active_flag
+    datatype: boolean
+data_quality_rules:
+  - "investment_objective_code NOT NULL"
+  - "active_flag = (deprecated_date IS NULL)"
+open_questions:
+  - "Need risk categorization mapping?"
+sample_rows:
+  - investment_objective_code: TREASURY_MANAGEMENT
+    name_en: Treasury Management
+    strategic_flag: true
+    active_flag: true
+  - investment_objective_code: CASH_PRESERVATION
+    name_en: Cash Preservation
+    strategic_flag: true
+    active_flag: true

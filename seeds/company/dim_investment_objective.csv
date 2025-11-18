@@ -1,0 +1,5 @@
+investment_objective_code,name_en,strategic_flag,introduced_date
+TREASURY_MANAGEMENT,Treasury Management,true,2010-01-01
+STRATEGIC_ASSET_ALLOCATION,Strategic Asset Allocation,true,2010-01-01
+CASH_PRESERVATION,Cash Preservation,true,2010-01-01
+SPECULATIVE_GROWTH,Speculative Growth,false,2010-01-01

@@ -1,0 +1,36 @@
+entity_name: dim_funding_source
+domain: company
+table_type: lookup
+grain_description: One row per funding source code.
+primary_keys:
+  - funding_source_code
+attributes:
+  - name: funding_source_code
+    datatype: string
+    business_definition: Funding source code (EQUITY, DEBT, VC, INTERNAL_CASH)
+  - name: name_en
+    datatype: string
+    business_definition: English display name
+  - name: capital_nature
+    datatype: string
+    business_definition: Category (EXTERNAL / INTERNAL)
+  - name: introduced_date
+    datatype: date
+  - name: deprecated_date
+    datatype: date
+  - name: active_flag
+    datatype: boolean
+data_quality_rules:
+  - "funding_source_code NOT NULL"
+  - "active_flag = (deprecated_date IS NULL)"
+open_questions:
+  - "Need subcategories (e.g., ANGEL vs VC)?"
+sample_rows:
+  - funding_source_code: EQUITY
+    name_en: Equity Capital
+    capital_nature: EXTERNAL
+    active_flag: true
+  - funding_source_code: INTERNAL_CASH
+    name_en: Internal Cash
+    capital_nature: INTERNAL
+    active_flag: true

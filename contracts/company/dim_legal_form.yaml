@@ -1,0 +1,36 @@
+entity_name: dim_legal_form
+domain: company
+table_type: lookup
+grain_description: One row per legal form code.
+primary_keys:
+  - legal_form_code
+attributes:
+  - name: legal_form_code
+    datatype: string
+    business_definition: Code representing the legal organizational form (e.g., LLC, PLC)
+  - name: name_en
+    datatype: string
+    business_definition: English display form
+  - name: requires_trade_name_flag
+    datatype: boolean
+    business_definition: Indicates if trade name generally expected
+  - name: introduced_date
+    datatype: date
+  - name: deprecated_date
+    datatype: date
+  - name: active_flag
+    datatype: boolean
+data_quality_rules:
+  - "legal_form_code NOT NULL"
+  - "active_flag = (deprecated_date IS NULL)"
+open_questions:
+  - "Need mapping to regulatory form codes?"
+sample_rows:
+  - legal_form_code: PLC
+    name_en: Public Limited Company
+    requires_trade_name_flag: false
+    active_flag: true
+  - legal_form_code: LLC
+    name_en: Limited Liability Company
+    requires_trade_name_flag: false
+    active_flag: true

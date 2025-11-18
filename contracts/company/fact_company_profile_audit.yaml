@@ -1,0 +1,105 @@
+entity_name: fact_company_profile_audit
+domain: company
+table_type: fact_audit
+grain_description: One row per company profile change event creating a new SCD2 version.
+primary_keys:
+  - audit_event_id
+surrogate_keys:
+  - audit_event_id
+natural_keys:
+  - company_id
+  - profile_version_id_new
+foreign_keys:
+  - column: profile_version_id_new
+    references: dim_company_profile.profile_version_id
+  - column: profile_version_id_old
+    references: dim_company_profile.profile_version_id
+attributes:
+  - name: audit_event_id
+    datatype: bigint
+    business_definition: Surrogate audit event id
+  - name: company_id
+    datatype: string
+    business_definition: Company identity
+  - name: profile_version_id_new
+    datatype: integer
+    business_definition: Newly created company profile version
+  - name: profile_version_id_old
+    datatype: integer
+    business_definition: Previous profile version (null on INITIAL_LOAD)
+  - name: change_reason
+    datatype: string
+    business_definition: Enumerated reason (INITIAL_LOAD, LEGAL_NAME_CHANGE, LEGAL_FORM_CHANGE, INDUSTRY_RECLASSIFICATION, FUNDING_SOURCE_UPDATE, OBJECTIVE_UPDATE, RISK_RATING_UPDATE, CORRECTION, MERGE_FLAG, RECOMPUTE_HASH)
+  - name: changed_scalar_attributes
+    datatype: string
+    business_definition: JSON array of scalar attribute names changed
+  - name: changed_set_names
+    datatype: string
+    business_definition: JSON array of changed multi-valued set names
+  - name: scalar_attribute_old_values
+    datatype: string
+    business_definition: JSON object of old scalar values (subset)
+  - name: scalar_attribute_new_values
+    datatype: string
+    business_definition: JSON object of new scalar values (subset)
+  - name: set_membership_diff_summary
+    datatype: string
+    business_definition: JSON summary counts added/removed per changed set
+  - name: old_profile_hash
+    datatype: string
+    business_definition: Profile hash of prior version
+  - name: new_profile_hash
+    datatype: string
+    business_definition: Profile hash of new version
+  - name: event_source_ts
+    datatype: timestamp
+    business_definition: Source effective timestamp
+  - name: event_detected_ts
+    datatype: timestamp
+    business_definition: Detection timestamp
+  - name: effective_start_ts_new
+    datatype: timestamp
+    business_definition: Start timestamp of new version
+  - name: processing_latency_seconds
+    datatype: integer
+    business_definition: event_detected_ts - event_source_ts in seconds
+  - name: initiated_by_system
+    datatype: string
+    business_definition: Source system initiating change
+  - name: initiated_by_user_id
+    datatype: string
+    business_definition: User id for manual corrections (nullable)
+  - name: load_ts
+    datatype: timestamp
+    business_definition: Ingestion timestamp
+data_quality_rules:
+  - "No duplicate (company_id, profile_version_id_new)"
+  - "profile_version_id_old IS NULL only when change_reason = INITIAL_LOAD"
+  - "changed_scalar_attributes <> '[]' OR changed_set_names <> '[]'"
+  - "new_profile_hash length=64 and equals dim_company_profile.profile_hash"
+  - "old_profile_hash length=64 OR old_profile_hash IS NULL"
+  - "processing_latency_seconds >= 0 OR change_reason IN ('CORRECTION','MERGE_FLAG')"
+  - "effective_start_ts_new = dim_company_profile.effective_start_ts for profile_version_id_new"
+  - "If change_reason='RECOMPUTE_HASH' then changed_scalar_attributes='[]' AND changed_set_names='[]'"
+open_questions:
+  - "Need to track beneficial owner change events here or separate?"
+sample_rows:
+  - audit_event_id: 80001
+    company_id: CO123456
+    profile_version_id_new: 15001
+    profile_version_id_old: null
+    change_reason: INITIAL_LOAD
+    changed_scalar_attributes: '["legal_name","trade_name","incorporation_date","legal_form_code","industry_code","ownership_risk_rating"]'
+    changed_set_names: '["funding_source","investment_objective"]'
+    scalar_attribute_old_values: "{}"
+    scalar_attribute_new_values: '{"legal_name":"Alpha Fintech Co., Ltd.","trade_name":"AlphaFin","incorporation_date":"2012-04-15","legal_form_code":"PLC","industry_code":"FIN_SERV","ownership_risk_rating":3}'
+    set_membership_diff_summary: '{"funding_source":{"added":2,"removed":0},"investment_objective":{"added":1,"removed":0}}'
+    old_profile_hash: null
+    new_profile_hash: "2c26b46b68ffc68ff99b453c1d304134..."
+    event_source_ts: "2024-10-01T08:00:00Z"
+    event_detected_ts: "2024-10-01T08:02:25Z"
+    effective_start_ts_new: "2024-10-01T08:00:00Z"
+    processing_latency_seconds: 145
+    initiated_by_system: "CRM_CORP"
+    initiated_by_user_id: null
+    load_ts: "2024-10-01T08:02:30Z"
