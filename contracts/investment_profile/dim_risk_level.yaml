@@ -1,0 +1,98 @@
+entity_name: dim_risk_level
+domain: investment_profile
+table_type: lookup_dimension
+grain_description: One record per risk tolerance/acceptance level.
+primary_keys:
+  - risk_level_id
+attributes:
+  - name: risk_level_id
+    datatype: string
+    business_definition: Unique risk level code
+    nullable: false
+  - name: risk_level_name
+    datatype: string
+    business_definition: Risk level name
+    nullable: false
+  - name: risk_level_description
+    datatype: string
+    business_definition: Detailed description of risk level
+    nullable: true
+  - name: min_risk_score
+    datatype: integer
+    business_definition: Minimum risk score (1-10 scale)
+    nullable: false
+    validation_rules:
+      - min_risk_score BETWEEN 1 AND 10
+  - name: max_risk_score
+    datatype: integer
+    business_definition: Maximum risk score (1-10 scale)
+    nullable: false
+    validation_rules:
+      - max_risk_score BETWEEN 1 AND 10
+      - max_risk_score >= min_risk_score
+  - name: display_order
+    datatype: integer
+    business_definition: Sort order for display (1=most conservative)
+    nullable: false
+  - name: is_active
+    datatype: char(1)
+    business_definition: Active flag (Y/N)
+    nullable: false
+  - name: load_ts
+    datatype: timestamp
+    business_definition: ETL ingestion timestamp
+    nullable: false
+data_quality_rules:
+  - "risk_level_id NOT NULL AND UNIQUE"
+  - "min_risk_score BETWEEN 1 AND 10"
+  - "max_risk_score BETWEEN 1 AND 10"
+  - "max_risk_score >= min_risk_score"
+  - "is_active IN ('Y','N')"
+  - "No overlapping score ranges for active risk levels"
+sample_rows:
+  - risk_level_id: VERY_CONSERVATIVE
+    risk_level_name: Very Conservative
+    risk_level_description: "Capital preservation is primary goal; minimal volatility tolerance; prefers fixed income and guaranteed products"
+    min_risk_score: 1
+    max_risk_score: 2
+    display_order: 1
+    is_active: Y
+    load_ts: "2024-01-01T00:00:00Z"
+  - risk_level_id: CONSERVATIVE
+    risk_level_name: Conservative
+    risk_level_description: "Low risk tolerance; prefers stable returns; limited exposure to equity markets"
+    min_risk_score: 3
+    max_risk_score: 4
+    display_order: 2
+    is_active: Y
+    load_ts: "2024-01-01T00:00:00Z"
+  - risk_level_id: MODERATE_RISK
+    risk_level_name: Moderate
+    risk_level_description: "Balanced approach; accepts moderate volatility for growth potential; diversified portfolio"
+    min_risk_score: 5
+    max_risk_score: 6
+    display_order: 3
+    is_active: Y
+    load_ts: "2024-01-01T00:00:00Z"
+  - risk_level_id: AGGRESSIVE
+    risk_level_name: Aggressive
+    risk_level_description: "High risk tolerance; seeks growth; comfortable with significant volatility; equity-focused"
+    min_risk_score: 7
+    max_risk_score: 8
+    display_order: 4
+    is_active: Y
+    load_ts: "2024-01-01T00:00:00Z"
+  - risk_level_id: VERY_AGGRESSIVE
+    risk_level_name: Very Aggressive
+    risk_level_description: "Very high risk tolerance; seeks maximum returns; comfortable with derivatives and leveraged products"
+    min_risk_score: 9
+    max_risk_score: 10
+    display_order: 5
+    is_active: Y
+    load_ts: "2024-01-01T00:00:00Z"
+notes: |
+  - Risk levels map to risk scores (1-10 scale where higher = more risk tolerant)
+  - Used in product eligibility determination
+  - Risk level assessment comes from customer questionnaire (source data not in this module)
+  - Conservative levels restrict access to complex/high-risk products
+  - Aggressive levels enable access to derivatives and leveraged products

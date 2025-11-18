@@ -1,0 +1,115 @@
+entity_name: dim_product_acceptance_version
+domain: investment_profile
+table_type: bridge_dimension
+grain_description: One record per product acceptance/acknowledgment per investment profile version; enables multi-valued acceptance tracking.
+primary_keys:
+  - investment_profile_id
+  - acceptance_type_code
+natural_keys:
+  - investment_profile_id
+  - acceptance_type_code
+attributes:
+  - name: investment_profile_id
+    datatype: string
+    business_definition: Reference to investment profile version
+    nullable: false
+  - name: acceptance_type_code
+    datatype: string
+    business_definition: Type of acceptance/acknowledgment (HIGH_RISK_ACK, DERIVATIVE_RISK_ACK, etc.)
+    nullable: false
+  - name: acceptance_flag
+    datatype: char(1)
+    business_definition: Accepted indicator (Y/N)
+    nullable: false
+    validation_rules:
+      - acceptance_flag IN ('Y','N')
+  - name: acceptance_date
+    datatype: date
+    business_definition: Date of acceptance
+    nullable: true
+    notes: Required when acceptance_flag = 'Y', null when 'N'
+    validation_rules:
+      - "(acceptance_flag = 'Y' AND acceptance_date IS NOT NULL) OR (acceptance_flag = 'N')"
+  - name: expiry_date
+    datatype: date
+    business_definition: Acceptance validity expiration date
+    nullable: true
+    notes: NULL means permanent/no expiry
+    validation_rules:
+      - expiry_date IS NULL OR expiry_date > acceptance_date
+  - name: acceptance_version
+    datatype: string
+    business_definition: Version of terms/conditions accepted
+    nullable: true
+  - name: acceptance_method
+    datatype: string
+    business_definition: How acceptance was captured (ONLINE, PAPER, PHONE, etc.)
+    nullable: true
+  - name: load_ts
+    datatype: timestamp
+    business_definition: ETL ingestion timestamp
+    nullable: false
+foreign_keys:
+  - column: investment_profile_id
+    references: dim_investment_profile.investment_profile_id
+  - column: acceptance_type_code
+    references: dim_acceptance_type.acceptance_type_code
+data_quality_rules:
+  - "No duplicate (investment_profile_id, acceptance_type_code) combinations"
+  - "All acceptance_type_code values valid in dim_acceptance_type"
+  - "acceptance_flag IN ('Y','N')"
+  - "If acceptance_flag = 'Y' THEN acceptance_date IS NOT NULL"
+  - "expiry_date > acceptance_date when both not null"
+  - "acceptance_date <= associated profile.effective_start_ts when not null"
+set_hash_logic: |
+  To compute acceptance_set_hash in dim_investment_profile:
+  1. Retrieve all rows for investment_profile_id from this bridge table
+  2. Sort by (acceptance_type_code ASC, expiry_date ASC NULLS LAST)
+  3. For each row, concatenate: acceptance_type_code|acceptance_flag|COALESCE(expiry_date::text, 'PERMANENT')
+  4. Join all concatenated strings with "|" delimiter
+  5. If no rows (empty set): use empty string ""
+  6. Apply SHA256 hash to the final string -> acceptance_set_hash
+acceptance_types:
+  - HIGH_RISK_PRODUCT_ACK: "Acknowledgment of high-risk product risks"
+  - COMPLEX_PRODUCT_ACK: "Complex product understanding confirmation"
+  - DERIVATIVE_RISK_ACK: "Derivative trading risk acknowledgment"
+  - FX_RISK_ACK: "Foreign exchange risk acknowledgment"
+  - LEVERAGED_RISK_ACK: "Leveraged product risk acknowledgment"
+  - LIQUIDITY_RISK_ACK: "Illiquid product risk acknowledgment"
+  - GLOBAL_TRADING_AGREEMENT: "Agreement for global market access"
+  - W8BEN_STATUS: "U.S. tax status declaration (W-8BEN form)"
+  - UNRATED_BOND_ACK: "Unrated bond risk acknowledgment"
+  - PERPETUAL_BOND_ACK: "Perpetual bond specific risk acknowledgment"
+  - STRUCTURED_NOTE_ACK: "Structured note complexity acknowledgment"
+  - INVERSE_ETF_ACK: "Inverse ETF risk acknowledgment"
+sample_rows:
+  - investment_profile_id: IP-100001
+    acceptance_type_code: DERIVATIVE_RISK_ACK
+    acceptance_flag: Y
+    acceptance_date: 2024-10-15
+    expiry_date: null
+    acceptance_version: V1.0
+    acceptance_method: ONLINE
+    load_ts: "2024-11-01T08:05:00Z"
+  - investment_profile_id: IP-100001
+    acceptance_type_code: HIGH_RISK_ACK
+    acceptance_flag: Y
+    acceptance_date: 2024-10-15
+    expiry_date: 2025-10-15
+    acceptance_version: V2.1
+    acceptance_method: ONLINE
+    load_ts: "2024-11-01T08:05:00Z"
+  - investment_profile_id: IP-100001
+    acceptance_type_code: FX_RISK_ACK
+    acceptance_flag: Y
+    acceptance_date: 2024-10-15
+    expiry_date: null
+    acceptance_version: V1.0
+    acceptance_method: ONLINE
+    load_ts: "2024-11-01T08:05:00Z"
+notes: |
+  - This bridge table enables tracking of multiple acceptances/acknowledgments per profile version
+  - When an acceptance expires, a new investment profile version should be created if affects product eligibility
+  - Acceptances are immutable per profile version; updates create new profile versions
+  - Some acceptances are permanent (expiry_date IS NULL), others require periodic renewal
+  - The acceptance_method field tracks compliance with documentation requirements
