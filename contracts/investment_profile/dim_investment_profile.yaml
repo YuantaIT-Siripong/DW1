@@ -1,0 +1,269 @@
+entity_name: dim_investment_profile
+domain: investment_profile
+table_type: dimension
+scd_type: 2
+grain_description: One record per historical investment profile version of a customer or customer_code; investment_profile_id globally unique.
+primary_keys:
+  - investment_profile_id
+surrogate_keys:
+  - investment_profile_sk
+natural_keys:
+  - customer_id
+  - customer_code
+versioning_attributes:
+  - suitability_score
+  - risk_score
+  - investor_classification_id
+  - net_worth_tier_id
+  - annual_income_tier_id
+  - investment_experience_years
+  - knowledge_test_set_hash
+  - acceptance_set_hash
+multi_valued_sets:
+  - knowledge_test
+  - product_acceptance
+hash_spec:
+  algorithm: SHA256
+  ordered_attribute_list:
+    - suitability_score
+    - risk_score
+    - investor_classification_id
+    - net_worth_tier_id
+    - annual_income_tier_id
+    - investment_experience_years
+    - knowledge_test_set_hash
+    - acceptance_set_hash
+  delimiter: "|"
+  null_token: "__NULL__"
+  empty_set_hash: SHA256("") # e3b0c44298fc1c149afbf4c8996fb924...
+change_detection_logic: |
+  1. For knowledge test set: sort by (product_category_code, test_expiry_date or 'PERMANENT'); concatenate code|pass_flag|expiry; join with "|".
+  2. For acceptance set: sort by (acceptance_type_code, expiry_date or 'PERMANENT'); concatenate code|flag|expiry; join with "|".
+  3. Hash each set with SHA256 -> *_set_hash.
+  4. Build canonical profile string by joining ordered scalar + set hash attributes with delimiter.
+  5. SHA256(canonical string) -> profile_hash.
+  6. If profile_hash differs from previous version for this customer_id+customer_code: close prior version and insert new row.
+attributes:
+  - name: investment_profile_id
+    datatype: string
+    business_definition: Globally unique investment profile version identifier
+    scd_role: version_key
+    hash_participation: false
+    nullable: false
+  - name: investment_profile_sk
+    datatype: bigint
+    business_definition: Surrogate warehouse key
+    scd_role: surrogate
+    hash_participation: false
+    nullable: false
+  - name: customer_id
+    datatype: string
+    business_definition: Link to customer identity (from dim_customer)
+    scd_role: natural_key
+    hash_participation: false
+    nullable: true
+    notes: Either customer_id or customer_code must be populated, both can be populated for omnibus scenarios
+  - name: customer_code
+    datatype: string
+    business_definition: Specific 6-digit customer trading code (for code-level profiles)
+    scd_role: natural_key
+    hash_participation: false
+    nullable: true
+    notes: When NOT NULL, profile is specific to this customer code; enables omnibus account scenarios
+  - name: profile_version_num
+    datatype: integer
+    business_definition: Sequential version number per customer_id+customer_code
+    hash_participation: false
+    nullable: false
+  - name: suitability_score
+    datatype: integer
+    business_definition: Calculated suitability assessment score (0-100)
+    hash_participation: true
+    nullable: false
+    validation_rules:
+      - suitability_score BETWEEN 0 AND 100
+  - name: suitability_category_id
+    datatype: string
+    business_definition: Categorical suitability level
+    hash_participation: false
+    nullable: false
+    notes: Derived from suitability_score ranges
+  - name: risk_level_id
+    datatype: string
+    business_definition: Risk tolerance/acceptance level code
+    hash_participation: true
+    nullable: false
+  - name: risk_score
+    datatype: integer
+    business_definition: Numeric risk tolerance score (1-10, higher=more tolerant)
+    hash_participation: true
+    nullable: false
+    validation_rules:
+      - risk_score BETWEEN 1 AND 10
+  - name: investor_classification_id
+    datatype: string
+    business_definition: Investor classification (RETAIL, HNW, UHNW, INSTITUTIONAL)
+    hash_participation: true
+    nullable: false
+  - name: hnw_status
+    datatype: char(1)
+    business_definition: High net worth flag (Y/N)
+    hash_participation: false
+    nullable: false
+    notes: Derived from investor_classification_id
+  - name: uhnw_status
+    datatype: char(1)
+    business_definition: Ultra high net worth flag (Y/N)
+    hash_participation: false
+    nullable: false
+    notes: Derived from investor_classification_id
+  - name: net_worth_tier_id
+    datatype: string
+    business_definition: Net worth tier categorization
+    hash_participation: true
+    nullable: true
+    notes: May be null for institutional or when not assessed
+  - name: annual_income_tier_id
+    datatype: string
+    business_definition: Annual income tier categorization
+    hash_participation: true
+    nullable: true
+    notes: May be null for institutional or when not assessed
+  - name: investment_experience_years
+    datatype: integer
+    business_definition: Years of investment experience
+    hash_participation: true
+    nullable: false
+    validation_rules:
+      - investment_experience_years >= 0
+  - name: total_portfolio_value
+    datatype: decimal(18,2)
+    business_definition: Total investment portfolio value (if available)
+    hash_participation: false
+    nullable: true
+    pii: true
+    notes: Optional field, may be masked in non-privileged views; Type 1 attribute (frequently changing)
+  - name: knowledge_test_set_hash
+    datatype: string
+    business_definition: Hash of product knowledge test results (empty -> SHA256(""))
+    hash_participation: true
+    nullable: false
+  - name: acceptance_set_hash
+    datatype: string
+    business_definition: Hash of product acceptances/acknowledgments (empty -> SHA256(""))
+    hash_participation: true
+    nullable: false
+  - name: profile_hash
+    datatype: string
+    business_definition: Hash representing entire versioning attribute set
+    hash_participation: false
+    nullable: false
+    validation_rules:
+      - LENGTH(profile_hash) = 64
+  - name: assessment_date
+    datatype: date
+    business_definition: Date when assessment/questionnaire was completed
+    hash_participation: false
+    nullable: false
+  - name: expiry_date
+    datatype: date
+    business_definition: Profile validity expiration date
+    hash_participation: false
+    nullable: true
+    validation_rules:
+      - expiry_date IS NULL OR expiry_date > assessment_date
+  - name: is_current
+    datatype: char(1)
+    business_definition: Current version flag (Y/N)
+    hash_participation: false
+    nullable: false
+    notes: Derived field for query optimization
+  - name: effective_start_ts
+    datatype: timestamp
+    business_definition: Profile version validity start (UTC)
+    hash_participation: false
+    nullable: false
+  - name: effective_end_ts
+    datatype: timestamp
+    business_definition: Profile version validity end (null=current)
+    hash_participation: false
+    nullable: true
+    validation_rules:
+      - effective_end_ts IS NULL OR effective_end_ts > effective_start_ts
+  - name: load_ts
+    datatype: timestamp
+    business_definition: ETL ingestion timestamp
+    hash_participation: false
+    nullable: false
+foreign_keys:
+  - column: customer_id
+    references: dim_customer.customer_id
+    notes: May be null if customer_code is the primary reference
+  - column: suitability_category_id
+    references: dim_suitability_category.suitability_category_id
+  - column: risk_level_id
+    references: dim_risk_level.risk_level_id
+  - column: investor_classification_id
+    references: dim_investor_classification.investor_classification_id
+  - column: net_worth_tier_id
+    references: dim_net_worth_tier.net_worth_tier_id
+    notes: May be null
+  - column: annual_income_tier_id
+    references: dim_income_tier.income_tier_id
+    notes: May be null
+pii_policy:
+  columns_raw:
+    - total_portfolio_value
+  masking_strategies:
+    total_portfolio_value: show-tier-only-non-privileged
+data_quality_rules:
+  - "No overlapping (effective_start_ts, effective_end_ts) intervals per customer_id + customer_code combination"
+  - "suitability_score BETWEEN 0 AND 100"
+  - "risk_score BETWEEN 1 AND 10"
+  - "investment_experience_years >= 0"
+  - "At least one of (customer_id, customer_code) must be NOT NULL"
+  - "If hnw_status = 'Y', investor_classification_id IN ('HNW','UHNW','INSTITUTIONAL')"
+  - "If uhnw_status = 'Y', investor_classification_id = 'UHNW'"
+  - "assessment_date <= effective_start_ts"
+  - "expiry_date IS NULL OR expiry_date > assessment_date"
+  - "All FK codes exist in lookup dimensions"
+  - "investment_profile_id globally unique"
+  - "profile_hash length = 64 hex, deterministic recomputation matches stored value"
+  - "Empty set membership produces SHA256('')"
+  - "is_current = 'Y' IFF effective_end_ts IS NULL"
+adr_refs:
+  - ADR-020-investment-profile-scd2.md
+  - ADR-021-product-eligibility-matrix.md
+  - ADR-022-omnibus-account-profiles.md
+  - ADR-002-multi-valued-sets.md
+open_questions:
+  - "Validity period standard (12 months, 24 months, classification-dependent)?"
+  - "Automatic downgrade logic when financial thresholds no longer met?"
+  - "Override mechanism for product restrictions and how tracked?"
+  - "Real-time vs batch profile update requirements?"
+sample_rows:
+  - investment_profile_id: IP-100001
+    investment_profile_sk: 500001
+    customer_id: C123456
+    customer_code: "111111"
+    profile_version_num: 1
+    suitability_score: 45
+    suitability_category_id: MODERATE
+    risk_level_id: MODERATE_RISK
+    risk_score: 5
+    investor_classification_id: RETAIL
+    hnw_status: N
+    uhnw_status: N
+    net_worth_tier_id: TIER_2
+    annual_income_tier_id: TIER_2
+    investment_experience_years: 5
+    total_portfolio_value: 2500000.00
+    knowledge_test_set_hash: "b6d81b360a5672d80c27430f39153e2c..."
+    acceptance_set_hash: "3f79bb7b435b05321651daefd374cd21..."
+    profile_hash: "a7f3d2c1b8e9f4a5c6d7e8f9a0b1c2d3..."
+    assessment_date: 2024-10-15
+    expiry_date: 2025-10-15
+    is_current: Y
+    effective_start_ts: "2024-11-01T08:00:00Z"
+    effective_end_ts: null
+    load_ts: "2024-11-01T08:05:00Z"

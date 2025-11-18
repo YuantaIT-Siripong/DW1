@@ -1,0 +1,111 @@
+entity_name: dim_investor_classification
+domain: investment_profile
+table_type: lookup_dimension
+grain_description: One record per investor classification type.
+primary_keys:
+  - investor_classification_id
+attributes:
+  - name: investor_classification_id
+    datatype: string
+    business_definition: Unique investor classification code
+    nullable: false
+  - name: classification_name
+    datatype: string
+    business_definition: Classification name
+    nullable: false
+  - name: classification_description
+    datatype: string
+    business_definition: Detailed description of classification criteria
+    nullable: true
+  - name: min_net_worth_thb
+    datatype: decimal(18,2)
+    business_definition: Minimum net worth requirement in THB (Thailand SEC)
+    nullable: true
+    notes: NULL if not applicable for this classification
+  - name: min_annual_income_thb
+    datatype: decimal(18,2)
+    business_definition: Minimum annual income requirement in THB (Thailand SEC)
+    nullable: true
+    notes: NULL if not applicable for this classification
+  - name: min_investment_value_thb
+    datatype: decimal(18,2)
+    business_definition: Minimum direct investment value requirement in THB
+    nullable: true
+    notes: Alternative qualification criterion
+  - name: requires_investment_knowledge
+    datatype: char(1)
+    business_definition: Flag indicating if proven investment knowledge required (Y/N)
+    nullable: false
+  - name: exemption_from_suitability_test
+    datatype: char(1)
+    business_definition: Flag for exemption from certain suitability tests (Y/N)
+    nullable: false
+  - name: is_active
+    datatype: char(1)
+    business_definition: Active classification flag (Y/N)
+    nullable: false
+  - name: effective_date
+    datatype: date
+    business_definition: Date when classification definition became effective
+    nullable: true
+  - name: load_ts
+    datatype: timestamp
+    business_definition: ETL ingestion timestamp
+    nullable: false
+data_quality_rules:
+  - "investor_classification_id NOT NULL AND UNIQUE"
+  - "requires_investment_knowledge IN ('Y','N')"
+  - "exemption_from_suitability_test IN ('Y','N')"
+  - "is_active IN ('Y','N')"
+sample_rows:
+  - investor_classification_id: RETAIL
+    classification_name: Retail Investor
+    classification_description: Standard individual investor not meeting HNW/UHNW criteria
+    min_net_worth_thb: null
+    min_annual_income_thb: null
+    min_investment_value_thb: null
+    requires_investment_knowledge: N
+    exemption_from_suitability_test: N
+    is_active: Y
+    effective_date: 2020-01-01
+    load_ts: "2024-01-01T00:00:00Z"
+  - investor_classification_id: HNW
+    classification_name: High Net Worth Investor
+    classification_description: "Individuals with net worth ≥ 30M THB OR income ≥ 3M THB OR direct investment ≥ 8M THB (or 15M including deposits)"
+    min_net_worth_thb: 30000000.00
+    min_annual_income_thb: 3000000.00
+    min_investment_value_thb: 8000000.00
+    requires_investment_knowledge: Y
+    exemption_from_suitability_test: N
+    is_active: Y
+    effective_date: 2023-01-01
+    load_ts: "2024-01-01T00:00:00Z"
+  - investor_classification_id: UHNW
+    classification_name: Ultra High Net Worth Investor
+    classification_description: "Individuals with net worth ≥ 60M THB OR income ≥ 6M THB, AND proven investment experience/knowledge"
+    min_net_worth_thb: 60000000.00
+    min_annual_income_thb: 6000000.00
+    min_investment_value_thb: null
+    requires_investment_knowledge: Y
+    exemption_from_suitability_test: Y
+    is_active: Y
+    effective_date: 2023-01-01
+    load_ts: "2024-01-01T00:00:00Z"
+  - investor_classification_id: INSTITUTIONAL
+    classification_name: Institutional Investor
+    classification_description: "Legal entities with professional investment management meeting institutional criteria"
+    min_net_worth_thb: null
+    min_annual_income_thb: null
+    min_investment_value_thb: null
+    requires_investment_knowledge: Y
+    exemption_from_suitability_test: Y
+    is_active: Y
+    effective_date: 2020-01-01
+    load_ts: "2024-01-01T00:00:00Z"
+notes: |
+  - Based on Thailand SEC investor classification regulations
+  - Criteria may change based on regulatory updates (track via effective_date)
+  - HNW criteria: meets ANY ONE of the financial thresholds PLUS knowledge requirement
+  - UHNW criteria: meets financial threshold AND demonstrates investment knowledge
+  - INSTITUTIONAL: typically corporate/fund investors with professional management
+  - Classification determines product access and suitability test exemptions

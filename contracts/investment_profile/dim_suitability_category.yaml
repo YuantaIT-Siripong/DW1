@@ -1,0 +1,107 @@
+entity_name: dim_suitability_category
+domain: investment_profile
+table_type: lookup_dimension
+grain_description: One record per suitability category level.
+primary_keys:
+  - suitability_category_id
+attributes:
+  - name: suitability_category_id
+    datatype: string
+    business_definition: Unique suitability category code
+    nullable: false
+  - name: category_name
+    datatype: string
+    business_definition: Category name
+    nullable: false
+  - name: category_description
+    datatype: string
+    business_definition: Detailed description of suitability category
+    nullable: true
+  - name: min_suitability_score
+    datatype: integer
+    business_definition: Minimum suitability score (0-100 scale)
+    nullable: false
+    validation_rules:
+      - min_suitability_score BETWEEN 0 AND 100
+  - name: max_suitability_score
+    datatype: integer
+    business_definition: Maximum suitability score (0-100 scale)
+    nullable: false
+    validation_rules:
+      - max_suitability_score BETWEEN 0 AND 100
+      - max_suitability_score >= min_suitability_score
+  - name: typical_products
+    datatype: string
+    business_definition: Comma-separated list of typical suitable products
+    nullable: true
+  - name: display_order
+    datatype: integer
+    business_definition: Sort order for display
+    nullable: false
+  - name: is_active
+    datatype: char(1)
+    business_definition: Active flag (Y/N)
+    nullable: false
+  - name: load_ts
+    datatype: timestamp
+    business_definition: ETL ingestion timestamp
+    nullable: false
+data_quality_rules:
+  - "suitability_category_id NOT NULL AND UNIQUE"
+  - "min_suitability_score BETWEEN 0 AND 100"
+  - "max_suitability_score BETWEEN 0 AND 100"
+  - "max_suitability_score >= min_suitability_score"
+  - "is_active IN ('Y','N')"
+  - "No overlapping score ranges for active categories"
+sample_rows:
+  - suitability_category_id: VERY_CONSERVATIVE
+    category_name: Very Conservative
+    category_description: "Capital preservation priority; minimal risk tolerance"
+    min_suitability_score: 0
+    max_suitability_score: 20
+    typical_products: "Savings, Fixed Income, Money Market Funds"
+    display_order: 1
+    is_active: Y
+    load_ts: "2024-01-01T00:00:00Z"
+  - suitability_category_id: CONSERVATIVE
+    category_name: Conservative
+    category_description: "Low risk tolerance; stable income preferred"
+    min_suitability_score: 21
+    max_suitability_score: 40
+    typical_products: "Government Bonds, Investment Grade Corporate Bonds, Dividend Stocks"
+    display_order: 2
+    is_active: Y
+    load_ts: "2024-01-01T00:00:00Z"
+  - suitability_category_id: MODERATE
+    category_name: Moderate
+    category_description: "Balanced risk/return profile; diversified approach"
+    min_suitability_score: 41
+    max_suitability_score: 60
+    typical_products: "Equity Funds, Balanced Funds, ETF, Blue Chip Stocks"
+    display_order: 3
+    is_active: Y
+    load_ts: "2024-01-01T00:00:00Z"
+  - suitability_category_id: AGGRESSIVE
+    category_name: Aggressive
+    category_description: "High risk tolerance; growth focused"
+    min_suitability_score: 61
+    max_suitability_score: 80
+    typical_products: "Individual Stocks, High Yield Bonds, DW, Sector Funds"
+    display_order: 4
+    is_active: Y
+    load_ts: "2024-01-01T00:00:00Z"
+  - suitability_category_id: VERY_AGGRESSIVE
+    category_name: Very Aggressive
+    category_description: "Maximum risk acceptance; sophisticated investor"
+    min_suitability_score: 81
+    max_suitability_score: 100
+    typical_products: "Derivatives, Leveraged Products, Complex Structures, Unrated Bonds"
+    display_order: 5
+    is_active: Y
+    load_ts: "2024-01-01T00:00:00Z"
+notes: |
+  - Suitability categories map to suitability scores (0-100 scale)
+  - Derived from comprehensive suitability assessment (questionnaire, financial capacity, objectives)
+  - Used in product eligibility determination alongside risk level
+  - Assessment methodology and scoring algorithm maintained outside this data warehouse module
+  - Categories align with typical product risk classifications

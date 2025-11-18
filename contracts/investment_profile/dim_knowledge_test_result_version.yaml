@@ -1,0 +1,98 @@
+entity_name: dim_knowledge_test_result_version
+domain: investment_profile
+table_type: bridge_dimension
+grain_description: One record per product knowledge test result per investment profile version; enables multi-valued knowledge test tracking.
+primary_keys:
+  - investment_profile_id
+  - product_category_code
+natural_keys:
+  - investment_profile_id
+  - product_category_code
+attributes:
+  - name: investment_profile_id
+    datatype: string
+    business_definition: Reference to investment profile version
+    nullable: false
+  - name: product_category_code
+    datatype: string
+    business_definition: Product category requiring knowledge test (DW, DRX, PERPETUAL_BOND, etc.)
+    nullable: false
+  - name: test_pass_flag
+    datatype: char(1)
+    business_definition: Test passed indicator (Y/N)
+    nullable: false
+    validation_rules:
+      - test_pass_flag IN ('Y','N')
+  - name: test_score
+    datatype: integer
+    business_definition: Test score if applicable (0-100)
+    nullable: true
+    validation_rules:
+      - test_score IS NULL OR test_score BETWEEN 0 AND 100
+  - name: test_date
+    datatype: date
+    business_definition: Date test was completed
+    nullable: false
+  - name: test_expiry_date
+    datatype: date
+    business_definition: Test validity expiration date
+    nullable: true
+    notes: NULL means permanent validity
+    validation_rules:
+      - test_expiry_date IS NULL OR test_expiry_date > test_date
+  - name: test_version
+    datatype: string
+    business_definition: Test version/iteration for audit trail
+    nullable: true
+  - name: test_provider
+    datatype: string
+    business_definition: System or entity that administered the test
+    nullable: true
+  - name: load_ts
+    datatype: timestamp
+    business_definition: ETL ingestion timestamp
+    nullable: false
+foreign_keys:
+  - column: investment_profile_id
+    references: dim_investment_profile.investment_profile_id
+  - column: product_category_code
+    references: dim_product_category.product_category_code
+data_quality_rules:
+  - "No duplicate (investment_profile_id, product_category_code) combinations"
+  - "All product_category_code values valid in dim_product_category"
+  - "test_date <= associated profile.effective_start_ts"
+  - "test_expiry_date > test_date when not null"
+  - "test_pass_flag IN ('Y','N')"
+  - "test_score between 0-100 when not null"
+set_hash_logic: |
+  To compute knowledge_test_set_hash in dim_investment_profile:
+  1. Retrieve all rows for investment_profile_id from this bridge table
+  2. Sort by (product_category_code ASC, test_expiry_date ASC NULLS LAST)
+  3. For each row, concatenate: product_category_code|test_pass_flag|COALESCE(test_expiry_date::text, 'PERMANENT')
+  4. Join all concatenated strings with "|" delimiter
+  5. If no rows (empty set): use empty string ""
+  6. Apply SHA256 hash to the final string -> knowledge_test_set_hash
+sample_rows:
+  - investment_profile_id: IP-100001
+    product_category_code: DW
+    test_pass_flag: Y
+    test_score: 85
+    test_date: 2024-10-15
+    test_expiry_date: 2025-10-15
+    test_version: V2.3
+    test_provider: KNOWLEDGE_TEST_PLATFORM
+    load_ts: "2024-11-01T08:05:00Z"
+  - investment_profile_id: IP-100001
+    product_category_code: DRX
+    test_pass_flag: Y
+    test_score: 78
+    test_date: 2024-09-20
+    test_expiry_date: 2025-09-20
+    test_version: V1.5
+    test_provider: KNOWLEDGE_TEST_PLATFORM
+    load_ts: "2024-11-01T08:05:00Z"
+notes: |
+  - This bridge table enables tracking of multiple product knowledge tests per profile version
+  - When a test expires, a new investment profile version should be created if the expiry affects eligibility
+  - Test results are immutable per profile version; updates create new profile versions
+  - Products requiring knowledge tests: DW, DRX, PERPETUAL_BOND, STRUCTURED_NOTE, COMPLEX_FUND, INVERSE_ETF, UNRATED_BOND, LEVERAGED_PRODUCT
