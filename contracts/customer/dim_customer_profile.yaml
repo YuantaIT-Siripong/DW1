@@ -2,7 +2,7 @@ entity_name: dim_customer_profile
 domain: customer
 table_type: dimension
 scd_type: 2
-grain_description: One record per historical profile version of a customer (customer_id + profile_version_id).
+grain_description: One record per historical profile version of a customer (customer_id + profile_version_id); profile_version_id globally unique.
 primary_keys:
   - customer_id
   - profile_version_id
@@ -18,6 +18,9 @@ versioning_attributes:
   - birthdate
   - income_source_set_hash
   - investment_purpose_set_hash
+non_versioning_sensitive_attributes:
+  - national_id
+  - national_id_hash
 multi_valued_sets:
   - income_source
   - investment_purpose
@@ -33,14 +36,13 @@ hash_spec:
     - investment_purpose_set_hash
   delimiter: "|"
   null_token: "__NULL__"
+  empty_set_hash: SHA256("") # e3b0c44298fc1c149afbf4c8996fb924...
 change_detection_logic: |
-  1. For each multi-valued set, sort codes ascending; join with "|" and replace nulls with "__NULL__".
-  2. Hash each joined string with SHA256 to derive *_set_hash columns.
-  3. Build canonical profile string by joining ordered scalar and set hash attributes with delimiter.
-  4. Apply SHA256 to canonical string -> profile_hash.
-  5. If profile_hash differs from previous version's profile_hash for customer_id:
-       a. Close previous version (effective_end_ts = new_effective_start_ts - microsecond).
-       b. Insert new row with incremented profile_version_id, effective_start_ts = business-effective timestamp.
+  1. For each multi-valued set, sort codes ascending; join with "|" (empty set -> empty string).
+  2. Hash each joined string with SHA256 -> *_set_hash.
+  3. Build canonical profile string by joining ordered scalar + set hash attributes with delimiter.
+  4. SHA256(canonical string) -> profile_hash.
+  5. If profile_hash differs from previous version for this customer_id: close prior version (effective_end_ts = new_effective_start_ts - microsecond) and insert new row.
 attributes:
   - name: customer_id
     datatype: string
@@ -49,13 +51,23 @@ attributes:
     hash_participation: false
   - name: profile_version_id
     datatype: integer
-    business_definition: Sequential version counter per customer
+    business_definition: Globally unique profile version identifier
     scd_role: version_key
     hash_participation: false
   - name: profile_sk
     datatype: bigint
     business_definition: Surrogate warehouse key
     scd_role: surrogate
+    hash_participation: false
+  - name: national_id
+    datatype: string
+    business_definition: Government-issued identifier (raw; privileged access)
+    pii: true
+    hash_participation: false
+  - name: national_id_hash
+    datatype: string
+    business_definition: SHA256(salt + normalized national_id) for non-privileged joins
+    pii: masked
     hash_participation: false
   - name: marital_status_id
     datatype: integer
@@ -81,11 +93,11 @@ attributes:
     hash_participation: true
   - name: income_source_set_hash
     datatype: string
-    business_definition: Hash of sorted income source codes
+    business_definition: Hash of sorted income source codes (empty -> SHA256(""))
     hash_participation: true
   - name: investment_purpose_set_hash
     datatype: string
-    business_definition: Hash of sorted investment purpose codes
+    business_definition: Hash of sorted investment purpose codes (empty -> SHA256(""))
     hash_participation: true
   - name: profile_hash
     datatype: string
@@ -113,25 +125,36 @@ foreign_keys:
   - column: education_level_id
     references: dim_education_level.education_level_id
 pii_policy:
+  columns_raw:
+    - national_id
+    - birthdate
   columns_masked:
     - birthdate
+    - national_id_hash
   masking_strategies:
     birthdate: show-year-only-non-privileged
+    national_id_hash: irreversible-sha256-salt
 data_quality_rules:
   - "No overlapping (effective_start_ts, effective_end_ts) intervals per customer_id"
   - "Birthdate <= current_date"
-  - "Effective_end_ts IS NULL OR effective_end_ts > effective_start_ts"
+  - "At least one of (income_source_set_hash, investment_purpose_set_hash) represents a non-empty set"
   - "All FK codes exist in lookup dimensions"
-  - "Set hashes recomputed consistently (deterministic ordering)"
+  - "profile_version_id globally unique"
+  - "profile_hash length = 64 and recomputation deterministic"
+  - "Empty set membership produces SHA256(\"\")"
+  - "national_id length=13 OR national_id IS NULL"
 adr_refs:
   - ADR-001-scd2-customer-profile.md
   - ADR-002-multi-valued-sets.md
 open_questions:
-  - "Confirm minimum age threshold for validity (currently 15)."
+  - "Salt rotation procedure details (future ADR)."
+  - "Checksum validation for national_id (future)."
 sample_rows:
   - customer_id: C123456
-    profile_version_id: 10
-    profile_sk: 987654321
+    profile_version_id: 9870
+    profile_sk: 121212121
+    national_id: "1234567890123"
+    national_id_hash: "a9f0e61a... (truncated)"
     marital_status_id: 2
     nationality_id: 66
     occupation_id: 301
@@ -139,7 +162,7 @@ sample_rows:
     birthdate: 1985-03-10
     income_source_set_hash: "b6d81b360a5672d80c27430f39153e2c..."
     investment_purpose_set_hash: "3f79bb7b435b05321651daefd374cd21..."
-    profile_hash: "a2b8c4d0e7f1..."
+    profile_hash: "5e884898da28047151d0e56f8dc62927..."
     effective_start_ts: "2024-09-01T08:00:00Z"
     effective_end_ts: null
     load_ts: "2024-09-01T08:02:10Z"
