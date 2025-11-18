@@ -141,8 +141,9 @@ data_quality_rules:
   - "All FK codes exist in lookup dimensions"
   - "profile_version_id globally unique"
   - "profile_hash length = 64 and recomputation deterministic"
-  - "Empty set membership produces SHA256(\"\")"
+  - "Empty set membership produces SHA256("")"
   - "national_id length=13 OR national_id IS NULL"
+  - "national_id immutable in Phase 1 (no updates after initial assignment)"
 adr_refs:
   - ADR-001-scd2-customer-profile.md
   - ADR-002-multi-valued-sets.md
