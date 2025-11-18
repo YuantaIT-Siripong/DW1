@@ -18,11 +18,9 @@ versioning_attributes:
   - birthdate
   - income_source_set_hash
   - investment_purpose_set_hash
-  - contact_channel_set_hash
 multi_valued_sets:
   - income_source
   - investment_purpose
-  - contact_channel
 hash_spec:
   algorithm: SHA256
   ordered_attribute_list:
@@ -33,7 +31,6 @@ hash_spec:
     - birthdate
     - income_source_set_hash
     - investment_purpose_set_hash
-    - contact_channel_set_hash
   delimiter: "|"
   null_token: "__NULL__"
 change_detection_logic: |
@@ -90,10 +87,6 @@ attributes:
     datatype: string
     business_definition: Hash of sorted investment purpose codes
     hash_participation: true
-  - name: contact_channel_set_hash
-    datatype: string
-    business_definition: Hash of sorted active contact channel codes
-    hash_participation: true
   - name: profile_hash
     datatype: string
     business_definition: Hash representing entire versioning attribute set
@@ -146,8 +139,7 @@ sample_rows:
     birthdate: 1985-03-10
     income_source_set_hash: "b6d81b360a5672d80c27430f39153e2c..."
     investment_purpose_set_hash: "3f79bb7b435b05321651daefd374cd21..."
-    contact_channel_set_hash: "726c836b6e72f9a303361c13d3..."
-    profile_hash: "c0d5c3e2e9f6b1fd2e4d9a0eaf1d7bf4..."
+    profile_hash: "a2b8c4d0e7f1..."
     effective_start_ts: "2024-09-01T08:00:00Z"
     effective_end_ts: null
     load_ts: "2024-09-01T08:02:10Z"
