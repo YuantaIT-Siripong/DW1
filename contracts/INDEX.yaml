@@ -1,0 +1,9 @@
+contracts:
+  - name: dim_customer_profile_columns.yaml
+    path: contracts/scd2/dim_customer_profile_columns.yaml
+    type: scd2
+    entity: dim_customer_profile
+    authoritative: true
+future:
+  - name: dim_investment_profile_columns.yaml
+    status: planned
