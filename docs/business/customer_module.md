@@ -23,7 +23,6 @@ The Customer Module establishes the canonical representation of an individual cl
 | Customer Profile | Dimension (SCD2) | Versioned demographic & suitability attributes |
 | Income Source | Bridge | Multi-valued set per profile version |
 | Investment Purpose | Bridge | Multi-valued set per profile version |
-| Contact Channel | Bridge | Multi-valued active communication channels per profile version |
 | Customer Profile Audit Event | Fact (Audit) | Each detected profile change & its cause |
 | Potential Identity Duplicate | Auxiliary / Future | Mapping for potential duplicate national IDs (Phase 2) |
 
@@ -40,8 +39,7 @@ The Customer Module establishes the canonical representation of an individual cl
 | education_level_id | Education level code | int | non-PII | 2 | Y | fk: dim_education_level | 5 | EducationLevel | |
 | income_source_set | Income sources selected | array<string> (logical) | non-PII | Bridge | Y | members in dim_income_source | ["SALARY","DIVIDEND"] | SourceOfIncome, Multi-Valued Set | Stored via bridge |
 | investment_purpose_set | Investment purposes | array<string> (logical) | non-PII | Bridge | Y | members in dim_investment_purpose | ["RETIREMENT"] | PurposeOfInvestment, Multi-Valued Set | Stored via bridge |
-| contact_channel_set | Preferred/active communication channels | array<string> (logical) | non-PII | Bridge | Y | members in dim_contact_channel | ["EMAIL","APP"] | ContactChannel, Multi-Valued Set | Stored via bridge |
-| profile_hash | SHA256 of ordered versioning attributes & set hashes | string | non-PII | Derived | Y logic | not null; length=64 hex | a9f0e61... | Attribute Hash | Change detection basis |
+| profile_hash | SHA256 of ordered versioning attributes & set hashes | string | non-PII | Derived | Y logic | not null; length=64 hex | a9f0e61... | Profile Hash | Change detection basis |
 | effective_start_ts | Start timestamp of version validity | timestamp | non-PII | 2 | N | not null | 2024-09-01T08:00:00Z | Effective Start Date | |
 | effective_end_ts | End timestamp (null=current) | timestamp | non-PII | 2 | N | end > start or null | null | Effective End Date | |
 | load_ts | Ingestion timestamp | timestamp | non-PII | Audit | N | not null | 2024-09-01T08:02:10Z | - | ETL metadata |
@@ -50,69 +48,67 @@ The Customer Module establishes the canonical representation of an individual cl
 ## 6. Semantic & Regulatory Notes
 - Birthdate and national_id treated as sensitive; access governed by role-based masking.
 - National ID stored hashed (SHA256 + salt) for non-privileged analytical views.
-- Backdated corrections produce a new version with effective_start_ts reflecting the business-effective date (not ingestion date) and logged in audit table.
+- Backdated corrections produce a new version with effective_start_ts reflecting business-effective date (not ingestion date) and logged in audit table.
 
 ## 7. Change Behavior (SCD2 Rules)
 Trigger new version when any of:
 1. Any scalar versioning attribute changes (birthdate, marital_status_id, nationality_id, occupation_id, education_level_id).
-2. Any multi-valued set membership changes (addition, removal, replacement in income_source, investment_purpose, contact_channel).
+2. Multi-valued set membership changes (addition/removal in income_source or investment_purpose).
 3. Explicit correction events flagged by source (change_reason=CORRECTION).
 
 Hashing:
 - Compute set hashes by sorting codes ascending, joining with "|", substituting "__NULL__" for missing; then SHA256.
-- profile_hash = SHA256 of concatenated ordered scalar values + set hashes (same delimiter).
+- profile_hash = SHA256 of ordered scalar attributes + income_source_set_hash + investment_purpose_set_hash.
 
 Version closure:
-- Prior row effective_end_ts = new_effective_start_ts - microsecond.
-- Backdated correction: effective_start_ts may be earlier than load_ts; ensure no overlap by adjusting previous version.
+- Prior row effective_end_ts = new_effective_start_ts - microsecond (or ensure strict non-overlap).
+- Backdated correction: effective_start_ts may precede load_ts; previous version end adjusted.
 
 ## 8. Relationships & Cardinality
 - customer_id 1:M profile_versions
 - profile_version 1:M income_source entries
 - profile_version 1:M investment_purpose entries
-- profile_version 1:M contact_channel entries
 - profile_version 1:1 profile_hash
 - profile_version 1:M audit events (one initial + corrections)
 
 ## 9. Edge Cases / Exceptions
-- Duplicate national_id across distinct customer_id → flagged for investigation (no auto merge).
-- Removal of all entries from a multi-valued set results in empty set (recorded with empty set hash).
-- Backdated changes cannot produce overlapping intervals; ETL reconciliation adjusts prior end timestamp.
+- Duplicate national_id across distinct customer_id → flagged (no auto merge).
+- Empty multi-valued set allowed (hash represents empty sequence).
+- Backdated changes cannot create overlapping intervals.
 
 ## 10. Source Systems & Cadence
 | Source | Feed Type | Cadence | Notes |
 |--------|-----------|--------|-------|
-| CRM Master | Batch | Daily | Core demographics, some occupation data |
+| CRM Master | Batch | Daily | Core demographics, occupation |
 | KYC System | Batch | Nightly | National ID, birthdate corrections |
-| Preference Center | Event | Near real-time | Contact channel, investment purpose updates |
 | Income Source Survey | Batch | Monthly | Income source refresh |
+| Investment Purpose Capture | Event/Batch | Variable | Suitability / purpose updates |
 
 ## 11. Data Quality Rules
-- No overlapping (effective_start_ts, effective_end_ts) intervals per customer_id.
-- Scalar FK codes must exist in lookup dimensions.
-- Birthdate <= current_date and age >= 15 (configurable).
+- No overlapping validity intervals per customer_id.
+- FK codes must exist in lookup dimensions.
+- Birthdate <= current_date AND age >= 15 (configurable).
 - Set entries valid; no duplicates within a set per version.
 - profile_hash unique within (customer_id, profile_version_id).
 - effective_end_ts IS NULL OR effective_end_ts > effective_start_ts.
 
-## 12. Open Questions (Answered as Decisions)
+## 12. Open Questions (Decisions Maintained)
 | Question | Decision |
 |----------|----------|
-| Handle corporate customers separately? | Phase 1: individual only; corporate Phase 2 (dim_customer_corporate). |
-| Merge logic for duplicate national_id? | No auto merge; create duplicate review record. |
-| Backdated profile corrections policy? | New version with historical effective_start_ts (no retro edit). |
-| Birthdate retro changes trigger? | Yes, always new version. |
-| Hash algorithm? | SHA256 standard. |
-| Timestamp vs date granularity? | Timestamp UTC (intraday changes). |
-| Corporate vs individual key separation? | Reserve person_id; customer_id remains Customer Code. |
+| Corporate customers? | Phase 1 individual only; corporate Phase 2. |
+| Duplicate national_id merge? | Manual review only. |
+| Backdated corrections policy? | New version with historical effective_start_ts. |
+| Birthdate change triggers? | Always new version. |
+| Hash algorithm? | SHA256. |
+| Timestamp granularity? | UTC timestamp. |
+| Minimum age threshold? | 15 (confirm later). |
 
 ## 13. Mapping to Schema Artifacts
 - dim_customer (identity)
 - dim_customer_profile (SCD2)
-- dim_customer_income_source_version
-- dim_customer_investment_purpose_version
-- dim_customer_contact_channel_version
-- fact_customer_profile_audit
+- dim_customer_income_source_version (bridge)
+- dim_customer_investment_purpose_version (bridge)
+- fact_customer_profile_audit (audit fact)
 - staging: stg_customer_profile_raw, stg_customer_sets_raw
 
 ## 14. ADR Links
@@ -135,15 +131,14 @@ Version closure:
       "birthdate": "1985-03-10",
       "income_source_set": ["SALARY","DIVIDEND"],
       "investment_purpose_set": ["RETIREMENT","EDUCATION"],
-      "contact_channel_set": ["EMAIL","APP"],
-      "profile_hash": "37b51d194a7513e45b56f6524f2d51f2..."
+      "profile_hash": "5e884898da28047151d0e56f8dc62927..."
     }
   ]
 }
 ```
 
 ## 16. Next Clarification Tasks
-- Bridge table contracts (income_source, investment_purpose, contact_channel)
+- Finalize bridge contracts (income_source, investment_purpose)
 - Audit fact grain & columns (fact_customer_profile_audit)
-- SQL macro for profile hash computation
+- Hash macro implementation
 - dbt tests (overlap, FK integrity, set validity)
