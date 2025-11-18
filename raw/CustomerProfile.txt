@@ -1,0 +1,182 @@
+AI Context for Yuanta Securities
+# Company Business
+
+Yuanta Securities is a leading financial services company in Thailand, providing a broad range of investment and securities solutions. Its offerings include equities, derivatives, bonds, mutual funds, structured products, and investment advisory services for both retail and institutional clients. The company operates a comprehensive trading and investment platform supported by front-office, middle-office, and back-office systems to ensure seamless execution, settlement, and risk management.
+
+# Data Design Principles
+## Naming Convention
+Fields ending with Id store an integer that references a master record.
+Fields storing constants always reference a constant list by constant type.
+
+## Company Master Data
+Service Category: List of service group that yuanta has, e.g. porfolio advisory, equity (sbl), tfex (block trade)
+SubscribeLevel : Refer to service subscription level, in Yuanta there 3 layer including person, customer code and account code
+Services: List of company services, e.g., SBL service, Block Trade service.
+## Constant Master Data
+Constant Type: Defines a key for a set of constants, e.g., marital status, gender, education level.
+Constant List: Enumeration of values for each constant type, e.g., for gender → 'male', 'female', 'other'.
+## Customer Profile
+Customer: Main table used as a reference for other customer-related data.
+Basic Profile: Stores personal information strictly about the individual, independent of company data.
+Address: Stores customer addresses; a customer may have multiple addresses.
+Contact Information: Stores customer contact details.
+ServiceRequest: Relation between customer and service with approval status
+
+## Metadata
+### ConstantType
+ColumnName	Purpose	DataType	SampleData
+ConstantTypeId	Unique identifier for the constant type	int	5
+ConstantTypeName	Name of the constant type category	varchar	BusinessType
+IsActive	Indicates if the constant type is currently active	bit	True
+CreatedBy	Identifier for the user/system that created the record	varchar	System
+CreatedTime	Timestamp of when this record was created	datetime	1/8/2025 1:45:52 PM
+UpdatedBy	Identifier for the user/system that last updated the record	varchar	System
+UpdatedTime	Timestamp of when this record was updated	datetime	1/8/2025 1:45:52 PM
+
+
+### ConstantList
+ColumnName	Purpose	DataType	SampleData
+ConstantListId	Unique identifier for each constant in the list	int	1
+ConstantTypeId	Identifier for the type/category of the constant	int	1
+LanguageCode	Code indicating the language of the text value	varchar	TH
+TextKey	Unique key for specifically identifying text value	varchar	001
+TextValue	The actual text value associated with the text key	varchar	Miss
+ReferSource	Source reference for the constant value	varchar	SEC
+IsActive	Status indicating if the constant is currently active or not	bit	True
+CreatedBy	Identifier for the user/system that created the record	varchar	System
+CreatedTime	Timestamp of when this record was created	datetime	1/8/2025 1:52:23 PM
+UpdatedBy	Identifier for the user/system that last updated the record	varchar	System
+UpdatedTime	Timestamp of when this record was updated	datetime	1/8/2025 1:52:23 PM
+ExtraCondition	Additional conditions or flags for the constant (if any)	varchar	
+
+### ServiceCategory
+ColumnName	Purpose	DataType	SampleData
+Id	Unique identifier for each service category	int	1
+CategoryName	Name of the service category	varchar	TradingAccount
+CreatedBy	Identifier for the user/system that created the record	varchar	System
+CreatedTime	Timestamp of when this record was created	datetime	3/6/2025 5:15:03 PM
+UpdatedBy	Identifier for the user/system that last updated the record	varchar	System
+UpdatedTime	Timestamp of when this record was updated	datetime	3/6/2025 5:15:03 PM
+
+### SubscribeLevel
+ColumnName	Purpose	DataType	SampleData
+Id	Unique identifier for each subscription level record	int	1
+LevelDetail	Describes the specifics of the subscription level	varchar	Person
+CreatedBy	Identifier for the user/system that created the record	varchar	System
+CreatedTime	Timestamp of when this record was created	datetime	3/6/2025 5:13:00 PM
+UpdatedBy	Identifier for the user/system that last updated the record	varchar	System
+UpdatedTime	Timestamp of when this record was updated	datetime	3/6/2025 5:13:00 PM
+
+### Service
+ColumnName	Purpose	DataType	SampleData
+Id	Unique identifier for each service	int	1
+ServiceCategoryId	Foreign key linking to the category of the service	int	1
+ServiceName	The name of the service being offered	varchar	Cash Balance
+SubscribeLevelId	Foreign key linking to different subscription levels available	int	1
+CreatedBy	Identifier for the user/system that created the record	varchar	System
+CreatedTime	Timestamp of when this record was created	datetime	3/6/2025 5:19:36 PM
+UpdatedBy	Identifier for the user/system that last updated the record	varchar	System
+UpdatedTime	Timestamp of when this record was updated	datetime	3/6/2025 5:19:36 PM
+
+
+### Customer
+ColumnName	Purpose	DataType	SampleData
+Id	A unique identifier for each customer record	int	1
+EvidenceUniqueKey	A unique key to track the evidence associated with the customer	varchar	3101800216029
+CreatedBy	Identifier for the user/system that created the record	varchar	System-EOpenAccount
+CreatedTime	Timestamp of when this record was created	datetime	3/10/2025 2:58:56 PM
+UpdatedBy	Identifier for the user/system that last updated the record	varchar	System-EOpenAccountSystem
+UpdatedTime	Timestamp of when this record was updated	datetime	3/10/2025 2:58:56 PM
+
+### AddressRegistered
+ColumnName	Purpose	DataType	SampleData
+Id	Unique identifier for the address entry	int	1
+CustomerId	Identifier linking to the customer who owns this address	int	1
+HouseNumber	Number of the house/building	varchar	594
+Moo	Land designation term in certain regions, often related to group of homes	varchar	
+BuildingOrVillage	Name of the building or village associated with the address	varchar	
+FloorNumber	Floor number within a multi-story building	varchar	
+Soi	Specific street or alley name, often used in urban addresses	varchar	Soi X
+StreetName	Name of the street where the address is located	varchar	Ratchadamri Road
+SubdistrictId	Identifier for the subdistrict/location	int	1208
+DistrictId	Identifier for the district where the address resides	int	1211
+ProvinceId	Identifier for the province of the address	int	1212
+PostalCode	Postal code for mailing purposes	varchar	10300
+CountryId	Identifier for the country where the address is located	int	1213
+IsActive	Indicates if the address is currently active or in use	bit	True
+Channel	The source or method through which the address was registered	varchar	E-OpenAccount
+ConsentTime	Timestamp indicating when consent for use of the address was given	datetime	
+CreatedBy	Identifier for the user/system that created the record	varchar	User-1
+CreatedTime	Timestamp of when this record was created	datetime	3/10/2025 3:23:50 PM
+UpdatedBy	Identifier for the user/system that last updated the record	varchar	User-1
+UpdatedTime	Timestamp of when this record was updated	datetime	3/10/2025 3:23:50 PM
+
+
+### ContactInformation
+ColumnName	Purpose	DataType	SampleData
+Id	Unique identifier for each contact information entry	int	1
+CustomerId	Identifier linking to customer profile	int	1
+MobilePhone	Customer's mobile phone number	varchar	0890413326
+HomePhone	Customer's home phone number	varchar	
+FaxNumber	Customer's fax number	varchar	
+EmailAddress	Customer's email address	varchar	siripong.s@yuanta.co.th
+RegisteredAddressId	Identifier for the customer's registered address	int	1
+CurrentAddressId	Identifier for the customer's current address	int	1
+CompanyAddressId	Identifier for the customer's company address	int	1
+MailAddressId	Identifier for the customer's mailing address	int	1
+EmergencyPersonId	Identifier for an emergency contact person	int	1
+CreatedBy	Identifier for the user/system that created the record	varchar	System-EOpenAccount
+CreatedTime	Timestamp of when this record was created	datetime	3/10/2025 2:59:01 PM
+UpdatedBy	Identifier for the user/system that last updated the record	varchar	User-01
+UpdatedTime	Timestamp of when this record was updated	datetime	3/10/2025 3:24:12 PM
+
+
+### BasicProfile
+ColumnName	Purpose	DataType	SampleData
+Id	Unique identifier for each profile	int	1
+CustomerId	Identifier to associate the profile with a customer	int	1
+PersonTitleId	Identifier for the person's title	int	1126
+PersonTitleRemark	Additional remarks regarding the person's title	varchar	
+ThaiFirstName	First name in Thai script	varchar	???????
+ThaiLastName	Last name in Thai script	varchar	???????????
+EnglishFirstName	First name in English script	varchar	Siripong
+EnglishLastName	Last name in English script	varchar	Suwattanapreeda
+NationalityId	Identifier for nationality	int	1134
+NationalityRemark	Additional remarks regarding the nationality	varchar	
+MaritalStatusId	Identifier for marital status	int	1133
+Birthdate	Person’s date of birth	date	3/26/1982 12:00:00 AM
+OccupationId	Identifier for occupation	int	1139
+OccupationRemark	Additional remarks regarding the occupation	varchar	
+BusinessTypeId	Identifier for type of business involved	int	1153
+BusinessTypeRemark	Additional remarks regarding the business type	varchar	
+TotalAssetId	Identifier for total assets owned	int	1224
+TotalAssetRemark	Additional remarks regarding total assets	varchar	
+IncomeCountryId	Identifier for the country of income	int	1213
+IncomeCountryRemark	Additional remarks regarding the income country	varchar	
+MonthlyIncomeId	Identifier for monthly income range	int	1164
+MonthlyIncomeRemark	Additional remarks regarding monthly income	varchar	
+EducationLevelId	Identifier for education level	int	1222
+EducationLevelRemark	Additional remarks regarding education level	varchar	
+SourceOfIncomeSetId	Identifiers for sources of income	varchar	1161, 1162, 1163
+SourceOfIncomeRemark	Additional remarks regarding sources of income	varchar	
+PurposeOfInvestmentSetId	Identifiers for purposes of investment	varchar	1156, 1155, 1157
+PurposeOfInvestmentRemark	Additional remarks regarding the purpose of investment	varchar	
+CreatedBy	Identifier for the user/system that created the record	varchar	System-EOpenAccount
+CreatedTime	Timestamp of when this record was created	datetime	3/10/2025 2:59:00 PM
+UpdatedBy	Identifier for the user/system that last updated the record	varchar	System-EOpenAccountSystem
+UpdatedTime	Timestamp of when this record was updated	datetime	3/10/2025 2:59:00 PM
+
+
+### ServiceRequest
+ColumnName	Purpose	DataType	SampleData
+Id	Unique identifier for each service request	int	1
+CustomerId	Identifier for the customer making the service request	int	1
+ServiceId	Identifier for the specific service being requested	int	1
+IsActive	Indicates if the service request is currently active	bit	True
+SubmitDate	Date and time when the service request was submitted	date	3/10/2025 12:00:00 AM
+ApproveDate	Date and time when the service request was approved	date	
+DeactivateDate	Date and time when the service request was deactivated	date	
+CreatedBy	Identifier for the user/system that created the record	varchar	User-01
+CreatedTime	Timestamp of when this record was created	datetime	3/10/2025 3:34:15 PM
+UpdatedBy	Identifier for the user/system that last updated the record	varchar	User-01
+UpdatedTime	Timestamp of when this record was updated	datetime	3/10/2025 3:34:15 PM
