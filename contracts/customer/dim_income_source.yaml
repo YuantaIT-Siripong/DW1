@@ -1,0 +1,42 @@
+entity_name: dim_income_source
+domain: customer
+table_type: lookup
+grain_description: One row per income source code.
+primary_keys:
+  - income_source_code
+attributes:
+  - name: income_source_code
+    datatype: string
+    business_definition: Code representing a source of income (e.g., SALARY, DIVIDEND)
+  - name: name_en
+    datatype: string
+    business_definition: English display name
+  - name: name_local
+    datatype: string
+    business_definition: Local display name
+  - name: taxable_flag
+    datatype: boolean
+    business_definition: Indicates if source typically taxable
+  - name: introduced_date
+    datatype: date
+    business_definition: Date code introduced
+  - name: deprecated_date
+    datatype: date
+    business_definition: Date code deprecated (null if active)
+  - name: active_flag
+    datatype: boolean
+    business_definition: Convenience active indicator
+data_quality_rules:
+  - "income_source_code NOT NULL"
+  - "active_flag = (deprecated_date IS NULL)"
+adr_refs:
+  - ADR-002-multi-valued-sets.md
+sample_rows:
+  - income_source_code: SALARY
+    taxable_flag: true
+    active_flag: true
+  - income_source_code: DIVIDEND
+    taxable_flag: true
+    active_flag: true
+open_questions:
+  - "Do we need a subcategory (EMPLOYMENT vs INVESTMENT)?"

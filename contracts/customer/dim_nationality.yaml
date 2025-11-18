@@ -1,0 +1,51 @@
+entity_name: dim_nationality
+domain: customer
+table_type: lookup
+grain_description: One row per nationality code.
+primary_keys:
+  - nationality_id
+attributes:
+  - name: nationality_id
+    datatype: integer
+    business_definition: Internal code representing nationality (maps to ISO)
+  - name: iso_alpha2
+    datatype: string
+    business_definition: ISO 3166-1 alpha-2 code
+  - name: iso_alpha3
+    datatype: string
+    business_definition: ISO 3166-1 alpha-3 code
+  - name: name_en
+    datatype: string
+    business_definition: English country name
+  - name: name_local
+    datatype: string
+    business_definition: Local language country name
+  - name: introduced_date
+    datatype: date
+    business_definition: Date code introduced
+  - name: deprecated_date
+    datatype: date
+    business_definition: Date code deprecated (null if active)
+  - name: active_flag
+    datatype: boolean
+    business_definition: Convenience active indicator (deprecated_date IS NULL)
+data_quality_rules:
+  - "nationality_id NOT NULL"
+  - "iso_alpha2 NOT NULL AND length(iso_alpha2)=2"
+  - "iso_alpha3 NOT NULL AND length(iso_alpha3)=3"
+  - "active_flag = (deprecated_date IS NULL)"
+adr_refs:
+  - ADR-001-scd2-customer-profile.md
+sample_rows:
+  - nationality_id: 66
+    iso_alpha2: TH
+    iso_alpha3: THA
+    name_en: Thailand
+    active_flag: true
+  - nationality_id: 840
+    iso_alpha2: US
+    iso_alpha3: USA
+    name_en: United States
+    active_flag: true
+open_questions:
+  - "Do we need region grouping columns (continent_code)?"

@@ -1,0 +1,5 @@
+occupation_id,name_en,category,introduced_date
+301,Engineer,PROFESSIONAL,2010-01-01
+302,Teacher,PROFESSIONAL,2010-01-01
+303,Trader,FINANCIAL,2010-01-01
+304,Retired,OTHER,2010-01-01

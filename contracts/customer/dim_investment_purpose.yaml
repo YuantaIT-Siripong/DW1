@@ -1,0 +1,42 @@
+entity_name: dim_investment_purpose
+domain: customer
+table_type: lookup
+grain_description: One row per investment purpose code.
+primary_keys:
+  - investment_purpose_code
+attributes:
+  - name: investment_purpose_code
+    datatype: string
+    business_definition: Code representing investment purpose (e.g., RETIREMENT)
+  - name: name_en
+    datatype: string
+    business_definition: English display name
+  - name: name_local
+    datatype: string
+    business_definition: Local display name
+  - name: strategic_flag
+    datatype: boolean
+    business_definition: TRUE if long-term strategic purpose
+  - name: introduced_date
+    datatype: date
+    business_definition: Date code introduced
+  - name: deprecated_date
+    datatype: date
+    business_definition: Date code deprecated (null if active)
+  - name: active_flag
+    datatype: boolean
+    business_definition: Convenience active indicator
+data_quality_rules:
+  - "investment_purpose_code NOT NULL"
+  - "active_flag = (deprecated_date IS NULL)"
+adr_refs:
+  - ADR-002-multi-valued-sets.md
+sample_rows:
+  - investment_purpose_code: RETIREMENT
+    strategic_flag: true
+    active_flag: true
+  - investment_purpose_code: EDUCATION
+    strategic_flag: true
+    active_flag: true
+open_questions:
+  - "Need grouping for regulatory suitability categories?"

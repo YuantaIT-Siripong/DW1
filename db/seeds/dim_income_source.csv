@@ -1,0 +1,6 @@
+income_source_code,name_en,taxable_flag,introduced_date
+SALARY,Salary,true,2010-01-01
+DIVIDEND,Dividend,true,2010-01-01
+BONUS,Bonus,true,2010-01-01
+RENTAL,Rental,true,2010-01-01
+OTHER,Other,true,2010-01-01

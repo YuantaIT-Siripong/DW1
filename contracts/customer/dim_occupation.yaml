@@ -1,0 +1,44 @@
+entity_name: dim_occupation
+domain: customer
+table_type: lookup
+grain_description: One row per occupation code.
+primary_keys:
+  - occupation_id
+attributes:
+  - name: occupation_id
+    datatype: integer
+    business_definition: Unique occupation code
+  - name: name_en
+    datatype: string
+    business_definition: English occupation title
+  - name: name_local
+    datatype: string
+    business_definition: Local occupation title
+  - name: category
+    datatype: string
+    business_definition: Occupational category grouping (e.g., PROFESSIONAL, FINANCIAL, SERVICE, OTHER)
+  - name: introduced_date
+    datatype: date
+    business_definition: Date code introduced
+  - name: deprecated_date
+    datatype: date
+    business_definition: Date code deprecated (null if active)
+  - name: active_flag
+    datatype: boolean
+    business_definition: Convenience active indicator
+data_quality_rules:
+  - "occupation_id NOT NULL"
+  - "active_flag = (deprecated_date IS NULL)"
+adr_refs:
+  - ADR-001-scd2-customer-profile.md
+sample_rows:
+  - occupation_id: 301
+    name_en: Engineer
+    category: PROFESSIONAL
+    active_flag: true
+  - occupation_id: 303
+    name_en: Trader
+    category: FINANCIAL
+    active_flag: true
+open_questions:
+  - "Need standardized category enumerations?"
