@@ -1,3 +1,11 @@
-contract: new_investment_profile_version_contract
-
-# Removed future planned entry to keep the INDEX.yaml clean and current
+contracts:
+  - name: dim_customer_profile_columns.yaml
+    path: contracts/scd2/dim_customer_profile_columns.yaml
+    type: scd2
+    entity: dim_customer_profile
+    authoritative: true
+  - name: dim_investment_profile_version_columns.yaml
+    path: contracts/scd2/dim_investment_profile_version_columns.yaml
+    type: scd2
+    entity: dim_investment_profile_version
+    authoritative: true
