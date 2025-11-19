@@ -1,10 +1,11 @@
 # DW1 Data Warehouse (Phase 1 Initialization)
 
-## Phase 1 Scope
+## Phase 1 Scope (Updated)
 - Customer Profile (SCD2) demographics
+- Investment Profile (SCD2) suitability & risk
 - Service taxonomy & subscription events
 - Multi-valued income source & investment purpose linked to profile versions
-- Audit of profile changes
+- Profile change audit (customer; investment audit future)
 
 ## Layers
 - dim: Conformed dimensions (including SCD2)
@@ -16,7 +17,7 @@
 See docs/modeling_decisions.md and docs/service_hierarchy_and_subscription.md for details.
 
 ## Overview
-This repository serves as a conceptual and experimental space for designing and documenting a Data Warehouse (DW) foundation using an **AI-first approach**. The goal is to create a structured, scalable, and consistent knowledge base that will later expand into full enterprise-level documentation.
+This repository serves as a conceptual and experimental space for designing and documenting a Data Warehouse (DW) foundation using an **AI-first approach**. The goal is to create a structured, scalable architecture with repeatable patterns.
 
 ## Purpose
 - Provide a comprehensive framework for modern data warehouse design
@@ -25,7 +26,6 @@ This repository serves as a conceptual and experimental space for designing and 
 - Establish a foundation for scalable data architecture
 
 ## Repository Structure
-
 ```
 DW1/
 ├── contracts/
@@ -36,19 +36,20 @@ DW1/
 │   ├── audit/               # Audit tables
 │   └── views/               # View definitions
 ├── docs/
-│   ├── architecture/          # Data warehouse architecture documentation
-│   ├── data-modeling/         # Data modeling standards and guidelines
-│   ├── etl-elt/              # ETL/ELT process documentation
-│   ├── governance/           # Data governance and quality framework
-│   ├── layers/               # DW layer specifications (staging, integration, presentation)
-│   ├── metadata/             # Metadata management documentation
-│   └── ai-methodology/       # AI-first approach and tools
-├── templates/                # Reusable templates for DW components
-└── examples/                 # Example implementations and use cases
+│   ├── architecture/        # Data warehouse architecture documentation
+│   ├── business/            # Business domain specifications
+│   │   └── modules/         # Business module specs (customer, investment)
+│   ├── data-modeling/       # Data modeling standards and guidelines
+│   ├── etl-elt/             # ETL/ELT process documentation
+│   ├── governance/          # Data governance and quality framework
+│   ├── layers/              # DW layer specifications (staging, integration, presentation)
+│   ├── metadata/            # Metadata management documentation
+│   └── ai-methodology/      # AI-first approach and tools
+├── templates/               # Reusable templates for DW components
+├── examples/                # Example implementations and use cases
 ```
 
 ## Key Principles
-
 ### 1. AI-First Approach
 - Leverage AI tools for documentation generation and validation
 - Use AI-assisted design for data models and ETL processes
@@ -74,32 +75,35 @@ DW1/
 - Include disaster recovery and backup strategies
 
 ## Getting Started
+1. **Review Architecture Documentation**: Start with /docs/architecture/
+2. **Explore Data Modeling**: Check /docs/data-modeling/
+3. **Understand Data Flow**: Review /docs/etl-elt/ and /docs/layers/
+4. **Implement Governance**: Follow /docs/governance/
 
-1. **Review Architecture Documentation**: Start with `/docs/architecture/` to understand the overall design
-2. **Explore Data Modeling**: Check `/docs/data-modeling/` for standards and guidelines
-3. **Understand Data Flow**: Review `/docs/etl-elt/` and `/docs/layers/` for data processing patterns
-4. **Implement Governance**: Follow `/docs/governance/` for data quality and compliance
+## Key References
+- [AI Context](AI_CONTEXT.md)
+- [Customer Module Spec](docs/business/modules/customer_module.md)
+- [Investment Profile Module Spec](docs/business/modules/investment_profile_module.md)
+- [Data Quality Rules](docs/business/data_quality_rules.md)
+- [Modeling Decisions](docs/modeling_decisions.md)
+- [Contracts Index](contracts/INDEX.yaml)
+- [Customer SCD2 Columns Contract](contracts/scd2/dim_customer_profile_columns.yaml)
+- [Investment SCD2 Columns Contract](contracts/scd2/dim_investment_profile_version_columns.yaml)
+- [Unified Enumerations](docs/data-modeling/enumerations.md)
+- [Investment Enumerations Detailed](docs/data-modeling/investment-profile/enumerations.md)
+- [ADR-001 SCD2 Customer Profile](docs/adr/ADR-001-scd2-customer-profile.md)
+- [ADR-INV-001 Investment Profile](docs/adr/ADR-INV-001-investment-profile.md)
+- [ADR-002 Multi-Valued Sets](docs/adr/ADR-002-multi-valued-sets.md)
+- [Contributing Guide](CONTRIBUTING.md)
 
 ## AI-First Methodology
-
-This project employs AI technologies throughout the data warehouse lifecycle:
-- **Design Phase**: AI-assisted architecture and model generation
-- **Development Phase**: Automated code generation and testing
-- **Operations Phase**: AI-driven monitoring and optimization
-- **Governance Phase**: Machine learning for data quality and lineage
+Employed across design, development, operations, governance lifecycle.
 
 ## Contributing
-
-As this is a conceptual and experimental repository, contributions should focus on:
-- Improving documentation clarity and completeness
-- Adding new patterns and best practices
-- Enhancing templates and examples
-- Documenting lessons learned and case studies
+Focus on improving clarity, adding patterns, enhancing templates, documenting lessons learned.
 
 ## License
-
-This is a conceptual documentation repository for educational and experimental purposes.
+Conceptual educational repository.
 
 ## Version
-
 Current Version: 1.0.0 - Foundation Release
