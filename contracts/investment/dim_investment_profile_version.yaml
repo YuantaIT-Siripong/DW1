@@ -1,0 +1,240 @@
+entity_name: dim_investment_profile_version
+domain: investment
+table_type: dimension_scd2
+scd_type: 2
+grain_description: One historical suitability / investment posture slice per investment_profile_id and version_number (time-variant).
+root_entity: dim_investment_profile
+surrogate_keys:
+  - investment_profile_version_sk
+natural_keys:
+  - investment_profile_id
+version_key:
+  - version_number
+effective_fields:
+  start: effective_start_ts
+  end: effective_end_ts
+  current_flag: current_flag
+chronology_granularity: second
+
+versioning_attributes:
+  # Core Suitability / Risk
+  - suitability_score
+  - suitability_tier
+  - risk_level_code
+  - ability_to_bear_loss_tier
+  - investment_objective_category
+  - investment_time_horizon
+  - liquidity_need_level
+  - investment_experience_years
+  # Regulatory / Compliance
+  - high_net_worth_status_code
+  - kyc_status
+  - kyc_risk_rating
+  - aml_risk_rating
+  - pep_flag
+  - sanction_screening_status
+  - fatca_status
+  - investor_category
+  - source_of_wealth_code
+  - tax_residency_status
+  # Acknowledgement Flags
+  - derivative_risk_ack_flag
+  - fx_risk_ack_flag
+  - complex_product_ack_flag
+  # Product Eligibility Flags
+  - complex_product_allowed
+  - structured_note_allowed
+  - perpetual_bond_allowed
+  - ipo_participation_allowed
+  - tender_offer_participation_allowed
+  - margin_agreement_status
+  - leverage_tolerance
+  - sbl_allowed
+  - block_trade_allowed
+  - fixed_income_access_allowed
+  - global_trading_allowed
+  - derivative_trading_allowed
+  - advisory_discretion_flag
+  - esg_preference
+  # Vulnerability
+  - vulnerable_investor_flag
+  - vulnerability_reason_code
+  - vulnerability_assessment_ts
+  # Review / Scheduling
+  - review_cycle
+  - next_review_due_ts
+  - last_risk_review_ts
+  # Scoring
+  - data_quality_score
+  - profile_reliability_score
+
+type1_attributes:
+  - source_extract_reference
+  - ingestion_batch_id
+  - created_ts
+  - created_by
+  # profile_hash is derived, not business-history but must change when versioning attributes change
+derived_attributes:
+  - profile_hash
+
+hash_spec:
+  algorithm: SHA256
+  delimiter: "|"
+  null_token: "__NULL__"
+  boolean_format: "true|false" # lowercase
+  timestamp_format: "ISO8601-UTC-SECONDS"
+  ordered_attribute_list:
+    - risk_level_code
+    - suitability_score
+    - ability_to_bear_loss_tier
+    - investment_objective_category
+    - investment_time_horizon
+    - liquidity_need_level
+    - investment_experience_years
+    - high_net_worth_status_code
+    - kyc_status
+    - kyc_risk_rating
+    - aml_risk_rating
+    - pep_flag
+    - sanction_screening_status
+    - fatca_status
+    - investor_category
+    - source_of_wealth_code
+    - tax_residency_status
+    - derivative_risk_ack_flag
+    - fx_risk_ack_flag
+    - complex_product_ack_flag
+    - complex_product_allowed
+    - structured_note_allowed
+    - perpetual_bond_allowed
+    - ipo_participation_allowed
+    - tender_offer_participation_allowed
+    - margin_agreement_status
+    - leverage_tolerance
+    - sbl_allowed
+    - block_trade_allowed
+    - fixed_income_access_allowed
+    - global_trading_allowed
+    - derivative_trading_allowed
+    - advisory_discretion_flag
+    - esg_preference
+    - vulnerable_investor_flag
+    - vulnerability_reason_code
+    - review_cycle
+    - next_review_due_ts
+    - last_risk_review_ts
+
+change_detection_logic: |
+  1. Normalize each versioning attribute (NULL -> __NULL__, booleans lowercased).
+  2. Format timestamps (next_review_due_ts, last_risk_review_ts, vulnerability_assessment_ts) to ISO8601 UTC seconds; NULL -> __NULL__.
+  3. Concatenate ordered_attribute_list values with the delimiter "|".
+  4. Compute SHA256 hex digest -> profile_hash.
+  5. Compare to previous current version for same investment_profile_id.
+     - If different: close previous version (effective_end_ts = new effective_start_ts - microsecond), insert new version with current_flag = true.
+     - If identical: do not create a new version (update lineage fields only if necessary via Type 1 overwrite).
+  6. Enforce only one current_flag = true per investment_profile_id.
+
+integrity_rules:
+  - "No overlapping (effective_start_ts, effective_end_ts) intervals per investment_profile_id."
+  - "Exactly one current_flag = true row per investment_profile_id."
+  - "complex_product_allowed = true implies complex_product_ack_flag = true."
+  - "margin_agreement_status = 'ACTIVE' implies leverage_tolerance <> 'NONE' AND ability_to_bear_loss_tier <> 'LOW' AND vulnerable_investor_flag = false."
+  - "next_review_due_ts > last_risk_review_ts when both not NULL."
+  - "vulnerable_investor_flag = true requires vulnerability_reason_code <> 'UNKNOWN' OR reliability penalty applied."
+  - "vulnerability_assessment_ts not NULL when vulnerable_investor_flag = true."
+
+mandatory_attributes_initial:
+  - risk_level_code
+  - suitability_score
+  - ability_to_bear_loss_tier
+  - investment_objective_category
+  - investor_category
+  - kyc_status
+
+enumeration_domains:
+  risk_level_code: RISK_LEVEL
+  ability_to_bear_loss_tier: ABILITY_TO_BEAR_LOSS
+  investment_objective_category: INVESTMENT_OBJECTIVE
+  investment_time_horizon: INVESTMENT_TIME_HORIZON
+  liquidity_need_level: LIQUIDITY_NEED
+  high_net_worth_status_code: HNW_STATUS
+  kyc_status: KYC_STATUS
+  kyc_risk_rating: KYC_RISK
+  aml_risk_rating: AML_RISK
+  sanction_screening_status: SANCTION_SCREENING_STATUS
+  fatca_status: FATCA_STATUS
+  investor_category: INVESTOR_CATEGORY
+  source_of_wealth_code: SOURCE_OF_WEALTH
+  tax_residency_status: TAX_RESIDENCY_STATUS
+  margin_agreement_status: MARGIN_AGREEMENT_STATUS
+  leverage_tolerance: LEVERAGE_TOLERANCE
+  esg_preference: ESG_PREFERENCE
+  vulnerability_reason_code: VULNERABILITY_REASON
+  review_cycle: REVIEW_CYCLE
+
+pii_sensitive_attributes: []  # none directly; vulnerability may be treated as sensitive but not PII
+sensitive_attributes:
+  - vulnerable_investor_flag
+  - vulnerability_reason_code
+  - pep_flag
+  - sanction_screening_status
+  - advisory_discretion_flag
+
+security_guidance:
+  - "Mask or restrict columns in analytics views for vulnerable_investor_flag, vulnerability_reason_code, pep_flag, sanction_screening_status."
+  - "profile_reliability_score may be exposed widely; underlying compliance flags restricted."
+
+audit_strategy:
+  phase1: implicit_via_version_table
+  phase2_planned_fact: fact_investment_profile_audit
+  future_diff_fields:
+    - changed_attribute_list
+    - old_profile_hash
+    - new_profile_hash
+    - override_reason
+    - supervisory_approval_id
+
+data_quality_scoring_reference:
+  unknown_penalty_per_attribute: 0.05
+  mandatory_attributes_threshold: 0.85  # fraction required for acceptable DataQualityScore
+  stale_review_penalty_days:
+    review_cycle_annual: 365
+    review_cycle_event_driven: 180
+  vulnerability_unknown_reason_penalty: 0.10
+
+reliability_score_formula: |
+  reliability = data_quality_score
+                * (1 - sanctions_penalty)
+                * (1 - pep_penalty)
+                * timeliness_factor
+                * consistency_factor
+                * (1 - vulnerability_penalty)
+
+timeliness_factor_logic: |
+  if current_date > next_review_due_ts then 0.85 else 1.00
+
+consistency_checks_examples:
+  - "RiskLevelCode = CONSERVATIVE and complex_product_allowed = true => consistency_factor = 0.90"
+  - "RiskLevelCode aligned with investment_objective_category => consistency_factor = 1.00"
+
+deployment_notes:
+  - "Initialize with baseline CUSTOMER scope versions before creating CUSTOMERCODE overrides."
+  - "Leave investment_time_horizon = 'UNKNOWN' until client-declared; do not derive authoritative value."
+  - "Ensure enumeration version (ENUM_VERSION) is captured to detect downstream cache refresh need."
+
+adr_reference: ADR-INV-001-investment-profile.md
+spec_reference: docs/business/investment_profile_module.md
+enumerations_reference: docs/data-modeling/investment-profile/enumerations.md
+status: draft
+version: 0.1
+
+change_log:
+  - version: 0.1
+    date: 2025-11-19
+    change: Initial draft contract
+    author: Data Architecture
+
+approval:
+  data_governance: pending
+  compliance: pending
+  engineering_lead: pending

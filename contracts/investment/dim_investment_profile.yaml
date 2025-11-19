@@ -1,0 +1,86 @@
+entity_name: dim_investment_profile
+domain: investment
+table_type: dimension_root
+grain_description: One row per investment profile scope (CUSTOMER baseline or CUSTOMER_CODE override).
+primary_keys:
+  - investment_profile_id
+natural_keys:
+  - customer_id
+  - customer_code
+scope_type_field: scope_type
+scope_types:
+  - CUSTOMER
+  - CUSTOMERCODE
+override_indicator_field: override_indicator
+current_version_pointer_fields:
+  last_version_number: last_version_number
+  last_version_sk: last_version_sk
+
+attributes:
+  - name: investment_profile_id
+    datatype: string
+    business_definition: Stable identifier for profile scope (unique across customer + code)
+  - name: customer_id
+    datatype: string
+    business_definition: Customer identifier linking to person-level identity
+  - name: customer_code
+    datatype: string
+    business_definition: Trading relationship code when scope_type=CUSTOMERCODE
+    nullable: true
+  - name: scope_type
+    datatype: string
+    business_definition: Scope classification (CUSTOMER or CUSTOMERCODE)
+  - name: override_indicator
+    datatype: boolean
+    business_definition: TRUE when scope is a customer_code override of a base customer profile
+  - name: active_flag
+    datatype: boolean
+    business_definition: Soft-delete / retirement marker for profile scope
+  - name: created_ts
+    datatype: timestamp
+    business_definition: Row creation timestamp
+  - name: created_by
+    datatype: string
+    business_definition: Origin process / user
+  - name: source_system
+    datatype: string
+    business_definition: Upstream system providing initial profile creation
+    nullable: true
+  - name: last_version_number
+    datatype: int
+    business_definition: Convenience pointer to latest version_number (non-authoritative)
+    nullable: true
+  - name: last_version_sk
+    datatype: bigint
+    business_definition: Convenience pointer to latest version surrogate key (non-authoritative)
+    nullable: true
+
+constraints:
+  - "Unique (customer_id, customer_code, scope_type)"
+  - "override_indicator must be true when scope_type = CUSTOMERCODE else false"
+
+integrity_rules:
+  - "CUSTOMERCODE profiles must have customer_code not NULL."
+  - "CUSTOMER scope profiles must have customer_code NULL."
+  - "active_flag = false only after all versions closed (effective_end_ts not NULL)."
+
+lineage_and_security:
+  sensitive_scope_fields:
+    - override_indicator
+  pii_fields: []  # None directly; links to customer dimension handle PII
+
+adr_reference: ADR-INV-001-investment-profile.md
+spec_reference: docs/business/investment_profile_module.md
+
+status: draft
+version: 0.1
+change_log:
+  - version: 0.1
+    date: 2025-11-19
+    change: Initial root dimension contract
+    author: Data Architecture
+
+approval:
+  data_governance: pending
+  compliance: pending
+  engineering_lead: pending
