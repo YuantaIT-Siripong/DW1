@@ -7,7 +7,7 @@ Single reference for AI assistants and new contributors. Points to authoritative
 - Business Domain: docs/business/domain_overview.md
 - Glossary: docs/business/glossary.md
 - Customer Module Spec: docs/business/modules/customer_module.md
-- Investment Profile Module Spec: docs/business/investment_profile_module.md
+- Investment Profile Module Spec: docs/business/modules/investment_profile_module.md
 - Data Quality Rules: docs/business/data_quality_rules.md
 - Service Hierarchy: docs/service_hierarchy_and_subscription.md
 - SCD2 Contract (Customer Profile): contracts/customer/dim_customer_profile.yaml
@@ -15,7 +15,8 @@ Single reference for AI assistants and new contributors. Points to authoritative
 - SCD2 Contracts (Investment Profile):
   - contracts/investment/dim_investment_profile_version.yaml
   - contracts/scd2/dim_investment_profile_version_columns.yaml
-- Enumerations: docs/data-modeling/investment-profile/enumerations.md
+- Unified Enumerations: docs/data-modeling/enumerations.md
+- Investment Enumerations Detailed: docs/data-modeling/investment-profile/enumerations.md
 - Investment Profile ADR: docs/adr/ADR-INV-001-investment-profile.md
 - Multi-Valued Sets ADR: docs/adr/ADR-002-multi-valued-sets.md
 
