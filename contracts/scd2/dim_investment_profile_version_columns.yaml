@@ -1,0 +1,146 @@
+entity: dim_investment_profile_version
+business_key: investment_profile_id
+surrogate_key: investment_profile_version_sk
+version_key: version_number
+effective_fields:
+  start: effective_start_ts
+  end: effective_end_ts
+  current_flag: current_flag
+chronology_granularity: second
+
+scd2_attributes:
+  # Core Suitability / Risk
+  - suitability_score
+  - suitability_tier
+  - risk_level_code
+  - ability_to_bear_loss_tier
+  - investment_objective_category
+  - investment_time_horizon
+  - liquidity_need_level
+  - investment_experience_years
+  # Regulatory / Compliance
+  - high_net_worth_status_code
+  - kyc_status
+  - kyc_risk_rating
+  - aml_risk_rating
+  - pep_flag
+  - sanction_screening_status
+  - fatca_status
+  - investor_category
+  - source_of_wealth_code
+  - tax_residency_status
+  # Acknowledgements
+  - derivative_risk_ack_flag
+  - fx_risk_ack_flag
+  - complex_product_ack_flag
+  # Product Eligibility
+  - complex_product_allowed
+  - structured_note_allowed
+  - perpetual_bond_allowed
+  - ipo_participation_allowed
+  - tender_offer_participation_allowed
+  - margin_agreement_status
+  - leverage_tolerance
+  - sbl_allowed
+  - block_trade_allowed
+  - fixed_income_access_allowed
+  - global_trading_allowed
+  - derivative_trading_allowed
+  - advisory_discretion_flag
+  - esg_preference
+  # Vulnerability
+  - vulnerable_investor_flag
+  - vulnerability_reason_code
+  - vulnerability_assessment_ts
+  # Review / Scheduling
+  - review_cycle
+  - next_review_due_ts
+  - last_risk_review_ts
+  # Scoring
+  - data_quality_score
+  - profile_reliability_score
+
+type1_attributes:
+  - source_extract_reference
+  - ingestion_batch_id
+  - created_ts
+  - created_by
+
+derived_attributes:
+  - profile_hash
+
+hash_fields:
+  - risk_level_code
+  - suitability_score
+  - ability_to_bear_loss_tier
+  - investment_objective_category
+  - investment_time_horizon
+  - liquidity_need_level
+  - investment_experience_years
+  - high_net_worth_status_code
+  - kyc_status
+  - kyc_risk_rating
+  - aml_risk_rating
+  - pep_flag
+  - sanction_screening_status
+  - fatca_status
+  - investor_category
+  - source_of_wealth_code
+  - tax_residency_status
+  - derivative_risk_ack_flag
+  - fx_risk_ack_flag
+  - complex_product_ack_flag
+  - complex_product_allowed
+  - structured_note_allowed
+  - perpetual_bond_allowed
+  - ipo_participation_allowed
+  - tender_offer_participation_allowed
+  - margin_agreement_status
+  - leverage_tolerance
+  - sbl_allowed
+  - block_trade_allowed
+  - fixed_income_access_allowed
+  - global_trading_allowed
+  - derivative_trading_allowed
+  - advisory_discretion_flag
+  - esg_preference
+  - vulnerable_investor_flag
+  - vulnerability_reason_code
+  - review_cycle
+  - next_review_due_ts
+  - last_risk_review_ts
+
+change_detection:
+  method: profile_hash_diff
+  notes: Hash is SHA256 of ordered attributes; timestamps normalized to seconds; NULL -> __NULL__.
+
+integrity_rules:
+  - "No overlapping effective intervals per investment_profile_id."
+  - "Exactly one current_flag = true per investment_profile_id."
+  - "complex_product_allowed=true implies complex_product_ack_flag=true."
+  - "margin_agreement_status='ACTIVE' implies leverage_tolerance<>'NONE' AND ability_to_bear_loss_tier<>'LOW' AND vulnerable_investor_flag=false."
+  - "next_review_due_ts > last_risk_review_ts when both not NULL."
+  - "vulnerable_investor_flag=true requires vulnerability_reason_code <> 'UNKNOWN' OR reliability penalty."
+
+mandatory_initial:
+  - risk_level_code
+  - suitability_score
+  - ability_to_bear_loss_tier
+  - investment_objective_category
+  - investor_category
+  - kyc_status
+
+status:
+  initial_version_number: 1
+  allow_overlap: false
+
+adr_reference: ADR-INV-001-investment-profile.md
+spec_reference: docs/business/investment_profile_module.md
+authoritative: true
+version: 0.1
+
+change_log:
+  - version: 0.1
+    date: 2025-11-19
+    change: Initial draft columns contract
+    author: Data Architecture
