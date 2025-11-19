@@ -9,7 +9,6 @@ effective_fields:
 chronology_granularity: second
 
 scd2_attributes:
-  # Core Suitability / Risk
   - suitability_score
   - suitability_tier
   - risk_level_code
@@ -18,7 +17,6 @@ scd2_attributes:
   - investment_time_horizon
   - liquidity_need_level
   - investment_experience_years
-  # Regulatory / Compliance
   - high_net_worth_status_code
   - kyc_status
   - kyc_risk_rating
@@ -29,11 +27,9 @@ scd2_attributes:
   - investor_category
   - source_of_wealth_code
   - tax_residency_status
-  # Acknowledgements
   - derivative_risk_ack_flag
   - fx_risk_ack_flag
   - complex_product_ack_flag
-  # Product Eligibility
   - complex_product_allowed
   - structured_note_allowed
   - perpetual_bond_allowed
@@ -48,15 +44,12 @@ scd2_attributes:
   - derivative_trading_allowed
   - advisory_discretion_flag
   - esg_preference
-  # Vulnerability
   - vulnerable_investor_flag
   - vulnerability_reason_code
   - vulnerability_assessment_ts
-  # Review / Scheduling
   - review_cycle
   - next_review_due_ts
   - last_risk_review_ts
-  # Scoring
   - data_quality_score
   - profile_reliability_score
 
@@ -135,7 +128,7 @@ status:
   allow_overlap: false
 
 adr_reference: ADR-INV-001-investment-profile.md
-spec_reference: docs/business/investment_profile_module.md
+spec_reference: docs/business/modules/investment_profile_module.md
 authoritative: true
 version: 0.1
 
