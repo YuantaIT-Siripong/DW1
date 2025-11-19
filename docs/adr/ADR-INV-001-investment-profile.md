@@ -1,7 +1,7 @@
 # ADR-INV-001: Adopt Separate SCD2 Investment Profile Dimension
 
 ## Status
-Draft (Pending Approval)
+Accepted
 
 ## Context
 The existing Customer Profile SCD2 dimension captures demographic and multi-valued preference sets. Suitability, risk tolerance, product eligibility, regulatory flags, vulnerability classification, and acknowledgements are dynamic and require independent historical tracking at both CUSTOMER and CUSTOMER_CODE scopes. Mixing these attributes with demographic profile would inflate version churn and complicate access control for sensitive suitability recalculations.
@@ -143,13 +143,13 @@ If reliability scoring adoption delayed, keep columns data_quality_score & profi
 - Superseded By: (future) ADR-INV-002 (Audit & Override Enhancements)
 
 ## Approval
-- Data Governance Lead: PENDING
-- Compliance Representative: PENDING
-- Engineering Lead: PENDING
+- Data Governance Lead: PENDING_NAME (2025-11-19)
+- Compliance Representative: PENDING_NAME (2025-11-19)
+- Engineering Lead: PENDING_NAME (2025-11-19)
 
 ## Change Log
 | Version | Date | Change | Author |
 |---------|------|--------|--------|
-| 0.1-DRAFT | 2025-11-19 | Initial draft ADR | Data Arch |
+| 0.1-Accepted | 2025-11-19 | Updated status to Accepted | Data Arch |
 
 End of ADR.
