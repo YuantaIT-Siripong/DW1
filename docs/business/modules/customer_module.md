@@ -101,6 +101,8 @@ Version closure:
 Required attributes: birthdate, marital_status_id, nationality_id, occupation_id, education_level_id, national_id (if legally required), set_presence_flag (1 if either set non-empty else 0).  
 completeness_score = (count_present(required_attributes_without_flag) + set_presence_flag) / (total_required_without_flag + 1)
 
+**Note**: This KPI is conceptual only. No derived quality columns (e.g., completeness_score, data_quality_score) are stored in `dim_customer_profile` SCD2 dimension. Derived metrics will be computed in future gold layer implementation (see [Data Quality Framework](../../data-quality/framework.md)).
+
 ## 13. Mapping to Schema Artifacts
 - dim_customer (identity)
 - dim_customer_profile (SCD2)

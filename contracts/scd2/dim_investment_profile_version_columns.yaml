@@ -50,8 +50,6 @@ scd2_attributes:
   - review_cycle
   - next_review_due_ts
   - last_risk_review_ts
-  - data_quality_score
-  - profile_reliability_score
 
 type1_attributes:
   - source_extract_reference
@@ -132,9 +130,13 @@ status:
 adr_reference: ADR-INV-001-investment-profile.md
 spec_reference: docs/business/modules/investment_profile_module.md
 authoritative: true
-version: 0.1
+version: 0.2
 
 change_log:
+  - version: 0.2
+    date: 2025-11-21
+    change: Removed data_quality_score and profile_reliability_score from scd2_attributes (Gap 4 resolution - derived metrics moved to planned gold layer implementation)
+    author: Data Architecture
   - version: 0.1
     date: 2025-11-19
     change: Initial draft columns contract

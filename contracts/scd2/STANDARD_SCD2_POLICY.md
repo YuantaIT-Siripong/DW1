@@ -162,6 +162,25 @@ The following fields are **NEVER** included in the profile change hash:
 
 **Rationale:** Scores and metrics are **outcomes** of the profile state, not drivers of versioning. Including them would create spurious versions when recalculations occur without business attribute changes.
 
+### Derived Metrics Exclusion Policy
+**All derived scoring and quality metrics are explicitly EXCLUDED from SCD2 dimension storage.**
+
+This policy applies to all derived metrics including but not limited to:
+- Data quality scores (completeness, consistency, timeliness)
+- Reliability scores and composite trust metrics
+- Regulatory penalty factors
+- Any calculated metrics that are outcomes of base attribute states
+
+**Rationale**:
+1. **Prevents Spurious Versioning**: Recalculation of metrics (e.g., due to formula updates or threshold changes) should not trigger new SCD2 versions if underlying business attributes haven't changed
+2. **Reproducibility**: Metrics can be recomputed from base attributes + versioned formulas, ensuring historical reproducibility
+3. **Separation of Concerns**: Silver layer (SCD2 dimensions) stores base business attributes; gold layer computes and serves derived analytical metrics
+4. **Change Detection Integrity**: SCD2 version changes should reflect actual business state changes, not metric recalculation artifacts
+
+**Implementation Location**: Derived metrics will be computed in the **gold layer** as part of the unified Data Quality & Reliability Framework. See [Data Quality Framework](../../docs/data-quality/framework.md) for planned component metrics and implementation approach.
+
+**Migration Guidance**: Existing queries referencing derived score columns in SCD2 dimensions must be updated to reference future gold layer views (e.g., `gold.mart_profile_quality`) once implemented.
+
 ## Applicable Tables and Contracts
 
 | Table | Contract Reference | Granularity |
