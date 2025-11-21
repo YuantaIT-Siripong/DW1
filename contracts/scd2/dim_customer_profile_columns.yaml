@@ -17,6 +17,9 @@ versioning:
   granularity: date
   change_detection:
     method: attribute_hash_diff
+    algorithm: SHA256
+    policy_reference: ../../contracts/scd2/STANDARD_SCD2_POLICY.md
+    hashing_standard: ../../docs/data-modeling/hashing_standards.md
 scd2_attributes:
   - marital_status_id
   - nationality_id

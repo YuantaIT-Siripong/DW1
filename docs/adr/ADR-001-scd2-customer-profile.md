@@ -18,6 +18,14 @@ Names (TH/EN), email, phones, evidence_unique_key.
 ## Hash Fields
 Defined in contracts/scd2/dim_customer_profile_columns.yaml + set hashes.
 
+**Hash Algorithm**: SHA256 (see [Hashing Standards](../data-modeling/hashing_standards.md))
+
+**Implementation Details**: See [Standard SCD2 Policy](../../contracts/scd2/STANDARD_SCD2_POLICY.md) for:
+- Temporal precision rules (DATE granularity for customer profile)
+- Closure rule (previous_end_date = new_start_date - 1 day)
+- Surrogate key pattern (customer_profile_version_sk)
+- Change detection triggers (hash-based)
+
 ## Alternatives
 - Daily full snapshots (discarded: duplication)
 - Full Data Vault for all entities (deferred: complexity vs team size)
@@ -32,3 +40,8 @@ Defined in contracts/scd2/dim_customer_profile_columns.yaml + set hashes.
 Investment profile dimension (implemented via ADR-INV-001).
 PII masking strategy (future ADR).
 Monthly snapshot (performance layer optional).
+
+## Related Policies and Standards
+- [Standard SCD2 Policy](../../contracts/scd2/STANDARD_SCD2_POLICY.md) - Authoritative SCD2 implementation rules
+- [Hashing Standards](../data-modeling/hashing_standards.md) - SHA256 profile change hash algorithm
+- [Naming Conventions](../data-modeling/naming_conventions.md) - Surrogate key and attribute naming patterns

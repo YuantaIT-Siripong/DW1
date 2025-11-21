@@ -1,5 +1,10 @@
 # Naming & Data Quality Cheatsheet
 
+**Quick Reference**: For complete standards, see:
+- [Naming Conventions](naming_conventions.md)
+- [Hashing Standards](hashing_standards.md)
+- [Standard SCD2 Policy](../../contracts/scd2/STANDARD_SCD2_POLICY.md)
+
 ## Column Suffixes
 - *_id: Natural or foreign key reference
 - *_sk: Surrogate key (dimension/fact identity)
@@ -14,10 +19,16 @@
 - Only one is_current = true per customer_id.
 
 ## Hash Generation
-Concatenate normalized SCD2 attributes with '|' delimiter; lowercase; trim spaces; MD5.
+**Algorithm**: SHA256 (not MD5 - deprecated)
+Concatenate normalized SCD2 attributes with '|' delimiter; lowercase; trim spaces; represent NULL as `__NULL__`; format timestamps to ISO 8601 seconds.
+
+**See**: [Hashing Standards](hashing_standards.md) for complete algorithm and exclusion rules.
 
 ## Multi-Valued Set Hash
-Sort IDs ascending; join with ','; MD5 of resulting list string.
+**Algorithm**: SHA256
+Sort IDs ascending; join with ','; apply SHA256 hash.
+
+**See**: [Hashing Standards](hashing_standards.md) for complete algorithm.
 
 ## Data Quality Summary
 - Uniqueness: (customer_id, version_num)
