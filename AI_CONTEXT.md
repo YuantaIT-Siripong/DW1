@@ -4,17 +4,28 @@
 Single reference for AI assistants and new contributors. Points to authoritative domain and modeling sources and sets rules for changes.
 
 ## Authoritative Source Files
+
+### Core Policies and Standards
+- **Standard SCD2 Policy**: contracts/scd2/STANDARD_SCD2_POLICY.md
+- **Hashing Standards**: docs/data-modeling/hashing_standards.md
+- **Naming Conventions**: docs/data-modeling/naming_conventions.md
+
+### Business Domain
 - Business Domain: docs/business/domain_overview.md
 - Glossary: docs/business/glossary.md
 - Customer Module Spec: docs/business/modules/customer_module.md
 - Investment Profile Module Spec: docs/business/modules/investment_profile_module.md
 - Data Quality Rules: docs/business/data_quality_rules.md
 - Service Hierarchy: docs/service_hierarchy_and_subscription.md
+
+### SCD2 Contracts
 - SCD2 Contract (Customer Profile): contracts/customer/dim_customer_profile.yaml
 - SCD2 Columns Contract (Customer Profile): contracts/scd2/dim_customer_profile_columns.yaml
 - SCD2 Contracts (Investment Profile):
   - contracts/investment/dim_investment_profile_version.yaml
   - contracts/scd2/dim_investment_profile_version_columns.yaml
+
+### Enumerations and ADRs
 - Unified Enumerations: docs/data-modeling/enumerations.md
 - Investment Enumerations Detailed: docs/data-modeling/investment-profile/enumerations.md
 - Investment Profile ADR: docs/adr/ADR-INV-001-investment-profile.md
@@ -22,30 +33,32 @@ Single reference for AI assistants and new contributors. Points to authoritative
 
 ## Core Modeling Decisions
 - SCD2 Dimension (Customer): dim_customer_profile (versioned attributes: marital_status_id, nationality_id, occupation_id, education_level_id, birthdate, income_source_set_hash, investment_purpose_set_hash, contact_channel_set_hash; Type 1: names TH/EN, email, phones, evidence).
-- SCD2 Dimension (Investment): dim_investment_profile_version (versioned suitability, risk, acknowledgements, entitlements, vulnerability, review, scoring; Type 1 lineage fields only).
+- SCD2 Dimension (Investment): dim_investment_profile_version (versioned suitability, risk, acknowledgements, entitlements, vulnerability, review; Type 1 lineage fields only).
 - Separate root scope entities: dim_investment_profile (CUSTOMER baseline + CUSTOMER_CODE overrides) to avoid demographic-driven churn in investment suitability history.
 - Multi-valued sets via bridge tables (customer only): dim_customer_income_source_version, dim_customer_investment_purpose_version, dim_customer_contact_channel_version (re-written only on membership hash change).
 - Acknowledgements events fact: fact_investment_acknowledgement (evidence for boolean flags in investment profile version).
-- Hashing: SHA256 for profile/set change detection; deterministic ordering & normalization tokens.
+- Hashing: SHA256 for profile/set change detection; deterministic ordering & normalization tokens. **Derived metrics (data_quality_score, profile_reliability_score) EXCLUDED from hash** to prevent spurious versioning.
 - Vulnerability classification always triggers new investment profile version (auditability).
-- Reliability & Data Quality scores stored per investment version snapshot.
+- **Scores Handling**: Reliability & Data Quality scores stored per investment version snapshot but **excluded from profile_hash** as they are derived outcomes, not drivers of versioning.
 
 ## Fact vs Dimension Classification
-| Entity | Classification | Grain |
-|--------|----------------|-------|
-| dim_customer_profile | Dimension (SCD2) | customer + profile_version |
-| dim_investment_profile | Dimension Root | customer/customer_code scope |
-| dim_investment_profile_version | Dimension (SCD2) | investment_profile_id + version |
-| fact_investment_acknowledgement | Fact (event) | acknowledgement_event_id |
-| fact_customer_profile_audit | Audit Fact | profile change event |
-| dim_service | Dimension | service |
-| dim_service_category | Dimension | category |
-| dim_subscribe_scope | Dimension | scope level |
-| fact_service_request | Fact | service request |
-| fact_service_subscription_event | Fact | status event |
-| dim_customer_income_source_version | Bridge Dimension | profile_version + income_source |
-| dim_customer_investment_purpose_version | Bridge Dimension | profile_version + purpose |
-| dim_customer_contact_channel_version | Bridge Dimension | profile_version + channel |
+| Entity | Classification | Grain | Surrogate Key Pattern |
+|--------|----------------|-------|----------------------|
+| dim_customer_profile | Dimension (SCD2) | customer_id + version_num | customer_profile_version_sk |
+| dim_investment_profile | Dimension Root | customer/customer_code scope | investment_profile_sk |
+| dim_investment_profile_version | Dimension (SCD2) | investment_profile_id + version_number | investment_profile_version_sk |
+| fact_investment_acknowledgement | Fact (event) | acknowledgement_event_id | acknowledgement_sk |
+| fact_customer_profile_audit | Audit Fact | profile change event | audit_event_sk |
+| dim_service | Dimension | service_id | service_sk |
+| dim_service_category | Dimension | category_id | category_sk |
+| dim_subscribe_scope | Dimension | scope level | scope_sk |
+| fact_service_request | Fact | service request | service_request_sk |
+| fact_service_subscription_event | Fact | status event | subscription_event_sk |
+| dim_customer_income_source_version | Bridge Dimension | profile_version + income_source | customer_income_source_version_sk |
+| dim_customer_investment_purpose_version | Bridge Dimension | profile_version + purpose | customer_investment_purpose_version_sk |
+| dim_customer_contact_channel_version | Bridge Dimension | profile_version + channel | customer_contact_channel_version_sk |
+
+**Surrogate Key Naming**: All SCD2 dimensions use `<entity>_version_sk` pattern. Non-versioned dimensions and facts use `<entity>_sk` pattern. See [Naming Conventions](docs/data-modeling/naming_conventions.md) for complete rules.
 
 ## Point-In-Time Query Pattern (Customer Profile)
 ```sql

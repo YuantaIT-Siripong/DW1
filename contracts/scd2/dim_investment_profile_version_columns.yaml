@@ -106,6 +106,8 @@ hash_fields:
 change_detection:
   method: profile_hash_diff
   notes: Hash is SHA256 of ordered attributes; timestamps normalized to seconds; NULL -> __NULL__.
+  policy_reference: ../../contracts/scd2/STANDARD_SCD2_POLICY.md
+  hashing_standard: ../../docs/data-modeling/hashing_standards.md
 
 integrity_rules:
   - "No overlapping effective intervals per investment_profile_id."

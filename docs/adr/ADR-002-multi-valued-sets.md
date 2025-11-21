@@ -24,9 +24,12 @@ Cons:
 
 ## Hash Construction
 1. Sort item codes ascending.
-2. Join with "|" delimiter.
-3. Substitute "__NULL__" for missing values.
-4. Apply SHA256 → *_set_hash stored in dim_customer_profile.
+2. Join with "," delimiter (comma, not pipe - see Hashing Standards).
+3. Apply SHA256 → *_set_hash stored in dim_customer_profile.
+
+**Algorithm**: SHA256 (see [Hashing Standards](../data-modeling/hashing_standards.md) for complete multi-valued set hash specification)
+
+**Note**: Multi-valued set hashes use comma delimiter `,` whereas profile change hashes use pipe delimiter `|`. See Hashing Standards for rationale.
 
 ## Alternatives Considered
 1. JSON array (harder diff, indexing challenges).
@@ -53,3 +56,8 @@ Macro: compute_set_hash(list<code>) → SHA256 hex.
 
 ## ADR References
 - ADR-001-scd2-customer-profile.md (SCD2 baseline)
+
+## Related Policies and Standards
+- [Hashing Standards](../data-modeling/hashing_standards.md) - Multi-valued set hash algorithm (SHA256)
+- [Standard SCD2 Policy](../../contracts/scd2/STANDARD_SCD2_POLICY.md) - Bridge table versioning rules
+- [Naming Conventions](../data-modeling/naming_conventions.md) - Bridge table and set hash naming patterns

@@ -53,8 +53,10 @@ Vulnerability & Review:
 - last_risk_review_ts
 
 Scoring:
-- data_quality_score
-- profile_reliability_score
+- data_quality_score (NOTE: Excluded from profile_hash - see Hashing Standards)
+- profile_reliability_score (NOTE: Excluded from profile_hash - see Hashing Standards)
+
+**Important**: Scores are **derived metrics** and are explicitly excluded from the profile change hash to prevent spurious versioning when scoring logic is recalibrated. See [Hashing Standards](../data-modeling/hashing_standards.md) for exclusion rules.
 
 ## Non-Versioned (Type 1 / Lineage)
 - created_ts
@@ -82,6 +84,16 @@ Cons:
 
 ## Profile Hash Specification
 Ordered attribute list (see DDL comment) concatenated with '|' delimiter; UNKNOWN or NULL replaced by '__NULL__'; boolean as 'true'/'false' lowercase; timestamp values normalized to ISO8601 UTC seconds.
+
+**Algorithm**: SHA256 (see [Hashing Standards](../data-modeling/hashing_standards.md) for complete specification)
+
+**Exclusions**: Scores (data_quality_score, profile_reliability_score), surrogate keys, effective timestamps, Type 1 attributes, and audit fields are excluded from the hash. This prevents spurious version creation when scoring algorithms are recalibrated.
+
+**Implementation Reference**: See [Standard SCD2 Policy](../../contracts/scd2/STANDARD_SCD2_POLICY.md) for:
+- Temporal precision (TIMESTAMP(6) microsecond granularity)
+- Closure rule (previous_end_ts = new_start_ts - 1 microsecond)
+- Surrogate key pattern (investment_profile_version_sk)
+- Change detection triggers
 
 ## Overlap & Integrity Rules
 - No overlapping effective intervals per investment_profile_id.
@@ -151,5 +163,11 @@ If reliability scoring adoption delayed, keep columns data_quality_score & profi
 | Version | Date | Change | Author |
 |---------|------|--------|--------|
 | 0.1-Accepted | 2025-11-19 | Updated status to Accepted | Data Arch |
+| 0.2 | 2025-11-21 | Added references to Standard SCD2 Policy and Hashing Standards; clarified score exclusion from hash | Data Arch |
+
+## Related Policies and Standards
+- [Standard SCD2 Policy](../../contracts/scd2/STANDARD_SCD2_POLICY.md) - Authoritative SCD2 implementation rules
+- [Hashing Standards](../data-modeling/hashing_standards.md) - SHA256 profile change hash algorithm and exclusion rules
+- [Naming Conventions](../data-modeling/naming_conventions.md) - Surrogate key and attribute naming patterns
 
 End of ADR.
