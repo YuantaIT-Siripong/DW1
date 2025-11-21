@@ -1,11 +1,12 @@
 # DW1 Data Warehouse (Phase 1 Initialization)
 
-## Phase 1 Scope (Updated)
-- Customer Profile (SCD2) demographics
-- Investment Profile (SCD2) suitability & risk
-- Service taxonomy & subscription events
-- Multi-valued income source & investment purpose linked to profile versions
-- Profile change audit (customer; investment audit future)
+## Phase 1 Scope
+This phase establishes foundational SCD2 dimensions and supporting structures:
+- **Customer Profile Dimension** (SCD2): Demographics, marital status, nationality, occupation, education, birthdate
+- **Investment Profile Dimension** (SCD2): Suitability assessment, risk levels, KYC/AML status, entitlements, vulnerability classification
+- **Service Taxonomy**: Service hierarchy, categories, subscription scopes
+- **Multi-Valued Sets**: Income sources, investment purposes, contact channels (linked to profile versions via bridge tables)
+- **Profile Change Audit**: Customer profile change tracking (investment profile audit in future phase)
 
 ## Layers
 - dim: Conformed dimensions (including SCD2)
@@ -63,7 +64,9 @@ DW1/
 - Plan for data volume growth
 
 ### 3. Consistency
-- Maintain standardized naming conventions
+- **Naming Conventions**: snake_case for physical layer, camelCase for API layer (see [Naming Conventions](docs/data-modeling/naming_conventions.md))
+- **Hashing Standards**: SHA256-based deterministic hashing for change detection (see [Hashing Standards](docs/data-modeling/hashing_standards.md))
+- **SCD2 Policy**: Microsecond precision, closure rules, surrogate key patterns (see [Standard SCD2 Policy](contracts/scd2/STANDARD_SCD2_POLICY.md))
 - Follow established design patterns
 - Use consistent documentation format
 - Implement version control for all artifacts
@@ -79,6 +82,18 @@ DW1/
 2. **Explore Data Modeling**: Check /docs/data-modeling/
 3. **Understand Data Flow**: Review /docs/etl-elt/ and /docs/layers/
 4. **Implement Governance**: Follow /docs/governance/
+
+## Core Policies and Standards
+
+This section provides quick access to authoritative policies governing data modeling, versioning, and naming:
+
+| Policy | Purpose | Location |
+|--------|---------|----------|
+| **Standard SCD2 Policy** | Temporal precision, closure rules, surrogate key patterns, change detection | [contracts/scd2/STANDARD_SCD2_POLICY.md](contracts/scd2/STANDARD_SCD2_POLICY.md) |
+| **Hashing Standards** | SHA256 algorithm, profile change hash, multi-valued set hash, normalization rules | [docs/data-modeling/hashing_standards.md](docs/data-modeling/hashing_standards.md) |
+| **Naming Conventions** | snake_case physical, camelCase API, surrogate key suffixes, boolean patterns, enumeration casing | [docs/data-modeling/naming_conventions.md](docs/data-modeling/naming_conventions.md) |
+
+**AI-Assisted Development**: These policies serve as authoritative anchors for AI tools. Always reference them when generating or reviewing code related to SCD2 dimensions, change detection, or naming.
 
 ## Key References
 - [AI Context](AI_CONTEXT.md)
