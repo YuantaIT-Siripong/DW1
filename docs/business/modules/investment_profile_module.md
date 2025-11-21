@@ -17,9 +17,10 @@ This module covers:
 - Acknowledgement flags
 - Margin agreement status and leverage tolerance
 - VulnerableInvestorFlag + reason & assessment timestamp
-- Reliability and Data Quality scores (derived)
 - AdvisoryDiscretionFlag (discretionary mandate indicator)
 - Review cycle & next/last risk review timestamps
+
+*Note: Reliability and Data Quality scores are NOT stored in SCD2 dimension; planned for future gold layer implementation (see docs/data-quality/framework.md).*
 
 ## 2. Business Goals / KPIs
 | KPI | Definition | Purpose |
@@ -28,7 +29,7 @@ This module covers:
 | Complex Product Readiness | % profiles where ComplexProductAllowed = true and acknowledgment flag present | Product enablement |
 | Vulnerability Prevalence | % profiles flagged vulnerable | Oversight allocation |
 | Overdue Reviews | count where current_date > nextReviewDueTs | Compliance scheduling |
-| Reliability Score Distribution | Histogram of ProfileReliabilityScore by segment | Data trust monitoring |
+| Reliability Score Distribution | Placeholder - Future gold layer view (docs/data-quality/framework.md) | Data trust monitoring (planned) |
 | Acknowledgement Freshness | % of required acknowledgements expiring in next 30 days | Renewal planning |
 
 ## 3. Core Use Cases
@@ -88,7 +89,8 @@ This module covers:
 | ReviewCycle, NextReviewDueTs, LastRiskReviewTs | Scheduling state |
 | VulnerableInvestorFlag, VulnerabilityReasonCode, VulnerabilityAssessmentTs | Oversight |
 | AdvisoryDiscretionFlag | Mandate state |
-| ProfileReliabilityScore, DataQualityScore | Derived but snapshot required |
+
+*Note: DataQualityScore and ProfileReliabilityScore removed from SCD2 storage. These derived metrics will be computed in future gold layer implementation (see docs/data-quality/framework.md).*
 
 Type 1 (overwrite only):
 - SourceSystem, CreatedBy, IngestionBatchId (operational lineage, not business history).
@@ -130,20 +132,28 @@ Type 1 (overwrite only):
 | VulnerabilityAssessmentTs | Last assessment timestamp | 2025-11-18T09:30:00Z | |
 | NextReviewDueTs | Scheduled next review date | 2026-05-18T00:00:00Z | Min of component due dates |
 | LastRiskReviewTs | Last suitability assessment timestamp | 2025-11-19T07:30:00Z | |
-| DataQualityScore | Completeness/validity (0–1) | 0.90 | |
-| ProfileReliabilityScore | Composite trust (0–1) | 0.84 | Includes penalties |
 
-## 9. Reliability & Data Quality (Conceptual)
-DataQualityScore:
-- Base completeness % across mandatory fields (objective, risk level, ability to bear loss, investor category, KYCStatus, acknowledgements required for granted entitlements).
-- Penalties for UNKNOWN mandatory attributes, stale LastRiskReviewTs beyond ReviewCycle threshold.
+*Removed Fields (moved to planned gold layer):*
+- DataQualityScore (completeness/validity 0-1) - see docs/data-quality/framework.md
+- ProfileReliabilityScore (composite trust 0-1) - see docs/data-quality/framework.md
 
-ProfileReliabilityScore:
-- Reliability = DataQualityScore * (1 - sanctionsPenalty) * (1 - pepPenalty) * timelinessFactor * consistencyFactor * (1 - vulnerabilityPenaltyIfUnknownReason)
+## 9. Reliability & Data Quality Scoring (Deferred to Gold Layer)
 
-Consistency check example:
-- If RiskLevelCode = CONSERVATIVE but ComplexProductAllowed = TRUE -> consistencyFactor < 1 (e.g., 0.9)
-- If Objective = SPECULATION with RiskLevelCode = SPECULATIVE -> factor = 1.0
+**Status**: NOT PERSISTED in SCD2 dimension. Scoring moved to future gold layer implementation.
+
+**Rationale**: 
+- Derived metrics excluded from SCD2 dimensions to prevent spurious versioning when scores recalculated without business attribute changes
+- Scores remain reproducible from base attributes + versioned formulas
+- See [Data Quality Framework](../../data-quality/framework.md) for planned component metrics
+
+**Planned Component Metrics** (gold layer):
+- `dq_completeness_score`: Base completeness % across mandatory fields (objective, risk level, ability to bear loss, investor category, KYCStatus, acknowledgements required for granted entitlements)
+- `dq_consistency_score`: Logical consistency between attributes (e.g., RiskLevelCode vs ComplexProductAllowed)
+- `dq_timeliness_score`: Penalties for UNKNOWN mandatory attributes, stale LastRiskReviewTs beyond ReviewCycle threshold
+- `dq_regulatory_penalty_factor`: Sanctions, PEP, vulnerability penalties
+- `reliability_score`: Composite of all components
+
+**Future Implementation**: `gold.mart_profile_quality` view (planned)
 
 ## 10. Vulnerable Investor Handling
 Rules (illustrative):
@@ -259,9 +269,7 @@ limit 1;
     "vulnerabilityAssessmentTs": "2025-11-18T09:30:00Z",
     "nextReviewDueTs": "2026-05-18T00:00:00Z",
     "lastRiskReviewTs": "2025-11-19T07:30:00Z",
-    "reviewCycle": "ANNUAL",
-    "dataQualityScore": 0.90,
-    "profileReliabilityScore": 0.84
+    "reviewCycle": "ANNUAL"
   }
 }
 ```

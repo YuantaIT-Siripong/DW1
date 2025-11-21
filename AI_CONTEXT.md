@@ -9,6 +9,7 @@ Single reference for AI assistants and new contributors. Points to authoritative
 - **Standard SCD2 Policy**: contracts/scd2/STANDARD_SCD2_POLICY.md
 - **Hashing Standards**: docs/data-modeling/hashing_standards.md
 - **Naming Conventions**: docs/data-modeling/naming_conventions.md
+- **Data Quality Framework**: docs/data-quality/framework.md
 
 ### Business Domain
 - Business Domain: docs/business/domain_overview.md
@@ -37,9 +38,8 @@ Single reference for AI assistants and new contributors. Points to authoritative
 - Separate root scope entities: dim_investment_profile (CUSTOMER baseline + CUSTOMER_CODE overrides) to avoid demographic-driven churn in investment suitability history.
 - Multi-valued sets via bridge tables (customer only): dim_customer_income_source_version, dim_customer_investment_purpose_version, dim_customer_contact_channel_version (re-written only on membership hash change).
 - Acknowledgements events fact: fact_investment_acknowledgement (evidence for boolean flags in investment profile version).
-- Hashing: SHA256 for profile/set change detection; deterministic ordering & normalization tokens. **Derived metrics (data_quality_score, profile_reliability_score) EXCLUDED from hash** to prevent spurious versioning.
+- Hashing: SHA256 for profile/set change detection; deterministic ordering & normalization tokens. **Derived metrics (e.g., data_quality_score, profile_reliability_score) EXCLUDED from hash** to prevent spurious versioning.
 - Vulnerability classification always triggers new investment profile version (auditability).
-- **Scores Handling**: Reliability & Data Quality scores stored per investment version snapshot but **excluded from profile_hash** as they are derived outcomes, not drivers of versioning.
 
 ## Fact vs Dimension Classification
 | Entity | Classification | Grain | Surrogate Key Pattern |
@@ -110,7 +110,9 @@ limit 1;
 - "List attributes affecting complex product eligibility"
 
 ## Change Discipline
-Changes to SCD2 attribute lists, scope semantics, reliability scoring formula, or hash algorithm require ADR update and contract changes.
+Changes to SCD2 attribute lists, scope semantics, or hash algorithm require ADR update and contract changes. 
+
+**Derived Quality Metrics**: Reliability scores, data quality scores, and similar derived metrics are NOT stored in SCD2 dimensions. They are computed downstream in the gold layer (planned implementation - see docs/data-quality/framework.md). This prevents spurious versioning driven by metric recalculations rather than business state changes.
 
 ## Do Not
 - Introduce new eligibility flags without enumeration + contract update.

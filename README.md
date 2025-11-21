@@ -92,6 +92,9 @@ This section provides quick access to authoritative policies governing data mode
 | **Standard SCD2 Policy** | Temporal precision, closure rules, surrogate key patterns, change detection | [contracts/scd2/STANDARD_SCD2_POLICY.md](contracts/scd2/STANDARD_SCD2_POLICY.md) |
 | **Hashing Standards** | SHA256 algorithm, profile change hash, multi-valued set hash, normalization rules | [docs/data-modeling/hashing_standards.md](docs/data-modeling/hashing_standards.md) |
 | **Naming Conventions** | snake_case physical, camelCase API, surrogate key suffixes, boolean patterns, enumeration casing | [docs/data-modeling/naming_conventions.md](docs/data-modeling/naming_conventions.md) |
+| **Data Quality Framework** | Unified quality metrics taxonomy, component definitions, gold layer implementation plan | [docs/data-quality/framework.md](docs/data-quality/framework.md) |
+
+**Note on Derived Metrics**: Derived scoring and quality metrics (e.g., data_quality_score, profile_reliability_score) are NOT stored in SCD2 dimensions. They are excluded from version storage and hash logic to prevent spurious versioning. These metrics will be computed in the gold layer as part of the unified Data Quality Framework.
 
 **AI-Assisted Development**: These policies serve as authoritative anchors for AI tools. Always reference them when generating or reviewing code related to SCD2 dimensions, change detection, or naming.
 
@@ -99,6 +102,7 @@ This section provides quick access to authoritative policies governing data mode
 - [AI Context](AI_CONTEXT.md)
 - [Customer Module Spec](docs/business/modules/customer_module.md)
 - [Investment Profile Module Spec](docs/business/modules/investment_profile_module.md)
+- [Data Quality Framework](docs/data-quality/framework.md)
 - [Data Quality Rules](docs/business/data_quality_rules.md)
 - [Modeling Decisions](docs/modeling_decisions.md)
 - [Contracts Index](contracts/INDEX.yaml)

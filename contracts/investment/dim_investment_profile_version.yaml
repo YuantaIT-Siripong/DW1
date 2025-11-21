@@ -64,9 +64,8 @@ versioning_attributes:
   - review_cycle
   - next_review_due_ts
   - last_risk_review_ts
-  # Scoring
-  - data_quality_score
-  - profile_reliability_score
+  # NOTE: Scoring fields (data_quality_score, profile_reliability_score) removed (Gap 4 resolution)
+  # See docs/data-quality/framework.md for planned gold layer implementation
 
 type1_attributes:
   - source_extract_reference
@@ -182,7 +181,7 @@ sensitive_attributes:
 
 security_guidance:
   - "Mask or restrict columns in analytics views for vulnerable_investor_flag, vulnerability_reason_code, pep_flag, sanction_screening_status."
-  - "profile_reliability_score may be exposed widely; underlying compliance flags restricted."
+  - "NOTE: profile_reliability_score removed from SCD2 dimension (Gap 4 resolution); will be computed in gold layer where security guidance still applies."
 
 audit_strategy:
   phase1: implicit_via_version_table
@@ -194,7 +193,10 @@ audit_strategy:
     - override_reason
     - supervisory_approval_id
 
-data_quality_scoring_reference:
+# NOTE: Data quality scoring moved to gold layer (Gap 4 resolution)
+# See docs/data-quality/framework.md for planned implementation
+# The following sections are retained for historical reference but NOT implemented in SCD2 layer
+data_quality_scoring_reference_DEPRECATED:
   unknown_penalty_per_attribute: 0.05
   mandatory_attributes_threshold: 0.85  # fraction required for acceptable DataQualityScore
   stale_review_penalty_days:
@@ -202,7 +204,11 @@ data_quality_scoring_reference:
     review_cycle_event_driven: 180
   vulnerability_unknown_reason_penalty: 0.10
 
-reliability_score_formula: |
+reliability_score_formula_DEPRECATED: |
+  NOTE: This formula is DEPRECATED and NOT implemented in SCD2 dimension.
+  Moved to planned gold layer implementation (docs/data-quality/framework.md).
+  
+  Original conceptual formula:
   reliability = data_quality_score
                 * (1 - sanctions_penalty)
                 * (1 - pep_penalty)
@@ -210,10 +216,12 @@ reliability_score_formula: |
                 * consistency_factor
                 * (1 - vulnerability_penalty)
 
-timeliness_factor_logic: |
+timeliness_factor_logic_DEPRECATED: |
+  NOTE: DEPRECATED - moved to gold layer
   if current_date > next_review_due_ts then 0.85 else 1.00
 
-consistency_checks_examples:
+consistency_checks_examples_DEPRECATED:
+  - "NOTE: These examples moved to gold layer framework (docs/data-quality/framework.md)"
   - "RiskLevelCode = CONSERVATIVE and complex_product_allowed = true => consistency_factor = 0.90"
   - "RiskLevelCode aligned with investment_objective_category => consistency_factor = 1.00"
 
@@ -226,9 +234,13 @@ adr_reference: ADR-INV-001-investment-profile.md
 spec_reference: docs/business/investment_profile_module.md
 enumerations_reference: docs/data-modeling/investment-profile/enumerations.md
 status: draft
-version: 0.1
+version: 0.2
 
 change_log:
+  - version: 0.2
+    date: 2025-11-21
+    change: Removed data_quality_score and profile_reliability_score from versioning_attributes; marked scoring sections as DEPRECATED (Gap 4 resolution - moved to planned gold layer)
+    author: Data Architecture
   - version: 0.1
     date: 2025-11-19
     change: Initial draft contract
