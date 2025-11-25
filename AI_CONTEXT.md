@@ -165,3 +165,9 @@ Changes to SCD2 attribute lists, scope semantics, or hash algorithm require ADR 
 - Add versioned attributes without contract + ADR update.
 - Change hash algorithm without updating ADR + contracts.
 - Derive authoritative InvestmentTimeHorizon from inference (must be client-declared).
+
+## Change Log (Context)
+| Date | Change | Commit |
+|------|--------|--------|
+| 2025-11-25 | Added Thread & Manifest section (CONTEXT_MANIFEST.yaml, THREAD_HANDOVER.md) | a9f221a |
+| 2025-11-25 | Integrated audit event enumeration reference | 348daee |
