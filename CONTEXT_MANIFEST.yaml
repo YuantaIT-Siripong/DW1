@@ -21,6 +21,11 @@ adrs:
   - "docs/adr/ADR-INV-001-investment-profile.md"
   - "docs/adr/ADR-002-multi-valued-sets.md"
 
+modules:
+  customer: "docs/business/modules/customer_module.md"
+  investment_profile: "docs/business/modules/investment_profile_module.md"
+  company: "docs/business/modules/company_module.md"
+  
 audit_fact_tables:
   customer_profile_audit: "db/audit/fact_customer_profile_audit.sql"
   investment_acknowledgement: "db/audit/fact_investment_acknowledgement.sql"

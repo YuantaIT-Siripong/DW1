@@ -22,6 +22,7 @@ Single reference for AI assistants and new contributors. Points to authoritative
 - Investment Profile Module Spec: docs/business/modules/investment_profile_module.md
 - Data Quality Rules: docs/business/data_quality_rules.md
 - Service Hierarchy: docs/service_hierarchy_and_subscription.md
+- Company Module Spec: docs/business/modules/company_module.md
 
 ### SCD2 Contracts
 - SCD2 Contract (Customer Profile): contracts/customer/dim_customer_profile.yaml
