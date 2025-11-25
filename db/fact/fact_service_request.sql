@@ -12,4 +12,4 @@ create table fact.fact_service_request (
   load_timestamp          timestamp not null default current_timestamp,
   constraint uq_service_request unique (service_request_id)
 );
-create index ix_fact_service_request_status on fact.fact_service_request(service_id, is_active_flag);
+create index idx_fact_service_request_status on fact.fact_service_request(service_id, is_active_flag);

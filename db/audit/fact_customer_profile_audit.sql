@@ -73,14 +73,14 @@ CREATE TABLE IF NOT EXISTS fact.fact_customer_profile_audit (
 );
 
 -- Indexes
-CREATE INDEX ix_customer_profile_audit_customer_time 
+CREATE INDEX idx_customer_profile_audit_customer_time 
   ON fact.fact_customer_profile_audit(customer_id, event_source_ts);
 
-CREATE INDEX ix_customer_profile_audit_event_hash_status 
+CREATE INDEX idx_customer_profile_audit_event_hash_status 
   ON fact.fact_customer_profile_audit(event_hash_status) 
   WHERE event_hash_status = 'PENDING';
 
-CREATE INDEX ix_customer_profile_audit_change_reason 
+CREATE INDEX idx_customer_profile_audit_change_reason 
   ON fact.fact_customer_profile_audit(change_reason);
 
 -- Table comment

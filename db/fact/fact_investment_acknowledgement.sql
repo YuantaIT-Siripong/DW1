@@ -15,8 +15,8 @@ create table fact.fact_investment_acknowledgement (
   constraint ck_ack_expiry check (expires_ts is null or expires_ts > accepted_ts)
 );
 
-create index ix_ack_version_type on fact.fact_investment_acknowledgement(investment_profile_version_sk, acknowledgement_type_code);
-create index ix_ack_expiry on fact.fact_investment_acknowledgement(expires_ts);
+create index idx_ack_version_type on fact.fact_investment_acknowledgement(investment_profile_version_sk, acknowledgement_type_code);
+create index idx_ack_expiry on fact.fact_investment_acknowledgement(expires_ts);
 
 comment on table fact.fact_investment_acknowledgement is
 'Stores individual acknowledgement acceptance events providing evidence for version-level boolean flags.';

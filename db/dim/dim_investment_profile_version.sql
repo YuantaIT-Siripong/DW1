@@ -79,14 +79,14 @@ create table dim.dim_investment_profile_version (
 );
 
 -- Ensure only one current version per profile
-create unique index ix_investment_profile_current
+create unique index idx_investment_profile_current
   on dim.dim_investment_profile_version(investment_profile_id)
   where current_flag = true;
 
-create index ix_investment_profile_effective
+create index idx_investment_profile_effective
   on dim.dim_investment_profile_version(investment_profile_id, effective_start_ts, effective_end_ts);
 
-create index ix_investment_profile_hash
+create index idx_investment_profile_hash
   on dim.dim_investment_profile_version(profile_hash);
 
 comment on table dim.dim_investment_profile_version is

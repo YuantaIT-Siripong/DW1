@@ -108,24 +108,24 @@ CREATE TABLE IF NOT EXISTS fact.fact_supervisory_override (
 );
 
 -- Indexes
-CREATE INDEX ix_override_profile_time 
+CREATE INDEX idx_override_profile_time 
   ON fact.fact_supervisory_override(investment_profile_id, override_ts);
 
-CREATE INDEX ix_override_version 
+CREATE INDEX idx_override_version 
   ON fact.fact_supervisory_override(investment_profile_version_sk);
 
-CREATE INDEX ix_override_supervisor 
+CREATE INDEX idx_override_supervisor 
   ON fact.fact_supervisory_override(supervisor_id);
 
-CREATE INDEX ix_override_next_review 
+CREATE INDEX idx_override_next_review 
   ON fact.fact_supervisory_override(next_review_due_ts) 
   WHERE next_review_due_ts IS NOT NULL;
 
-CREATE INDEX ix_override_event_hash_status 
+CREATE INDEX idx_override_event_hash_status 
   ON fact.fact_supervisory_override(event_hash_status) 
   WHERE event_hash_status = 'PENDING';
 
-CREATE INDEX ix_override_decision_type 
+CREATE INDEX idx_override_decision_type 
   ON fact.fact_supervisory_override(override_decision, override_type);
 
 -- Table comment

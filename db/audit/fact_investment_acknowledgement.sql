@@ -63,18 +63,18 @@ CREATE TABLE IF NOT EXISTS fact.fact_investment_acknowledgement (
 );
 
 -- Indexes
-CREATE INDEX ix_ack_version_type 
+CREATE INDEX idx_ack_version_type 
   ON fact.fact_investment_acknowledgement(investment_profile_version_sk, ack_type);
 
-CREATE INDEX ix_ack_expiry 
+CREATE INDEX idx_ack_expiry 
   ON fact.fact_investment_acknowledgement(expires_ts) 
   WHERE expires_ts IS NOT NULL;
 
-CREATE INDEX ix_ack_event_hash_status 
+CREATE INDEX idx_ack_event_hash_status 
   ON fact.fact_investment_acknowledgement(event_hash_status) 
   WHERE event_hash_status = 'PENDING';
 
-CREATE INDEX ix_ack_profile_time 
+CREATE INDEX idx_ack_profile_time 
   ON fact.fact_investment_acknowledgement(investment_profile_id, accepted_ts);
 
 -- Table comment

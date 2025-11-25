@@ -22,5 +22,5 @@ create table dim.dim_customer_profile (
   constraint uq_customer_version unique (customer_id, version_num),
   constraint ck_effective_dates check (effective_end_date is null or effective_end_date >= effective_start_date)
 );
-create index ix_dim_customer_profile_current on dim.dim_customer_profile(customer_id, is_current);
-create index ix_dim_customer_profile_effective on dim.dim_customer_profile(customer_id, effective_start_date, effective_end_date);
+create index idx_dim_customer_profile_current on dim.dim_customer_profile(customer_id, is_current);
+create index idx_dim_customer_profile_effective on dim.dim_customer_profile(customer_id, effective_start_date, effective_end_date);

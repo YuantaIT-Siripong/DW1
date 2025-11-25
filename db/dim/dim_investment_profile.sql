@@ -19,8 +19,8 @@ create table dim.dim_investment_profile (
   constraint uq_scope_unique unique (customer_id, customer_code, scope_type)
 );
 
-create index ix_investment_profile_customer on dim.dim_investment_profile(customer_id);
-create index ix_investment_profile_code on dim.dim_investment_profile(customer_code)
+create index idx_investment_profile_customer on dim.dim_investment_profile(customer_id);
+create index idx_investment_profile_code on dim.dim_investment_profile(customer_code)
   where customer_code is not null;
 
 comment on table dim.dim_investment_profile is
