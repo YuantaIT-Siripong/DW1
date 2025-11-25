@@ -205,3 +205,4 @@ Monitoring Targets (future view `vw_audit_quality_issues`):
 | Version | Date | Change | Author |
 |---------|------|--------|--------|
 | 1.0 | 2025-11-25 | Initial audit artifacts standard | Data Architecture |
+| 1.1 | 2025-11-25 | Added enumeration management reference (audit_event_types.yaml) | Data Architecture |
