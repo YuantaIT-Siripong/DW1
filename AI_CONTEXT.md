@@ -62,7 +62,6 @@ Single reference for AI assistants and new contributors. Points to authoritative
 | dim_service_category | Dimension | category_id | category_sk |
 | dim_subscribe_scope | Dimension | scope level | scope_sk |
 | fact_service_request | Fact | service request | service_request_sk |
-| fact_service_subscription_event | Fact | status event | subscription_event_sk |
 | dim_customer_income_source_version | Bridge Dimension | profile_version + income_source | customer_income_source_version_sk |
 | dim_customer_investment_purpose_version | Bridge Dimension | profile_version + purpose | customer_investment_purpose_version_sk |
 | dim_customer_contact_channel_version | Bridge Dimension | profile_version + channel | customer_contact_channel_version_sk |
