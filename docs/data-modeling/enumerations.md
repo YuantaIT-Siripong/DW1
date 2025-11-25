@@ -41,4 +41,7 @@ Enumeration governance:
 | UNKNOWN | Present for early ingestion when value not collected |
 | ENUM_VERSION | Bump when any domain changes (add/remove/semantic change) |
 
-ENUM_VERSION: 2025.11.19-1
+ENUM_VERSION: 2025.11.25-2
+
+Change Notes:
+- 2025.11.25-2 Added reference to centralized audit event enumeration file (audit_event_types.yaml).

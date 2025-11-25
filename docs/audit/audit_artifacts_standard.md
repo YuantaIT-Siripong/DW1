@@ -172,11 +172,7 @@ See [Hashing Standards](../data-modeling/hashing_standards.md) for complete SHA2
 
 
 ### Centralized Audit Event Types
-Future PR will introduce `audit_event_types.yaml` with:
-- Versioned enumeration of all rationale codes across domains
-- Semantic groupings (PROFILE_CHANGE, REGULATORY, CORRECTION, etc.)
-- Deprecation workflow for obsolete codes
-- ADR update requirement for new event types
+Implemented via `enumerations/audit_event_types.yaml` (enumeration_version: 2025.11.25-1). See Enumeration Management section below for validation and governance rules.
 
 ## Enumeration Management
 
