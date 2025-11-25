@@ -74,8 +74,8 @@ attributes:
     constraints: "NULLABLE"
   - name: override_effective_start_ts
     datatype: timestamp
-    business_definition: Override becomes effective at this timestamp
-    constraints: "NOT NULL"
+    business_definition: Override becomes effective at this timestamp (required for APPROVED/CONDITIONAL_APPROVED decisions)
+    constraints: "NULLABLE"
   - name: override_effective_end_ts
     datatype: timestamp
     business_definition: Override expires at this timestamp (null if indefinite)
@@ -137,7 +137,7 @@ data_quality_rules:
   - "override_decision = 'APPROVED' OR override_decision = 'CONDITIONAL_APPROVED' implies override_effective_start_ts IS NOT NULL"
   - "override_decision = 'CONDITIONAL_APPROVED' implies conditions IS NOT NULL AND review_frequency IS NOT NULL"
   - "customer_consent_flag = TRUE implies consent_document_id IS NOT NULL - consent must reference document"
-  - "regulatory_notification_flag = TRUE implies regulatory_notification_ts IS NOT NULL OR regulatory_notification_ts IS PENDING"
+  - "regulatory_notification_flag = TRUE implies regulatory_notification_ts IS NOT NULL - notification must be timestamped when required"
   - "event_detected_ts >= override_ts OR rationale_code = 'PERIODIC_RENEWAL' - allow backdating only for renewals"
   - "event_hash_status = 'PENDING' AND event_hash = '__PENDING__' OR event_hash_status = 'GENERATED' AND LENGTH(event_hash) = 64"
   - "override_type IN ('COMPLEX_PRODUCT_VULNERABLE', 'MARGIN_EXCEPTION', 'LEVERAGE_EXCEPTION', 'IPO_ACCESS_EXCEPTION') - valid enumeration"
