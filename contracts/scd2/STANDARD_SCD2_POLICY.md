@@ -250,14 +250,45 @@ For each SCD2 dimension, implement tests verifying:
 - Multi-version scenario: Create 3+ versions for a single business key, query at different timestamps, verify correct version retrieval
 - Concurrent update handling: Ensure race conditions don't violate uniqueness or overlap constraints
 
+## Audit Event Linkage Requirement
+
+Per [Audit Artifacts Standard](../../docs/audit/audit_artifacts_standard.md) and [ADR-AUDIT-001](../../docs/adr/ADR-AUDIT-001-audit-artifacts-standard.md):
+
+### Version Creation Audit Events
+Each SCD2 dimension version creation **SHOULD** have a corresponding audit event in the domain-specific audit fact table:
+
+| Dimension | Audit Fact Table | Event Type |
+|-----------|------------------|------------|
+| `dim_customer_profile` | `fact_customer_profile_audit` | PROFILE_VERSION_CREATE |
+| `dim_investment_profile_version` | (Future audit fact) | PROFILE_VERSION_CREATE |
+
+### Audit Event Constraints
+- **Event Timestamp Alignment**: Audit event `event_ts` MUST match dimension `effective_start_ts`
+- **Hash Consistency**: Audit event profile hash MUST match dimension `profile_hash`
+- **Version Linkage**: Audit event references dimension version surrogate key (nullable for early events; backfill job will populate)
+
+### Future Enforcement
+- Current implementation: Audit events created asynchronously (best effort)
+- Future enforcement: ETL pipeline will validate 1:1 audit event per dimension version
+- Quality monitoring view (`vw_audit_quality_issues`) will detect orphaned dimension versions
+
+### Benefits
+- **Dimension Reconstruction**: Replay audit events to rebuild SCD2 history
+- **Root Cause Analysis**: Understand why versions were created (rationale codes)
+- **Data Quality**: Detect missing audit events for compliance gaps
+- **Regulatory Traceability**: Immutable evidence chain for state changes
+
 ## Related Documents
 - [Hashing Standards](../../docs/data-modeling/hashing_standards.md)
 - [Naming Conventions](../../docs/data-modeling/naming_conventions.md)
 - [ADR-001: SCD2 Customer Profile](../../docs/adr/ADR-001-scd2-customer-profile.md)
 - [ADR-INV-001: Investment Profile](../../docs/adr/ADR-INV-001-investment-profile.md)
+- [Audit Artifacts Standard](../../docs/audit/audit_artifacts_standard.md)
+- [ADR-AUDIT-001: Audit Artifacts Standard](../../docs/adr/ADR-AUDIT-001-audit-artifacts-standard.md)
 - [AI_CONTEXT.md](../../AI_CONTEXT.md)
 
 ## Change Log
 | Version | Date | Change | Author |
 |---------|------|--------|--------|
 | 1.0 | 2025-11-21 | Initial standard SCD2 policy | Data Architecture |
+| 1.1 | 2025-11-25 | Add audit event linkage requirement | Data Architecture |

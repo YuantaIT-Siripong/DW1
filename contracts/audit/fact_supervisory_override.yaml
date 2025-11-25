@@ -1,0 +1,212 @@
+entity_name: fact_supervisory_override
+domain: investment
+table_type: fact_audit
+grain_description: One row per supervisory override decision (complex product access for vulnerable investors, margin approval exceptions, etc.).
+primary_keys:
+  - override_sk
+surrogate_keys:
+  - override_sk
+natural_keys:
+  - investment_profile_id
+  - override_type
+  - override_ts
+foreign_keys:
+  - column: investment_profile_version_sk
+    references: dim_investment_profile_version.investment_profile_version_sk
+    nullable: true
+    description: Version surrogate key at time of override; nullable for early events
+attributes:
+  - name: override_sk
+    datatype: bigint
+    business_definition: Surrogate identifier for override event (auto-generated)
+    constraints: "PRIMARY KEY, GENERATED ALWAYS AS IDENTITY"
+  - name: investment_profile_id
+    datatype: string
+    business_definition: Investment profile identifier (stable across versions)
+    constraints: "NOT NULL"
+  - name: investment_profile_version_sk
+    datatype: bigint
+    business_definition: Foreign key to investment profile version at time of override
+    constraints: "NULLABLE"
+  - name: override_ts
+    datatype: timestamp
+    business_definition: Business-effective timestamp when override decision was made
+    constraints: "NOT NULL"
+  - name: override_type
+    datatype: string
+    business_definition: Type of override (COMPLEX_PRODUCT_VULNERABLE, MARGIN_EXCEPTION, LEVERAGE_EXCEPTION, IPO_ACCESS_EXCEPTION)
+    constraints: "NOT NULL"
+  - name: override_decision
+    datatype: string
+    business_definition: Decision outcome (APPROVED, DENIED, CONDITIONAL_APPROVED)
+    constraints: "NOT NULL"
+  - name: override_reason
+    datatype: text
+    business_definition: Supervisor's documented reason for override decision
+    constraints: "NOT NULL"
+  - name: supervisor_id
+    datatype: string
+    business_definition: Identifier of supervisor making override decision
+    constraints: "NOT NULL"
+  - name: supervisor_name
+    datatype: string
+    business_definition: Name of supervisor (for audit trail display)
+    constraints: "NOT NULL"
+  - name: supervisor_role
+    datatype: string
+    business_definition: Role of supervisor (BRANCH_MANAGER, COMPLIANCE_OFFICER, REGIONAL_SUPERVISOR, CHIEF_COMPLIANCE)
+    constraints: "NOT NULL"
+  - name: requested_by_id
+    datatype: string
+    business_definition: Identifier of relationship manager or system requesting override
+    constraints: "NULLABLE"
+  - name: request_reason
+    datatype: text
+    business_definition: Original request justification from relationship manager
+    constraints: "NULLABLE"
+  - name: customer_consent_flag
+    datatype: boolean
+    business_definition: True if customer explicitly consented to override conditions (e.g., signed waiver)
+    constraints: "NOT NULL DEFAULT FALSE"
+  - name: consent_document_id
+    datatype: string
+    business_definition: Reference to signed consent document (e.g., DocuSign envelope ID)
+    constraints: "NULLABLE"
+  - name: override_effective_start_ts
+    datatype: timestamp
+    business_definition: Override becomes effective at this timestamp
+    constraints: "NOT NULL"
+  - name: override_effective_end_ts
+    datatype: timestamp
+    business_definition: Override expires at this timestamp (null if indefinite)
+    constraints: "NULLABLE, CHECK (override_effective_end_ts IS NULL OR override_effective_end_ts > override_effective_start_ts)"
+  - name: conditions
+    datatype: text
+    business_definition: Conditions attached to override (e.g., 'Max position size 10% of portfolio')
+    constraints: "NULLABLE"
+  - name: review_frequency
+    datatype: string
+    business_definition: Required review frequency for conditional approvals (MONTHLY, QUARTERLY, ANNUAL)
+    constraints: "NULLABLE"
+  - name: next_review_due_ts
+    datatype: timestamp
+    business_definition: Scheduled next review timestamp for conditional approvals
+    constraints: "NULLABLE"
+  - name: event_detected_ts
+    datatype: timestamp
+    business_definition: System timestamp when override event was detected/ingested
+    constraints: "NOT NULL"
+  - name: actor_id
+    datatype: string
+    business_definition: User identifier performing override action (typically supervisor_id)
+    constraints: "NOT NULL DEFAULT 'SYSTEM'"
+  - name: actor_type
+    datatype: string
+    business_definition: Actor type (HUMAN, SYSTEM, BATCH_JOB)
+    constraints: "NOT NULL DEFAULT 'HUMAN'"
+  - name: event_source_system
+    datatype: string
+    business_definition: Source system code (e.g., COMPLIANCE_PORTAL, SUPERVISOR_APP)
+    constraints: "NOT NULL"
+  - name: rationale_code
+    datatype: string
+    business_definition: Reason code for override action (SUPERVISORY_OVERRIDE, EMERGENCY_APPROVAL, PERIODIC_RENEWAL)
+    constraints: "NOT NULL DEFAULT 'SUPERVISORY_OVERRIDE'"
+  - name: regulatory_notification_flag
+    datatype: boolean
+    business_definition: True if override requires regulatory notification (per internal policy)
+    constraints: "NOT NULL DEFAULT FALSE"
+  - name: regulatory_notification_ts
+    datatype: timestamp
+    business_definition: Timestamp when regulatory notification was sent (if required)
+    constraints: "NULLABLE"
+  - name: event_hash
+    datatype: string
+    business_definition: SHA256 hash of event content (default __PENDING__ until hash generation job runs)
+    constraints: "NOT NULL DEFAULT '__PENDING__', LENGTH = 64 OR = '__PENDING__'"
+  - name: event_hash_status
+    datatype: string
+    business_definition: Hash generation status (PENDING, GENERATED)
+    constraints: "NOT NULL DEFAULT 'PENDING'"
+  - name: load_ts
+    datatype: timestamp
+    business_definition: ETL ingestion timestamp
+    constraints: "NOT NULL DEFAULT CURRENT_TIMESTAMP"
+data_quality_rules:
+  - "UNIQUE (investment_profile_id, override_type, override_ts) - one override per profile/type/timestamp"
+  - "override_decision = 'APPROVED' OR override_decision = 'CONDITIONAL_APPROVED' implies override_effective_start_ts IS NOT NULL"
+  - "override_decision = 'CONDITIONAL_APPROVED' implies conditions IS NOT NULL AND review_frequency IS NOT NULL"
+  - "customer_consent_flag = TRUE implies consent_document_id IS NOT NULL - consent must reference document"
+  - "regulatory_notification_flag = TRUE implies regulatory_notification_ts IS NOT NULL OR regulatory_notification_ts IS PENDING"
+  - "event_detected_ts >= override_ts OR rationale_code = 'PERIODIC_RENEWAL' - allow backdating only for renewals"
+  - "event_hash_status = 'PENDING' AND event_hash = '__PENDING__' OR event_hash_status = 'GENERATED' AND LENGTH(event_hash) = 64"
+  - "override_type IN ('COMPLEX_PRODUCT_VULNERABLE', 'MARGIN_EXCEPTION', 'LEVERAGE_EXCEPTION', 'IPO_ACCESS_EXCEPTION') - valid enumeration"
+  - "override_decision IN ('APPROVED', 'DENIED', 'CONDITIONAL_APPROVED') - valid enumeration"
+  - "supervisor_role IN ('BRANCH_MANAGER', 'COMPLIANCE_OFFICER', 'REGIONAL_SUPERVISOR', 'CHIEF_COMPLIANCE') - valid enumeration"
+  - "actor_type IN ('HUMAN', 'SYSTEM', 'BATCH_JOB') - valid enumeration"
+  - "review_frequency IS NULL OR review_frequency IN ('MONTHLY', 'QUARTERLY', 'ANNUAL') - valid enumeration when present"
+adr_refs:
+  - ADR-AUDIT-001-audit-artifacts-standard.md
+  - ADR-INV-001-investment-profile.md
+open_questions:
+  - "Should override revocations be separate events or status field?"
+  - "Add override precedence levels for multiple concurrent overrides?"
+sample_rows:
+  - override_sk: 30001
+    investment_profile_id: "IP-CODE-111111"
+    investment_profile_version_sk: 5003
+    override_ts: "2025-11-20T15:30:00Z"
+    override_type: "COMPLEX_PRODUCT_VULNERABLE"
+    override_decision: "CONDITIONAL_APPROVED"
+    override_reason: "Client has 15 years investment experience despite low financial literacy score; request limited to structured notes with principal protection only"
+    supervisor_id: "SUPER-001"
+    supervisor_name: "John Smith"
+    supervisor_role: "COMPLIANCE_OFFICER"
+    requested_by_id: "RM-456"
+    request_reason: "Client specifically requested access to principal-protected notes for portfolio diversification"
+    customer_consent_flag: true
+    consent_document_id: "DOCUSIGN-ENV-ABC123"
+    override_effective_start_ts: "2025-11-21T00:00:00Z"
+    override_effective_end_ts: "2026-11-21T00:00:00Z"
+    conditions: "Max position size 10% of portfolio; Principal-protected products only; Monthly review of positions"
+    review_frequency: "MONTHLY"
+    next_review_due_ts: "2025-12-21T00:00:00Z"
+    event_detected_ts: "2025-11-20T15:32:00Z"
+    actor_id: "SUPER-001"
+    actor_type: "HUMAN"
+    event_source_system: "COMPLIANCE_PORTAL"
+    rationale_code: "SUPERVISORY_OVERRIDE"
+    regulatory_notification_flag: false
+    regulatory_notification_ts: null
+    event_hash: "__PENDING__"
+    event_hash_status: "PENDING"
+    load_ts: "2025-11-20T15:32:10Z"
+  - override_sk: 30002
+    investment_profile_id: "IP-CODE-222222"
+    investment_profile_version_sk: 6005
+    override_ts: "2025-11-22T09:00:00Z"
+    override_type: "MARGIN_EXCEPTION"
+    override_decision: "DENIED"
+    override_reason: "Client has insufficient income to support margin requirements; recent vulnerability assessment indicates age-related cognitive decline"
+    supervisor_id: "SUPER-002"
+    supervisor_name: "Jane Doe"
+    supervisor_role: "BRANCH_MANAGER"
+    requested_by_id: "RM-789"
+    request_reason: "Client requested margin account for covered call strategy"
+    customer_consent_flag: false
+    consent_document_id: null
+    override_effective_start_ts: null
+    override_effective_end_ts: null
+    conditions: null
+    review_frequency: null
+    next_review_due_ts: null
+    event_detected_ts: "2025-11-22T09:02:00Z"
+    actor_id: "SUPER-002"
+    actor_type: "HUMAN"
+    event_source_system: "COMPLIANCE_PORTAL"
+    rationale_code: "SUPERVISORY_OVERRIDE"
+    regulatory_notification_flag: false
+    regulatory_notification_ts: null
+    event_hash: "c5d7e8f9a0b1c2d3e4f5a6b7c8d9e0f1a2b3c4d5e6f7a8b9c0d1e2f3a4b5c6d7"
+    event_hash_status: "GENERATED"
+    load_ts: "2025-11-22T09:02:05Z"

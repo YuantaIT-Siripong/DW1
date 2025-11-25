@@ -138,8 +138,37 @@ completeness_score = (count_present(required_attributes_without_flag) + set_pres
 }
 ```
 
-## 16. Next Clarification Tasks
-- Audit fact contract (fact_customer_profile_audit) design.
+## 16. Audit Events
+Per [Audit Artifacts Standard](../../audit/audit_artifacts_standard.md), customer profile state changes are tracked via append-only audit events.
+
+### Event Types
+| Event Type | Description | Grain |
+|------------|-------------|-------|
+| `PROFILE_VERSION_CREATE` | New SCD2 version creation | One row per version |
+
+### Audit Fact Tables
+- **fact_customer_profile_audit**: Profile change events (INITIAL_LOAD, SOURCE_UPDATE, CORRECTION, DATA_QUALITY_FIX, MERGE_FLAG, RECOMPUTE_HASH)
+
+### Key Attributes
+- Event timestamp (business-effective)
+- Change reason (rationale code)
+- Actor identification (user or system)
+- Attribute-level change tracking (scalar attributes + set membership diffs)
+- Hash verification (old vs new profile_hash)
+- Version linkage (profile_version_id_old → profile_version_id_new)
+
+### Usage
+- **Dimension Reconstruction**: Replay audit events to rebuild SCD2 dimension history
+- **Root Cause Analysis**: Investigate profile version churn (unexpected high version counts)
+- **Regulatory Compliance**: Immutable audit trail for suitability decisions
+- **Data Quality Monitoring**: Detect orphaned dimension versions without corresponding audit events
+
+### Related Documentation
+- [Audit Artifacts Standard](../../audit/audit_artifacts_standard.md) - Central audit event design
+- [ADR-AUDIT-001](../../adr/ADR-AUDIT-001-audit-artifacts-standard.md) - Audit architecture decision
+- [STANDARD_SCD2_POLICY.md](../../../contracts/scd2/STANDARD_SCD2_POLICY.md) - SCD2 version linkage requirements
+
+## 17. Next Clarification Tasks
 - Attribute-level source mapping matrix.
 - Hash macro (future) + test queries.
 - Salt rotation ADR supplement.
