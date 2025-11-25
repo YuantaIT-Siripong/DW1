@@ -5,6 +5,10 @@ Single reference for AI assistants and new contributors. Points to authoritative
 
 ## Authoritative Source Files
 
+### Thread & Manifest
+- Context Manifest: CONTEXT_MANIFEST.yaml (machine index of versions and key artifacts)
+- Thread Handover Guide: docs/THREAD_HANDOVER.md (instructions for resuming work across AI threads)
+
 ### Core Policies and Standards
 - **Standard SCD2 Policy**: contracts/scd2/STANDARD_SCD2_POLICY.md
 - **Hashing Standards**: docs/data-modeling/hashing_standards.md
