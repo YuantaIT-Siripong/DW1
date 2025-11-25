@@ -42,13 +42,22 @@ Single reference for AI assistants and new contributors. Points to authoritative
 - Vulnerability classification always triggers new investment profile version (auditability).
 
 ## Fact vs Dimension Classification
+
+### State vs Actions Separation
+- **Dimensions (SCD2)** store current and historical **state** (what attributes were in effect at a point in time)
+- **Audit Facts** capture **events** and **actions** that caused state changes (why and who)
+- Dimensions answer "What was the profile state on date X?"
+- Audit facts answer "Why did the profile change and who initiated it?"
+
 | Entity | Classification | Grain | Surrogate Key Pattern |
 |--------|----------------|-------|----------------------|
 | dim_customer_profile | Dimension (SCD2) | customer_id + version_num | customer_profile_version_sk |
 | dim_investment_profile | Dimension Root | customer/customer_code scope | investment_profile_sk |
 | dim_investment_profile_version | Dimension (SCD2) | investment_profile_id + version_number | investment_profile_version_sk |
-| fact_investment_acknowledgement | Fact (event) | acknowledgement_event_id | acknowledgement_sk |
 | fact_customer_profile_audit | Audit Fact | profile change event | audit_event_sk |
+| fact_investment_acknowledgement | Audit Fact | acknowledgement event | acknowledgement_sk |
+| fact_vulnerability_assessment | Audit Fact | vulnerability assessment event | vulnerability_assessment_sk |
+| fact_supervisory_override | Audit Fact | override decision event | override_sk |
 | dim_service | Dimension | service_id | service_sk |
 | dim_service_category | Dimension | category_id | category_sk |
 | dim_subscribe_scope | Dimension | scope level | scope_sk |
@@ -59,6 +68,29 @@ Single reference for AI assistants and new contributors. Points to authoritative
 | dim_customer_contact_channel_version | Bridge Dimension | profile_version + channel | customer_contact_channel_version_sk |
 
 **Surrogate Key Naming**: All SCD2 dimensions use `<entity>_version_sk` pattern. Non-versioned dimensions and facts use `<entity>_sk` pattern. See [Naming Conventions](docs/data-modeling/naming_conventions.md) for complete rules.
+
+## Audit Artifacts Overview
+Per [Audit Artifacts Standard](docs/audit/audit_artifacts_standard.md) and [ADR-AUDIT-001](docs/adr/ADR-AUDIT-001-audit-artifacts-standard.md):
+
+### Unified Audit Event Layer
+- **Append-only** event capture (no updates/deletes)
+- **Common attributes**: event_ts, actor_id, rationale_code, event_hash, event_hash_status
+- **Sentinel defaults**: actor_id='SYSTEM', event_hash='__PENDING__' (async hash generation)
+- **Integrity constraints**: Hash status enforcement, chronological validation, uniqueness per domain
+
+### Audit Fact Tables
+| Audit Fact | Domain | Event Types | Purpose |
+|------------|--------|-------------|---------|
+| fact_customer_profile_audit | Customer | INITIAL_LOAD, SOURCE_UPDATE, CORRECTION, DATA_QUALITY_FIX | Profile version change tracking |
+| fact_investment_acknowledgement | Investment | DERIVATIVE_RISK, FX_RISK, COMPLEX_PRODUCT | Risk disclosure evidence |
+| fact_vulnerability_assessment | Investment | INITIAL_ASSESSMENT, PERIODIC_REVIEW, COMPLAINT_INVESTIGATION | Vulnerability classification |
+| fact_supervisory_override | Investment | COMPLEX_PRODUCT_VULNERABLE, MARGIN_EXCEPTION, etc. | Suitability override decisions |
+
+### SCD2 Linkage Requirements
+- One audit event per dimension version creation (future enforcement)
+- Event `event_ts` matches dimension `effective_start_ts`
+- Profile hash in event matches dimension `profile_hash`
+- Version surrogate keys nullable for early events (backfill job will populate)
 
 ## Point-In-Time Query Pattern (Customer Profile)
 ```sql
@@ -96,18 +128,19 @@ limit 1;
 - Entitlement expansion view
 - Change detection ETL scripts (customer + investment)
 - PII masking view (Phase 2)
-- Investment profile reliability scoring ETL implementation
+- Investment profile reliability scoring ETL implementation (gold layer)
 - Monthly snapshot (optional)
 - Bridge table contracts (income_source, investment_purpose, contact_channel) tests
 - Profile & Investment hash macro implementation & tests
-- Supervisory override audit fact (future)
+- Audit quality monitoring view (vw_audit_quality_issues)
+- Enumeration file for audit event types (audit_event_types.yaml with versioning)
 
 ## Interaction Guidance (Prompts)
 - "Create PR for customer profile hash macro"
 - "Generate change detection SQL for dim_investment_profile_version"
 - "Add dbt tests for non-overlap & uniqueness for investment profile"
-- "Produce ADR for investment profile audit fact"
 - "List attributes affecting complex product eligibility"
+- "Create monitoring view for pending audit event hashes"
 
 ## Change Discipline
 Changes to SCD2 attribute lists, scope semantics, or hash algorithm require ADR update and contract changes. 

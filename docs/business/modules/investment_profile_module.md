@@ -288,16 +288,63 @@ limit 1;
 | 9 | Dedicated reason codes for margin suspension vs vulnerability? | Transparency |
 | 10 | Aggregated risk posture roll‑up needed for analytics? | Additional derived field |
 
-## 20. Next Steps
-1. Confirm mandatory field list for DataQualityScore baseline.
-2. Finalize scoring weights & override event logging.
-3. Implement dim_investment_profile & dim_investment_profile_version DDL (aligned with attributes).
-4. Build Acknowledgement fact table (acceptance events).
-5. Add reliability calculation logic to ETL pipeline.
-6. Define vulnerability override workflow & supervisor trace.
-7. Decide initial horizon collection strategy; keep UNKNOWN handling documented.
+## 20. Audit Events
+Per [Audit Artifacts Standard](../../audit/audit_artifacts_standard.md), investment profile events are tracked via append-only audit facts providing regulatory traceability.
 
-## 21. Change Control
+### Event Types
+| Event Type | Description | Grain |
+|------------|-------------|-------|
+| `ACKNOWLEDGEMENT_RECEIVED` | Risk disclosure acceptance | One row per acknowledgement event |
+| `VULNERABILITY_CLASSIFIED` | Vulnerability assessment outcome | One row per assessment |
+| `SUPERVISORY_OVERRIDE` | Override decision for suitability exceptions | One row per override |
+
+### Audit Fact Tables
+- **fact_investment_acknowledgement**: Acknowledgement acceptance events (DERIVATIVE_RISK, FX_RISK, COMPLEX_PRODUCT)
+  - Links to investment profile version
+  - Tracks acceptance timestamp, expiry, channel, IP address
+  - Provides evidence for boolean flags in dimension
+  
+- **fact_vulnerability_assessment**: Vulnerability classification events
+  - Assessment timestamp, method, assessor identity
+  - Vulnerability flag, reason code
+  - Status change tracking (previous vs current)
+  - Next review due timestamp
+  
+- **fact_supervisory_override**: Override decision events
+  - Override type (COMPLEX_PRODUCT_VULNERABLE, MARGIN_EXCEPTION, etc.)
+  - Decision (APPROVED, DENIED, CONDITIONAL_APPROVED)
+  - Supervisor identity, role, documented reason
+  - Customer consent flag, conditions, review frequency
+
+### Key Attributes (Common)
+- Event timestamp (business-effective)
+- Event detection timestamp (system ingestion)
+- Actor identification (user or system)
+- Rationale code (reason for event)
+- Event hash (SHA256 content verification)
+- Version linkage (investment_profile_version_sk; nullable for early events)
+
+### Usage
+- **Regulatory Compliance**: Immutable evidence for suitability decisions, vulnerability handling, supervisory oversight
+- **Acknowledgement Freshness**: Track expiry dates for renewal workflows
+- **Vulnerability Monitoring**: Periodic review scheduling, status change analysis
+- **Override Audit Trail**: SEC/FINRA compliance for complex product access exceptions
+- **Data Quality**: Orphaned dimension version detection (missing acknowledgement/assessment events)
+
+### Related Documentation
+- [Audit Artifacts Standard](../../audit/audit_artifacts_standard.md) - Central audit event design
+- [ADR-AUDIT-001](../../adr/ADR-AUDIT-001-audit-artifacts-standard.md) - Audit architecture decision
+- [STANDARD_SCD2_POLICY.md](../../../contracts/scd2/STANDARD_SCD2_POLICY.md) - SCD2 version linkage requirements
+
+## 21. Next Steps
+1. Confirm mandatory field list for DataQualityScore baseline.
+2. Finalize scoring weights (deferred to gold layer implementation).
+3. Implement dim_investment_profile & dim_investment_profile_version DDL (aligned with attributes).
+4. Add reliability calculation logic to gold layer ETL pipeline.
+5. Define vulnerability override workflow & supervisor trace.
+6. Decide initial horizon collection strategy; keep UNKNOWN handling documented.
+
+## 22. Change Control
 - Adding/removing versioned attributes requires ADR (ADR-INV-001) before schema alteration.
 - Enumeration changes require update to enumerations.md & ENUM_VERSION bump.
 - Reliability scoring formula changes require data governance sign‑off and versioned formula doc.

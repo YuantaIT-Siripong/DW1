@@ -1,0 +1,168 @@
+entity_name: fact_customer_profile_audit
+domain: customer
+table_type: fact_audit
+grain_description: One row per profile change event causing a new SCD2 version in dim_customer_profile.
+primary_keys:
+  - audit_event_sk
+surrogate_keys:
+  - audit_event_sk
+natural_keys:
+  - customer_id
+  - profile_version_id_new
+foreign_keys:
+  - column: profile_version_id_new
+    references: dim_customer_profile.customer_profile_version_sk
+    nullable: false
+  - column: profile_version_id_old
+    references: dim_customer_profile.customer_profile_version_sk
+    nullable: true
+attributes:
+  - name: audit_event_sk
+    datatype: bigint
+    business_definition: Surrogate identifier for the audit event
+    constraints: "PRIMARY KEY, GENERATED ALWAYS AS IDENTITY"
+  - name: customer_id
+    datatype: string
+    business_definition: Customer identity key affected
+    constraints: "NOT NULL"
+  - name: profile_version_id_new
+    datatype: bigint
+    business_definition: Newly created profile version identifier (FK to dim_customer_profile.customer_profile_version_sk)
+    constraints: "NOT NULL"
+  - name: profile_version_id_old
+    datatype: bigint
+    business_definition: Previous profile version identifier (null if INITIAL_LOAD)
+    constraints: "NULLABLE"
+  - name: change_reason
+    datatype: string
+    business_definition: Categorized reason (INITIAL_LOAD, SOURCE_UPDATE, CORRECTION, DATA_QUALITY_FIX, MERGE_FLAG, RECOMPUTE_HASH)
+    constraints: "NOT NULL DEFAULT 'UNKNOWN'"
+  - name: changed_scalar_attributes
+    datatype: text
+    business_definition: JSON array of scalar attribute names changed
+    constraints: "NULLABLE"
+  - name: changed_set_names
+    datatype: text
+    business_definition: JSON array of multi-valued set names changed
+    constraints: "NULLABLE"
+  - name: scalar_attribute_old_values
+    datatype: text
+    business_definition: JSON object of old scalar values (subset for changed attributes)
+    constraints: "NULLABLE"
+  - name: scalar_attribute_new_values
+    datatype: text
+    business_definition: JSON object of new scalar values (subset for changed attributes)
+    constraints: "NULLABLE"
+  - name: set_membership_diff_summary
+    datatype: text
+    business_definition: JSON object summarizing counts of added/removed members per changed set
+    constraints: "NULLABLE"
+  - name: old_profile_hash
+    datatype: string
+    business_definition: Profile hash of previous version
+    constraints: "NULLABLE, LENGTH = 64"
+  - name: new_profile_hash
+    datatype: string
+    business_definition: Profile hash of new version (must match dim row)
+    constraints: "NOT NULL, LENGTH = 64"
+  - name: event_source_ts
+    datatype: timestamp
+    business_definition: Business-effective timestamp when source system says change occurred
+    constraints: "NOT NULL"
+  - name: event_detected_ts
+    datatype: timestamp
+    business_definition: Timestamp when change was detected by ETL
+    constraints: "NOT NULL"
+  - name: effective_start_ts_new
+    datatype: timestamp
+    business_definition: Effective start timestamp of new version (copied from dimension)
+    constraints: "NOT NULL"
+  - name: processing_latency_seconds
+    datatype: integer
+    business_definition: Difference in seconds (event_detected_ts - event_source_ts); may be positive for backdated corrections
+    constraints: "NULLABLE"
+  - name: actor_id
+    datatype: string
+    business_definition: User identifier or SYSTEM for automated processes
+    constraints: "NOT NULL DEFAULT 'SYSTEM'"
+  - name: actor_type
+    datatype: string
+    business_definition: Actor type (HUMAN, SYSTEM, BATCH_JOB)
+    constraints: "NOT NULL DEFAULT 'SYSTEM'"
+  - name: initiated_by_system
+    datatype: string
+    business_definition: Source system code initiating change (e.g., CRM, KYC, SURVEY, PURPOSE_APP)
+    constraints: "NOT NULL"
+  - name: initiated_by_user_id
+    datatype: string
+    business_definition: User identifier if manual correction (null otherwise)
+    constraints: "NULLABLE"
+  - name: event_hash
+    datatype: string
+    business_definition: SHA256 hash of event content (default __PENDING__ until hash generation job runs)
+    constraints: "NOT NULL DEFAULT '__PENDING__', LENGTH = 64 OR = '__PENDING__'"
+  - name: event_hash_status
+    datatype: string
+    business_definition: Hash generation status (PENDING, GENERATED)
+    constraints: "NOT NULL DEFAULT 'PENDING'"
+  - name: load_ts
+    datatype: timestamp
+    business_definition: Ingestion timestamp for this audit event
+    constraints: "NOT NULL DEFAULT CURRENT_TIMESTAMP"
+data_quality_rules:
+  - "UNIQUE (customer_id, profile_version_id_new)"
+  - "profile_version_id_old IS NULL only when change_reason = INITIAL_LOAD"
+  - "changed_scalar_attributes <> '[]' OR changed_set_names <> '[]' (no-op events prohibited)"
+  - "new_profile_hash length=64 and equals dim_customer_profile.profile_hash for profile_version_id_new"
+  - "old_profile_hash length=64 OR old_profile_hash IS NULL (initial load)"
+  - "processing_latency_seconds >= 0 OR change_reason IN ('CORRECTION','MERGE_FLAG')"
+  - "effective_start_ts_new = dim_customer_profile.effective_start_ts for profile_version_id_new"
+  - "If change_reason='RECOMPUTE_HASH' then changed_scalar_attributes='[]' AND changed_set_names='[]'"
+  - "event_hash_status = 'PENDING' AND event_hash = '__PENDING__' OR event_hash_status = 'GENERATED' AND LENGTH(event_hash) = 64"
+adr_refs:
+  - ADR-001-scd2-customer-profile.md
+  - ADR-002-multi-valued-sets.md
+  - ADR-AUDIT-001-audit-artifacts-standard.md
+open_questions:
+  - "Do we persist full old/new scalar value JSON or only attribute names?"
+  - "Do we need per-item diff details for sets (added_codes, removed_codes arrays)?"
+  - "Should RECOMPUTE_HASH events be stored or just logged?"
+sample_rows:
+  - audit_event_id: 50001
+    customer_id: C123456
+    profile_version_id_new: 9870
+    profile_version_id_old: null
+    change_reason: INITIAL_LOAD
+    changed_scalar_attributes: '["birthdate","marital_status_id","nationality_id","occupation_id","education_level_id"]'
+    changed_set_names: '["income_source","investment_purpose"]'
+    scalar_attribute_old_values: "{}"
+    scalar_attribute_new_values: '{"birthdate":"1985-03-10","marital_status_id":2,"nationality_id":66,"occupation_id":301,"education_level_id":5}'
+    set_membership_diff_summary: '{"income_source":{"added":2,"removed":0},"investment_purpose":{"added":2,"removed":0}}'
+    old_profile_hash: null
+    new_profile_hash: "5e884898da28047151d0e56f8dc62927..."
+    event_source_ts: "2024-09-01T08:00:00Z"
+    event_detected_ts: "2024-09-01T08:02:05Z"
+    effective_start_ts_new: "2024-09-01T08:00:00Z"
+    processing_latency_seconds: 125
+    initiated_by_system: "CRM"
+    initiated_by_user_id: null
+    load_ts: "2024-09-01T08:02:10Z"
+  - audit_event_id: 50002
+    customer_id: C123456
+    profile_version_id_new: 9871
+    profile_version_id_old: 9870
+    change_reason: SOURCE_UPDATE
+    changed_scalar_attributes: '["occupation_id"]'
+    changed_set_names: '[]'
+    scalar_attribute_old_values: '{"occupation_id":301}'
+    scalar_attribute_new_values: '{"occupation_id":305}'
+    set_membership_diff_summary: '{"income_source":{"added":0,"removed":0},"investment_purpose":{"added":0,"removed":0}}'
+    old_profile_hash: "5e884898da28047151d0e56f8dc62927..."
+    new_profile_hash: "2c26b46b68ffc68ff99b453c1d304134..."
+    event_source_ts: "2024-10-10T11:15:00Z"
+    event_detected_ts: "2024-10-10T11:16:30Z"
+    effective_start_ts_new: "2024-10-10T11:15:00Z"
+    processing_latency_seconds: 90
+    initiated_by_system: "CRM"
+    initiated_by_user_id: null
+    load_ts: "2024-10-10T11:16:35Z"

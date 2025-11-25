@@ -1,0 +1,135 @@
+entity_name: fact_investment_acknowledgement
+domain: investment
+table_type: fact_audit
+grain_description: One row per acknowledgement acceptance event tied to an investment profile version (DERIVATIVE_RISK, FX_RISK, COMPLEX_PRODUCT).
+primary_keys:
+  - acknowledgement_sk
+surrogate_keys:
+  - acknowledgement_sk
+natural_keys:
+  - investment_profile_id
+  - ack_type
+  - accepted_ts
+foreign_keys:
+  - column: investment_profile_version_sk
+    references: dim_investment_profile_version.investment_profile_version_sk
+    nullable: true
+    description: Version surrogate key; nullable for early events (backfill job will populate)
+attributes:
+  - name: acknowledgement_sk
+    datatype: bigint
+    business_definition: Surrogate identifier for acknowledgement event (auto-generated)
+    constraints: "PRIMARY KEY, GENERATED ALWAYS AS IDENTITY"
+  - name: investment_profile_id
+    datatype: string
+    business_definition: Investment profile identifier (stable across versions)
+    constraints: "NOT NULL"
+  - name: investment_profile_version_sk
+    datatype: bigint
+    business_definition: Foreign key to investment profile version at time of acceptance
+    constraints: "NULLABLE"
+  - name: ack_type
+    datatype: string
+    business_definition: Acknowledgement type code (DERIVATIVE_RISK, FX_RISK, COMPLEX_PRODUCT)
+    constraints: "NOT NULL"
+  - name: accepted_ts
+    datatype: timestamp
+    business_definition: Business-effective timestamp when acknowledgement was accepted
+    constraints: "NOT NULL"
+  - name: expires_ts
+    datatype: timestamp
+    business_definition: Expiration timestamp for time-limited acknowledgements (null if perpetual)
+    constraints: "NULLABLE, CHECK (expires_ts IS NULL OR expires_ts > accepted_ts)"
+  - name: event_detected_ts
+    datatype: timestamp
+    business_definition: System timestamp when acknowledgement event was detected/ingested
+    constraints: "NOT NULL"
+  - name: actor_id
+    datatype: string
+    business_definition: User identifier who accepted the acknowledgement (default 'SYSTEM' for batch imports)
+    constraints: "NOT NULL DEFAULT 'SYSTEM'"
+  - name: actor_type
+    datatype: string
+    business_definition: Actor type (HUMAN, SYSTEM, BATCH_JOB)
+    constraints: "NOT NULL DEFAULT 'HUMAN'"
+  - name: event_source_system
+    datatype: string
+    business_definition: Source system code (e.g., PORTAL, CRM, MOBILE_APP)
+    constraints: "NOT NULL"
+  - name: rationale_code
+    datatype: string
+    business_definition: Reason code for acknowledgement (DISCLOSURE_ACCEPTANCE, RENEWAL, CORRECTION)
+    constraints: "NOT NULL DEFAULT 'DISCLOSURE_ACCEPTANCE'"
+  - name: acceptance_channel
+    datatype: string
+    business_definition: Channel through which acceptance was captured (WEB, MOBILE, BRANCH, CALL_CENTER)
+    constraints: "NULLABLE"
+  - name: acceptance_ip_address
+    datatype: string
+    business_definition: IP address of client device (for audit trail)
+    constraints: "NULLABLE"
+  - name: acceptance_device_id
+    datatype: string
+    business_definition: Device identifier hash (for fraud detection)
+    constraints: "NULLABLE"
+  - name: event_hash
+    datatype: string
+    business_definition: SHA256 hash of event content (default __PENDING__ until hash generation job runs)
+    constraints: "NOT NULL DEFAULT '__PENDING__', LENGTH = 64 OR = '__PENDING__'"
+  - name: event_hash_status
+    datatype: string
+    business_definition: Hash generation status (PENDING, GENERATED)
+    constraints: "NOT NULL DEFAULT 'PENDING'"
+  - name: load_ts
+    datatype: timestamp
+    business_definition: ETL ingestion timestamp
+    constraints: "NOT NULL DEFAULT CURRENT_TIMESTAMP"
+data_quality_rules:
+  - "UNIQUE (investment_profile_id, ack_type, accepted_ts) - no duplicate acknowledgements"
+  - "expires_ts IS NULL OR expires_ts > accepted_ts - expiry must be after acceptance"
+  - "event_detected_ts >= accepted_ts OR rationale_code = 'CORRECTION' - allow backdating only for corrections"
+  - "event_hash_status = 'PENDING' AND event_hash = '__PENDING__' OR event_hash_status = 'GENERATED' AND LENGTH(event_hash) = 64"
+  - "ack_type IN ('DERIVATIVE_RISK', 'FX_RISK', 'COMPLEX_PRODUCT') - valid enumeration"
+  - "actor_type IN ('HUMAN', 'SYSTEM', 'BATCH_JOB') - valid enumeration"
+  - "rationale_code IN ('DISCLOSURE_ACCEPTANCE', 'RENEWAL', 'CORRECTION', 'UNKNOWN') - valid enumeration"
+adr_refs:
+  - ADR-AUDIT-001-audit-artifacts-standard.md
+  - ADR-INV-001-investment-profile.md
+open_questions:
+  - "Should acknowledgement expiry trigger automatic version creation in investment profile?"
+  - "Add document hash field for signed disclosure PDFs?"
+sample_rows:
+  - acknowledgement_sk: 10001
+    investment_profile_id: "IP-CODE-111111"
+    investment_profile_version_sk: 5001
+    ack_type: "DERIVATIVE_RISK"
+    accepted_ts: "2025-11-19T10:30:00Z"
+    expires_ts: "2026-11-19T10:30:00Z"
+    event_detected_ts: "2025-11-19T10:30:05Z"
+    actor_id: "USR-987654"
+    actor_type: "HUMAN"
+    event_source_system: "PORTAL"
+    rationale_code: "DISCLOSURE_ACCEPTANCE"
+    acceptance_channel: "WEB"
+    acceptance_ip_address: "192.168.1.100"
+    acceptance_device_id: "DEV-HASH-ABC123"
+    event_hash: "__PENDING__"
+    event_hash_status: "PENDING"
+    load_ts: "2025-11-19T10:30:10Z"
+  - acknowledgement_sk: 10002
+    investment_profile_id: "IP-CODE-111111"
+    investment_profile_version_sk: 5002
+    ack_type: "COMPLEX_PRODUCT"
+    accepted_ts: "2025-11-20T14:15:00Z"
+    expires_ts: null
+    event_detected_ts: "2025-11-20T14:15:02Z"
+    actor_id: "USR-987654"
+    actor_type: "HUMAN"
+    event_source_system: "PORTAL"
+    rationale_code: "DISCLOSURE_ACCEPTANCE"
+    acceptance_channel: "WEB"
+    acceptance_ip_address: "192.168.1.100"
+    acceptance_device_id: "DEV-HASH-ABC123"
+    event_hash: "a3f8b9c1d2e3f4a5b6c7d8e9f0a1b2c3d4e5f6a7b8c9d0e1f2a3b4c5d6e7f8a9"
+    event_hash_status: "GENERATED"
+    load_ts: "2025-11-20T14:15:05Z"
