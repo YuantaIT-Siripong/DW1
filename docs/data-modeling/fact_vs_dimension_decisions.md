@@ -8,6 +8,5 @@
 | Service Category | category | Dimension | Lookup grouping |
 | Subscribe Scope | scope level | Dimension | PERSON/CUSTOMER_CODE/ACCOUNT_CODE |
 | Service Request | request | Fact | Lifecycle metrics |
-| Service Subscription Event | status event | Fact | Approval / rejection / deactivation transitions |
 | Income Source Version | profile version + income source | Bridge Dimension | Multi-valued set |
 | Investment Purpose Version | profile version + purpose | Bridge Dimension | Multi-valued set |

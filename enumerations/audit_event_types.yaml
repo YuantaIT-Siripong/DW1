@@ -1,0 +1,261 @@
+enumeration_version: 2025.11.25-1
+generated_at_utc: "2025-11-25T12:45:00Z"
+purpose: "Unified, versioned list of audit event types and rationale codes across DW1 for validation, analytics, and governance."
+schema_version: 1
+
+# ---------------------------------------------------------------------
+# Glossary
+# event_type: What happened at the business/audit layer.
+# rationale_code: Why it happened (reason/motivation/workflow).
+# category: Functional grouping (PROFILE_VERSION, ACKNOWLEDGEMENT, etc.).
+# domain: Primary domain using the type (customer, investment, cross).
+# requires_version_link: Should reference a dimension version surrogate key.
+# chronology_exception_allowed: Allows event_ts < detected_ts (late/backdated).
+# requires_approval_reference: Needs approval or workflow linkage (e.g., override).
+# status_change_flag_applicable: Event may carry a status_change flag (e.g., vulnerability classification).
+# lifecycle_status: ACTIVE | DEPRECATED (never delete historical values).
+# introduced_version: enumeration_version when introduced.
+# notes: Optional explanatory text.
+# ---------------------------------------------------------------------
+
+event_types:
+  - code: PROFILE_VERSION_CREATE
+    category: PROFILE_VERSION
+    domain: customer
+    description: "Creation of a new customer profile SCD2 version."
+    requires_version_link: true
+    chronology_exception_allowed: false
+    requires_approval_reference: false
+    status_change_flag_applicable: false
+    lifecycle_status: ACTIVE
+    introduced_version: 2025.11.25-1
+
+  - code: PROFILE_VERSION_CORRECTION
+    category: PROFILE_CORRECTION
+    domain: customer
+    description: "Corrective new version (manual or approved change)."
+    requires_version_link: true
+    chronology_exception_allowed: true
+    requires_approval_reference: true
+    status_change_flag_applicable: false
+    lifecycle_status: ACTIVE
+    introduced_version: 2025.11.25-1
+
+  - code: PROFILE_VERSION_BACKDATED_INSERT
+    category: PROFILE_CORRECTION
+    domain: customer
+    description: "Late arriving version inserted with earlier effective timestamp."
+    requires_version_link: true
+    chronology_exception_allowed: true
+    requires_approval_reference: true
+    status_change_flag_applicable: false
+    lifecycle_status: ACTIVE
+    introduced_version: 2025.11.25-1
+
+  - code: SET_CHANGE
+    category: MULTI_VALUED_SET
+    domain: customer
+    description: "Version creation due to multi-valued set membership change."
+    requires_version_link: true
+    chronology_exception_allowed: false
+    requires_approval_reference: false
+    status_change_flag_applicable: false
+    lifecycle_status: ACTIVE
+    introduced_version: 2025.11.25-1
+
+  - code: PROFILE_HASH_RECOMPUTE
+    category: QUALITY
+    domain: customer
+    description: "Integrity maintenance event recomputing profile hash."
+    requires_version_link: true
+    chronology_exception_allowed: false
+    requires_approval_reference: false
+    status_change_flag_applicable: false
+    lifecycle_status: ACTIVE
+    introduced_version: 2025.11.25-1
+    notes: "No changed attributes; used for algorithm migration."
+
+  - code: ACK_ACCEPT
+    category: ACKNOWLEDGEMENT
+    domain: investment
+    description: "Risk disclosure acknowledgement accepted."
+    requires_version_link: true
+    chronology_exception_allowed: true
+    requires_approval_reference: false
+    status_change_flag_applicable: false
+    lifecycle_status: ACTIVE
+    introduced_version: 2025.11.25-1
+
+  - code: VULNERABILITY_CLASSIFIED
+    category: VULNERABILITY
+    domain: investment
+    description: "Vulnerability assessment recorded."
+    requires_version_link: true
+    chronology_exception_allowed: true
+    requires_approval_reference: false
+    status_change_flag_applicable: true
+    lifecycle_status: ACTIVE
+    introduced_version: 2025.11.25-1
+
+  - code: SUPERVISORY_OVERRIDE
+    category: SUPERVISORY_OVERRIDE
+    domain: investment
+    description: "Override decision (approved / denied / conditional)."
+    requires_version_link: true
+    chronology_exception_allowed: true
+    requires_approval_reference: true
+    status_change_flag_applicable: false
+    lifecycle_status: ACTIVE
+    introduced_version: 2025.11.25-1
+
+  - code: SCOPE_FALLBACK_USED
+    category: SCOPE_FALLBACK
+    domain: investment
+    description: "Fallback to broader scope profile (e.g., CUSTOMER baseline)."
+    requires_version_link: false
+    chronology_exception_allowed: false
+    requires_approval_reference: false
+    status_change_flag_applicable: false
+    lifecycle_status: ACTIVE
+    introduced_version: 2025.11.25-1
+    notes: "Purpose & KPIs to be refined (open issue)."
+
+rationale_codes:
+  - code: INITIAL_LOAD
+    category: PROFILE_VERSION
+    description: "First version creation for entity."
+    lifecycle_status: ACTIVE
+
+  - code: SOURCE_UPDATE
+    category: PROFILE_VERSION
+    description: "Regular source-driven change."
+    lifecycle_status: ACTIVE
+
+  - code: DATA_QUALITY_FIX
+    category: PROFILE_CORRECTION
+    description: "Correction of previously invalid data."
+    lifecycle_status: ACTIVE
+
+  - code: CORRECTION
+    category: PROFILE_CORRECTION
+    description: "Manual/approved correction of incorrect value."
+    lifecycle_status: ACTIVE
+
+  - code: BACKDATED
+    category: PROFILE_CORRECTION
+    description: "Late arriving change with earlier business timestamp."
+    lifecycle_status: ACTIVE
+
+  - code: MERGE_FLAG
+    category: PROFILE_CORRECTION
+    description: "Version introduced due to duplicate merge resolution."
+    lifecycle_status: ACTIVE
+
+  - code: RECOMPUTE_HASH
+    category: QUALITY
+    description: "Profile hash recalculated after algorithm or normalization change."
+    lifecycle_status: ACTIVE
+
+  - code: DISCLOSURE_ACCEPTANCE
+    category: ACKNOWLEDGEMENT
+    description: "Standard initial acknowledgement acceptance."
+    lifecycle_status: ACTIVE
+
+  - code: RENEWAL
+    category: ACKNOWLEDGEMENT
+    description: "Renewed expiring acknowledgement."
+    lifecycle_status: ACTIVE
+
+  - code: INITIAL_ASSESSMENT
+    category: VULNERABILITY
+    description: "First vulnerability classification."
+    lifecycle_status: ACTIVE
+
+  - code: PERIODIC_REVIEW
+    category: VULNERABILITY
+    description: "Scheduled reassessment of vulnerability."
+    lifecycle_status: ACTIVE
+
+  - code: COMPLAINT_INVESTIGATION
+    category: VULNERABILITY
+    description: "Assessment triggered by complaint or alert."
+    lifecycle_status: ACTIVE
+
+  - code: SUPERVISORY_OVERRIDE
+    category: SUPERVISORY_OVERRIDE
+    description: "Supervisor decision reason for override event."
+    lifecycle_status: ACTIVE
+
+  - code: EMERGENCY_APPROVAL
+    category: SUPERVISORY_OVERRIDE
+    description: "Time-sensitive supervisory approval under exceptional conditions."
+    lifecycle_status: ACTIVE
+
+  - code: PERIODIC_RENEWAL
+    category: SUPERVISORY_OVERRIDE
+    description: "Renewal of a time-bound override."
+    lifecycle_status: ACTIVE
+
+  - code: FALLBACK_APPLIED
+    category: SCOPE_FALLBACK
+    description: "Scope fallback executed due to absence of specific profile."
+    lifecycle_status: ACTIVE
+
+  - code: UNKNOWN
+    category: GENERIC
+    description: "Sentinel reason when rationale not supplied (should be minimized)."
+    lifecycle_status: ACTIVE
+    notes: "Monitor usage; high frequency indicates upstream data quality gap."
+
+deprecation:
+  deprecated_items: []
+  policy: "Codes are never physically removed; mark lifecycle_status=DEPRECATED and optionally add replacement_code."
+  replacement_guidelines: "Introduce new code, mark old as DEPRECATED with deprecation_reason and effective_date."
+
+validation:
+  event_type_required_fields:
+    - code
+    - category
+    - domain
+    - lifecycle_status
+  rationale_code_required_fields:
+    - code
+    - category
+    - lifecycle_status
+  chronology_exception_allowed_codes:
+    event_types:
+      - PROFILE_VERSION_CORRECTION
+      - PROFILE_VERSION_BACKDATED_INSERT
+      - ACK_ACCEPT
+      - VULNERABILITY_CLASSIFIED
+      - SUPERVISORY_OVERRIDE
+    rationale_codes:
+      - BACKDATED
+      - CORRECTION
+      - PERIODIC_REVIEW
+      - EMERGENCY_APPROVAL
+  approval_required_event_types:
+    - PROFILE_VERSION_CORRECTION
+    - PROFILE_VERSION_BACKDATED_INSERT
+    - SUPERVISORY_OVERRIDE
+  monitoring_rules:
+    - "UNKNOWN rationale_code usage > 2% of monthly audit events triggers data quality alert."
+    - "Backdated events must include approval reference where requires_approval_reference=true."
+
+change_control:
+  addition_requires: "Governance ticket + ADR-AUDIT-001 reference"
+  deprecation_requires: "Governance ticket + documentation of replacement"
+  last_review_date: "2025-11-25"
+  reviewers: ["Data Architecture", "Compliance", "Domain Lead"]
+
+# Implementation Notes
+# - ETL should reject events with event_type/rationale_code not listed here unless in controlled backfill mode.
+# - Hash status checks unaffected by enumeration.
+# - Enumeration updates must bump enumeration_version and update docs/data-modeling/enumerations.md (ENUM_VERSION).
+# - Future: Add deprecated_items with replacement_code and effective_date.
+
+change_log:
+  - version: 2025.11.25-1
+    date: "2025-11-25"
+    change: "Initial enumeration file creation."
+    author: "Data Architecture"
