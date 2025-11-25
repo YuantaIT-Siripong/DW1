@@ -1,0 +1,61 @@
+manifest_version: 2025.11.25-1
+generated_at_utc: "2025-11-25T15:55:00Z"
+description: "Authoritative machine-consumable manifest of modeling, audit, and enumeration artifacts for DW1. Used for rapid AI thread rehydration."
+ai_context_file: "AI_CONTEXT.md"
+
+enumeration_files:
+  - path: "enumerations/audit_event_types.yaml"
+    enumeration_version: "2025.11.25-1"
+  - path: "docs/data-modeling/enumerations.md"
+    enum_version: "2025.11.25-2"
+
+standards:
+  scd2_policy: "contracts/scd2/STANDARD_SCD2_POLICY.md"
+  audit_standard: "docs/audit/audit_artifacts_standard.md"
+  hashing: "docs/data-modeling/hashing_standards.md"
+  naming: "docs/data-modeling/naming_conventions.md"
+  fact_vs_dimension_matrix: "docs/data-modeling/fact_vs_dimension_decisions.md"
+
+adrs:
+  - "docs/adr/ADR-AUDIT-001-audit-artifacts-standard.md"
+  - "docs/adr/ADR-INV-001-investment-profile.md"
+  - "docs/adr/ADR-002-multi-valued-sets.md"
+
+audit_fact_tables:
+  customer_profile_audit: "db/audit/fact_customer_profile_audit.sql"
+  investment_acknowledgement: "db/audit/fact_investment_acknowledgement.sql"
+  vulnerability_assessment: "db/audit/fact_vulnerability_assessment.sql"
+  supervisory_override: "db/audit/fact_supervisory_override.sql"
+
+future_audit_artifacts:
+  - fact_profile_scope_fallback
+  - fact_backdated_request
+  - vw_audit_quality_issues (monitoring view)
+
+backlog_focus:
+  - "Design vw_audit_quality_issues view (hash aging, UNKNOWN rationale usage)"
+  - "Define fallback audit event semantics (SCOPE_FALLBACK_USED KPI, conditions)"
+  - "Approval reference pattern for backdated + override events (field design)"
+  - "Enumeration deprecation example stub"
+  - "Add monitoring thresholds to audit standard (UNKNOWN rationale <=2%)"
+
+governance:
+  enumeration_change_requires: "ADR reference + version bump"
+  audit_event_requires: "Enumeration entry + rationale code classification"
+  hash_algorithm_change_requires: "Update hashing_standards.md + impacted contracts"
+
+surrogate_key_patterns:
+  - "SCD2 dimensions: <entity>_version_sk"
+  - "Facts & audit facts: <entity>_sk"
+  - "Bridge dimensions: <entity>_version_sk per membership"
+
+hash_exclusion_policy_ref: "contracts/scd2/STANDARD_SCD2_POLICY.md#Derived-Metrics-Exclusion"
+
+monitoring_targets_planned:
+  - "Pending event hashes older than 1 hour"
+  - "Unknown rationale_code usage >2% monthly"
+  - "Orphan dimension versions (no audit event)"
+  - "Backdated events missing approval reference"
+
+last_reviewed_by: "Data Architecture"
+last_review_date: "2025-11-25"
