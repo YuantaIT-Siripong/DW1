@@ -170,7 +170,6 @@ See [Hashing Standards](../data-modeling/hashing_standards.md) for complete SHA2
 - [Customer Module](../business/modules/customer_module.md) - Customer domain audit events
 - [Investment Module](../business/modules/investment_profile_module.md) - Investment domain audit events
 
-## Enumeration Management (Future)
 
 ### Centralized Audit Event Types
 Future PR will introduce `audit_event_types.yaml` with:
@@ -178,6 +177,27 @@ Future PR will introduce `audit_event_types.yaml` with:
 - Semantic groupings (PROFILE_CHANGE, REGULATORY, CORRECTION, etc.)
 - Deprecation workflow for obsolete codes
 - ADR update requirement for new event types
+
+## Enumeration Management
+
+Audit event types and rationale codes are centralized in `enumerations/audit_event_types.yaml` (enumeration_version: 2025.11.25-1).
+
+Key fields per event_type:
+- category, domain, requires_version_link, chronology_exception_allowed, requires_approval_reference, status_change_flag_applicable, lifecycle_status.
+
+Key fields per rationale_code:
+- category, lifecycle_status, notes.
+
+Validation Rules (from enumeration file):
+- Unknown codes rejected at ingestion (except controlled backfill).
+- Chronology exceptions allowed only for configured event_types/rationale_codes (e.g., BACKDATED, CORRECTION, PERIODIC_REVIEW).
+- Approval required event types (PROFILE_VERSION_CORRECTION, PROFILE_VERSION_BACKDATED_INSERT, SUPERVISORY_OVERRIDE) must include approval reference in future schema extensions.
+
+Monitoring Targets (future view `vw_audit_quality_issues`):
+- `event_hash_status='PENDING'` older than SLA threshold.
+- UNKNOWN rationale_code usage > 2% monthly.
+- Backdated events missing approval reference.
+
 
 ## Change Control
 - Adding new audit fact tables requires ADR review

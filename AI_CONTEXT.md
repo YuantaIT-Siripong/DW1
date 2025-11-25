@@ -123,6 +123,15 @@ order by effective_start_ts desc
 limit 1;
 ```
 
+### Audit Event Enumeration
+A centralized machine-consumable enumeration file now exists: `enumerations/audit_event_types.yaml` (enumeration_version: 2025.11.25-1). It defines:
+- event_type codes (e.g., PROFILE_VERSION_CREATE, ACK_ACCEPT, VULNERABILITY_CLASSIFIED, SUPERVISORY_OVERRIDE, SCOPE_FALLBACK_USED, PROFILE_HASH_RECOMPUTE)
+- rationale_code values (e.g., INITIAL_LOAD, SOURCE_UPDATE, CORRECTION, BACKDATED, DISCLOSURE_ACCEPTANCE, PERIODIC_REVIEW, SUPERVISORY_OVERRIDE, FALLBACK_APPLIED, UNKNOWN)
+Governance:
+- Additions/deprecations require ADR-AUDIT-001 reference and enumeration_version bump.
+- ETL validation rejects unknown event_type/rationale_code outside controlled backfill mode.
+Monitoring (planned): UNKNOWN rationale_code usage > 2% triggers alert; backdated events must carry approval reference when required.
+
 ## Pending Backlog (See docs/backlog/phase1_tasks.yaml)
 - Entitlement expansion view
 - Change detection ETL scripts (customer + investment)
@@ -132,7 +141,7 @@ limit 1;
 - Bridge table contracts (income_source, investment_purpose, contact_channel) tests
 - Profile & Investment hash macro implementation & tests
 - Audit quality monitoring view (vw_audit_quality_issues)
-- Enumeration file for audit event types (audit_event_types.yaml with versioning)
+
 
 ## Interaction Guidance (Prompts)
 - "Create PR for customer profile hash macro"

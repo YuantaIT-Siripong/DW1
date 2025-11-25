@@ -65,6 +65,12 @@ Implement four audit facts:
 - **AI_CONTEXT.md Updated**: Lists audit artifacts and clarifies state (dimensions) vs actions (audit facts) separation
 - **SCD2 Policy Updated**: Notes audit linkage requirement for version creation events
 
+### 8. Enumeration Standardization
+Implemented centralized enumeration file `enumerations/audit_event_types.yaml` (version 2025.11.25-1) to prevent rationale/event_type drift. Governance:
+- Any new event_type or rationale_code requires enumeration_version bump and ADR reference.
+- Deprecation uses lifecycle_status=DEPRECATED (codes retained for historical integrity).
+- Chronology exception logic and approval requirements sourced from enumeration metadata (reduces hard-coded ETL rules).
+
 ## Implementation Directory Structure
 ```
 contracts/audit/
@@ -155,3 +161,4 @@ docs/audit/
 | Version | Date | Change | Author |
 |---------|------|--------|--------|
 | 1.0 | 2025-11-25 | Initial ADR for audit artifacts standard | Data Architecture |
+| 1.1 | 2025-11-25 | Added enumeration standard reference (audit_event_types.yaml) | Data Architecture |
