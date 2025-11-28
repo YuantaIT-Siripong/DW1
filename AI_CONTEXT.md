@@ -4,6 +4,22 @@
 Single reference for AI assistants and new contributors. Points to authoritative domain and modeling sources and sets rules for changes.
 
 ## Authoritative Source Files
+- [AI Context](AI_CONTEXT.md)
+- [Customer Module Spec](docs/business/modules/customer_module.md)
+- [Investment Profile Module Spec](docs/business/modules/investment_profile_module.md)
+- [Data Quality Framework](docs/data-quality/framework.md)
+- [Data Quality Rules](docs/business/data_quality_rules.md)
+- [Modeling Decisions](docs/modeling_decisions.md)
+- [Contracts Index](contracts/INDEX.yaml)
+- [Customer SCD2 Columns Contract](contracts/scd2/dim_customer_profile_columns.yaml)
+- [Investment SCD2 Columns Contract](contracts/scd2/dim_investment_profile_version_columns.yaml)
+- [Unified Enumerations](docs/data-modeling/enumerations.md)
+- [Investment Enumerations Detailed](docs/data-modeling/investment-profile/enumerations.md)
+- [ADR-001 SCD2 Customer Profile](docs/adr/ADR-001-scd2-customer-profile.md)
+- [ADR-INV-001 Investment Profile](docs/adr/ADR-INV-001-investment-profile.md)
+- [ADR-002 Multi-Valued Sets](docs/adr/ADR-002-multi-valued-sets.md)
+- [Contributing Guide](CONTRIBUTING.md)
+- Customer Profile Attribute Matrix (governance crosswalk): docs/business/matrices/customer_profile_attribute_matrix.yaml
 
 ### Thread & Manifest
 - Context Manifest: CONTEXT_MANIFEST.yaml (machine index of versions and key artifacts)

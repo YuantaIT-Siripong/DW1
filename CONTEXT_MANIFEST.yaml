@@ -26,6 +26,12 @@ modules:
   investment_profile: "docs/business/modules/investment_profile_module.md"
   company: "docs/business/modules/company_module.md"
   
+matrices:
+  - entity: "dim_customer_profile"
+    path: "docs/business/matrices/customer_profile_attribute_matrix.yaml"
+    matrix_version: "2025.11.28-1"
+    purpose: "Governance crosswalk for customer profile attributes (business-to-technical)."
+
 audit_fact_tables:
   customer_profile_audit: "db/audit/fact_customer_profile_audit.sql"
   investment_acknowledgement: "db/audit/fact_investment_acknowledgement.sql"
