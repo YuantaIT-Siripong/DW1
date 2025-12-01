@@ -1,1 +1,583 @@
-empty file, wait for generate
+entity_name: customer_profile_standardized
+domain: customer
+table_type: cleansed
+layer: silver
+grain_description: One record per customer with cleaned, validated, and enriched data.  Adds computed hashes for change detection and data quality flags.  Still flat table (not dimensional model yet). 
+
+upstream_source:
+  layer: bronze
+  table_name: bronze.customer_profile_standardized
+  transformation_type: enrichment_and_validation
+
+primary_keys:
+  - customer_id
+
+natural_keys:
+  - customer_id
+
+attributes:
+  # Natural Key (TYPE CONVERTED)
+  - name: customer_id
+    datatype: BIGINT
+    business_definition: Unique business key (converted from VARCHAR to BIGINT)
+    nullable: false
+    primary_key: true
+    source_field: customer_id
+    transformation: CAST(customer_id AS BIGINT)
+
+  # Identity Evidence (PII)
+  - name: evidence_unique_key
+    datatype: VARCHAR(100)
+    business_definition: National ID/Passport (normalized)
+    pii: true
+    pii_category: identity_document
+    nullable: true
+    source_field: evidence_unique_key
+    transformation: UPPER(TRIM(evidence_unique_key))
+
+  # Names (PII) - Preserve case in storage
+  - name: firstname
+    datatype: VARCHAR(200)
+    business_definition: Given name (case preserved, whitespace trimmed)
+    pii: true
+    pii_category: name
+    nullable: true
+    source_field: firstname
+    transformation: TRIM(firstname)
+
+  - name: lastname
+    datatype: VARCHAR(200)
+    business_definition: Family name (case preserved, whitespace trimmed)
+    pii: true
+    pii_category: name
+    nullable: true
+    source_field: lastname
+    transformation: TRIM(lastname)
+
+  - name: firstname_local
+    datatype: VARCHAR(200)
+    business_definition: Local script given name (case preserved, whitespace trimmed)
+    pii: true
+    pii_category: name
+    nullable: true
+    source_field: firstname_local
+    transformation: TRIM(firstname_local)
+
+  - name: lastname_local
+    datatype: VARCHAR(200)
+    business_definition: Local script family name (case preserved, whitespace trimmed)
+    pii: true
+    pii_category: name
+    nullable: true
+    source_field: lastname_local
+    transformation: TRIM(lastname_local)
+
+  # Enumeration Fields
+  - name: person_title
+    datatype: VARCHAR(50)
+    business_definition: Honorific title enumeration code
+    nullable: true
+    enumeration_ref: enumerations/customer_person_title.yaml
+    valid_values: [MR, MRS, MS, MISS, DR, PROF, REV, OTHER]
+    source_field: person_title
+    transformation: UPPER(TRIM(person_title))
+
+  - name: person_title_other
+    datatype: VARCHAR(200)
+    business_definition: Freetext title when person_title=OTHER
+    nullable: true
+    source_field: person_title_other
+    transformation: TRIM(person_title_other)
+
+  - name: marital_status
+    datatype: VARCHAR(50)
+    business_definition: Marital status enumeration code
+    nullable: true
+    enumeration_ref: enumerations/customer_marital_status.yaml
+    valid_values: [SINGLE, MARRIED, DIVORCED, WIDOWED, SEPARATED, UNKNOWN]
+    source_field: marital_status
+    transformation: UPPER(TRIM(marital_status))
+
+  - name: nationality
+    datatype: VARCHAR(2)
+    business_definition: Nationality enumeration code - ISO 3166-1 alpha-2
+    nullable: true
+    enumeration_ref: enumerations/customer_nationality.yaml
+    standard_reference: ISO 3166-1 alpha-2
+    source_field: nationality
+    transformation: UPPER(TRIM(nationality))
+
+  - name: nationality_other
+    datatype: VARCHAR(200)
+    business_definition: Freetext nationality when nationality=OTHER
+    nullable: true
+    source_field: nationality_other
+    transformation: TRIM(nationality_other)
+
+  - name: occupation
+    datatype: VARCHAR(100)
+    business_definition: Occupational classification enumeration code
+    nullable: true
+    enumeration_ref: enumerations/customer_occupation.yaml
+    valid_values: [EMPLOYEE, SELF_EMPLOYED, BUSINESS_OWNER, GOVERNMENT_OFFICER, PROFESSIONAL, RETIRED, STUDENT, HOMEMAKER, UNEMPLOYED, OTHER, UNKNOWN]
+    source_field: occupation
+    transformation: UPPER(TRIM(occupation))
+
+  - name: occupation_other
+    datatype: VARCHAR(200)
+    business_definition: Freetext occupation when occupation=OTHER
+    nullable: true
+    source_field: occupation_other
+    transformation: TRIM(occupation_other)
+
+  - name: education_level
+    datatype: VARCHAR(100)
+    business_definition: Education attainment enumeration code
+    nullable: true
+    enumeration_ref: enumerations/customer_education_level.yaml
+    valid_values: [PRIMARY, SECONDARY, VOCATIONAL, DIPLOMA, BACHELOR, MASTER, DOCTORATE, OTHER, UNKNOWN]
+    source_field: education_level
+    transformation: UPPER(TRIM(education_level))
+
+  - name: education_level_other
+    datatype: VARCHAR(200)
+    business_definition: Freetext education when education_level=OTHER
+    nullable: true
+    source_field: education_level_other
+    transformation: TRIM(education_level_other)
+
+  - name: business_type
+    datatype: VARCHAR(100)
+    business_definition: Business/industry sector enumeration code
+    nullable: true
+    enumeration_ref: enumerations/customer_business_type.yaml
+    valid_values: [FINANCE, MANUFACTURING, RETAIL, SERVICES, AGRICULTURE, TECHNOLOGY, HEALTHCARE, EDUCATION, CONSTRUCTION, HOSPITALITY, TRANSPORTATION, ENERGY, MEDIA, GOVERNMENT, OTHER, UNKNOWN]
+    source_field: business_type
+    transformation: UPPER(TRIM(business_type))
+
+  - name: business_type_other
+    datatype: VARCHAR(200)
+    business_definition: Freetext business type when business_type=OTHER
+    nullable: true
+    source_field: business_type_other
+    transformation: TRIM(business_type_other)
+
+  - name: birthdate
+    datatype: DATE
+    business_definition: Date of birth in YYYY-MM-DD format
+    pii: true
+    pii_category: birthdate
+    nullable: true
+    source_field: birthdate
+    transformation: birthdate
+
+  # Economic Bands
+  - name: total_asset
+    datatype: VARCHAR(50)
+    business_definition: Total asset value band enumeration code
+    nullable: true
+    enumeration_ref: enumerations/customer_total_asset_bands.yaml
+    valid_values: [ASSET_BAND_1, ASSET_BAND_2, ASSET_BAND_3, ASSET_BAND_4, ASSET_BAND_5, UNKNOWN]
+    source_field: total_asset
+    transformation: UPPER(TRIM(total_asset))
+
+  - name: monthly_income
+    datatype: VARCHAR(50)
+    business_definition: Monthly income band enumeration code
+    nullable: true
+    enumeration_ref: enumerations/customer_monthly_income_bands.yaml
+    valid_values: [INCOME_BAND_1, INCOME_BAND_2, INCOME_BAND_3, INCOME_BAND_4, INCOME_BAND_5, UNKNOWN]
+    source_field: monthly_income
+    transformation: UPPER(TRIM(monthly_income))
+
+  - name: income_country
+    datatype: VARCHAR(2)
+    business_definition: Country of income origin - ISO 3166-1 alpha-2
+    nullable: true
+    enumeration_ref: enumerations/customer_income_country. yaml
+    standard_reference: ISO 3166-1 alpha-2
+    source_field: income_country
+    transformation: UPPER(TRIM(income_country))
+
+  - name: income_country_other
+    datatype: VARCHAR(200)
+    business_definition: Freetext income country when income_country=OTHER
+    nullable: true
+    source_field: income_country_other
+    transformation: TRIM(income_country_other)
+
+  # Multi-Valued Sets (Still pipe-delimited, not parsed into bridge yet)
+  - name: source_of_income_list
+    datatype: TEXT
+    business_definition: Pipe-delimited list of income source codes (normalized, sorted)
+    nullable: true
+    format: Pipe-delimited string (e.g., "DIVIDEND|RENTAL|SALARY")
+    enumeration_ref: enumerations/customer_source_of_income. yaml
+    source_field: source_of_income_list
+    transformation: Normalize each code UPPER(TRIM), deduplicate, sort, join with "|"
+
+  - name: purpose_of_investment_list
+    datatype: TEXT
+    business_definition: Pipe-delimited list of investment purpose codes (normalized, sorted)
+    nullable: true
+    format: Pipe-delimited string (e. g., "EDUCATION|RETIREMENT")
+    enumeration_ref: enumerations/customer_purpose_of_investment.yaml
+    source_field: purpose_of_investment_list
+    transformation: Normalize each code UPPER(TRIM), deduplicate, sort, join with "|"
+
+  # IT Source Metadata (passthrough)
+  - name: last_modified_ts
+    datatype: TIMESTAMP
+    business_definition: Last modified timestamp from operational system
+    nullable: true
+    source_field: last_modified_ts
+
+  # Bronze Metadata (passthrough)
+  - name: _bronze_load_ts
+    datatype: TIMESTAMP
+    business_definition: UTC timestamp when record was landed into Bronze
+    nullable: false
+    source_field: _bronze_load_ts
+
+  - name: _bronze_source_file
+    datatype: VARCHAR(500)
+    business_definition: Source view name or file identifier
+    nullable: true
+    source_field: _bronze_source_file
+
+  - name: _bronze_batch_id
+    datatype: BIGINT
+    business_definition: ETL batch identifier for lineage tracking
+    nullable: true
+    source_field: _bronze_batch_id
+
+  # ===== COMPUTED COLUMNS (NEW IN SILVER) =====
+
+  # Set Hashes
+  - name: source_of_income_set_hash
+    datatype: VARCHAR(64)
+    business_definition: SHA256 hash of normalized, sorted source_of_income codes (empty set = SHA256(""))
+    nullable: true
+    computed: true
+    computation_logic: |
+      1. Parse source_of_income_list by "|" delimiter
+      2. Normalize each code: UPPER(TRIM)
+      3.  Deduplicate
+      4. Sort ascending alphabetically
+      5. Join with "|" (empty list → "")
+      6. SHA256(joined_string) → lowercase hex
+    empty_set_value: "e3b0c44298fc1c149afbf4c8996fb92427ae41e4649b934ca495991b7852b855"
+
+  - name: purpose_of_investment_set_hash
+    datatype: VARCHAR(64)
+    business_definition: SHA256 hash of normalized, sorted purpose_of_investment codes (empty set = SHA256(""))
+    nullable: true
+    computed: true
+    computation_logic: |
+      1. Parse purpose_of_investment_list by "|" delimiter
+      2. Normalize each code: UPPER(TRIM)
+      3. Deduplicate
+      4. Sort ascending alphabetically
+      5. Join with "|" (empty list → "")
+      6.  SHA256(joined_string) → lowercase hex
+    empty_set_value: "e3b0c44298fc1c149afbf4c8996fb92427ae41e4649b934ca495991b7852b855"
+
+  # Profile Hash (for change detection in Gold layer)
+  - name: profile_hash
+    datatype: VARCHAR(64)
+    business_definition: SHA256 hash of all version-driving attributes (17 fields) for SCD2 change detection
+    nullable: false
+    computed: true
+    computation_logic: |
+      Canonical string assembly (17 fields, "|" delimiter, "__NULL__" for NULLs):
+      1. UPPER(TRIM(evidence_unique_key))
+      2. UPPER(TRIM(firstname))
+      3. UPPER(TRIM(lastname))
+      4. TRIM(firstname_local)  -- preserve case
+      5. TRIM(lastname_local)   -- preserve case
+      6.  UPPER(TRIM(person_title))
+      7. UPPER(TRIM(marital_status))
+      8.  UPPER(TRIM(nationality))
+      9. UPPER(TRIM(occupation))
+      10.  UPPER(TRIM(education_level))
+      11. UPPER(TRIM(business_type))
+      12. birthdate (YYYY-MM-DD)
+      13.  UPPER(TRIM(total_asset))
+      14. UPPER(TRIM(monthly_income))
+      15. UPPER(TRIM(income_country))
+      16. source_of_income_set_hash
+      17. purpose_of_investment_set_hash
+      
+      SHA256(concatenated) → lowercase hex (64 chars)
+    reference: AI_CONTEXT. md "Hash Normalization Rules"
+
+  # Data Quality Flags
+  - name: is_valid_person_title
+    datatype: BOOLEAN
+    business_definition: TRUE if person_title is in enumeration valid_values
+    nullable: false
+    computed: true
+    default: false
+    computation_logic: Check person_title against enumerations/customer_person_title.yaml
+
+  - name: is_valid_marital_status
+    datatype: BOOLEAN
+    business_definition: TRUE if marital_status is in enumeration valid_values
+    nullable: false
+    computed: true
+    default: false
+    computation_logic: Check marital_status against enumerations/customer_marital_status.yaml
+
+  - name: is_valid_nationality
+    datatype: BOOLEAN
+    business_definition: TRUE if nationality is in enumeration valid_values
+    nullable: false
+    computed: true
+    default: false
+    computation_logic: Check nationality against enumerations/customer_nationality.yaml
+
+  - name: is_valid_occupation
+    datatype: BOOLEAN
+    business_definition: TRUE if occupation is in enumeration valid_values
+    nullable: false
+    computed: true
+    default: false
+    computation_logic: Check occupation against enumerations/customer_occupation. yaml
+
+  - name: is_valid_education_level
+    datatype: BOOLEAN
+    business_definition: TRUE if education_level is in enumeration valid_values
+    nullable: false
+    computed: true
+    default: false
+    computation_logic: Check education_level against enumerations/customer_education_level.yaml
+
+  - name: is_valid_business_type
+    datatype: BOOLEAN
+    business_definition: TRUE if business_type is in enumeration valid_values
+    nullable: false
+    computed: true
+    default: false
+    computation_logic: Check business_type against enumerations/customer_business_type.yaml
+
+  - name: is_valid_total_asset
+    datatype: BOOLEAN
+    business_definition: TRUE if total_asset is in enumeration valid_values
+    nullable: false
+    computed: true
+    default: false
+    computation_logic: Check total_asset against enumerations/customer_total_asset_bands.yaml
+
+  - name: is_valid_monthly_income
+    datatype: BOOLEAN
+    business_definition: TRUE if monthly_income is in enumeration valid_values
+    nullable: false
+    computed: true
+    default: false
+    computation_logic: Check monthly_income against enumerations/customer_monthly_income_bands.yaml
+
+  - name: is_valid_income_country
+    datatype: BOOLEAN
+    business_definition: TRUE if income_country is in enumeration valid_values
+    nullable: false
+    computed: true
+    default: false
+    computation_logic: Check income_country against enumerations/customer_income_country.yaml
+
+  - name: is_valid_birthdate
+    datatype: BOOLEAN
+    business_definition: TRUE if birthdate <= CURRENT_DATE and age between 18-120
+    nullable: false
+    computed: true
+    default: false
+    computation_logic: birthdate IS NOT NULL AND birthdate <= CURRENT_DATE AND age >= 18 AND age <= 120
+
+  - name: is_valid_source_of_income_list
+    datatype: BOOLEAN
+    business_definition: TRUE if all codes in pipe-delimited list are valid enumeration values
+    nullable: false
+    computed: true
+    default: false
+    computation_logic: Parse list, check each code against enumerations/customer_source_of_income.yaml
+
+  - name: is_valid_purpose_of_investment_list
+    datatype: BOOLEAN
+    business_definition: TRUE if all codes in pipe-delimited list are valid enumeration values
+    nullable: false
+    computed: true
+    default: false
+    computation_logic: Parse list, check each code against enumerations/customer_purpose_of_investment.yaml
+
+  # Overall Data Quality Score
+  - name: data_quality_score
+    datatype: DECIMAL(5,4)
+    business_definition: Overall data quality score (0. 0000 to 1.0000) based on validation flags
+    nullable: false
+    computed: true
+    default: 0.0000
+    computation_logic: |
+      Count of TRUE validation flags / Total validation flags (12)
+      Example: 11 TRUE flags out of 12 = 0.9167
+
+  # Silver Metadata
+  - name: _silver_processed_ts
+    datatype: TIMESTAMP
+    business_definition: UTC timestamp when record was processed into Silver
+    nullable: false
+    default: CURRENT_TIMESTAMP
+    etl_metadata: true
+
+  - name: _silver_dq_status
+    datatype: VARCHAR(50)
+    business_definition: Data quality status classification
+    nullable: true
+    valid_values: [VALID, VALID_WITH_OTHER, INVALID_ENUMERATION, INVALID_BIRTHDATE, MULTIPLE_ISSUES]
+    etl_metadata: true
+    computation_logic: |
+      IF data_quality_score = 1.0 THEN 'VALID'
+      ELSIF data_quality_score >= 0.9 AND (person_title='OTHER' OR nationality='OTHER' OR .. .) THEN 'VALID_WITH_OTHER'
+      ELSIF NOT is_valid_birthdate THEN 'INVALID_BIRTHDATE'
+      ELSIF data_quality_score < 0.7 THEN 'MULTIPLE_ISSUES'
+      ELSE 'INVALID_ENUMERATION'
+
+materialization_strategy:
+  approach: table
+  reason: Computed hashes and DQ flags are expensive to calculate on-the-fly
+  refresh_pattern: incremental_based_on_bronze_load_ts
+  partitioning: optional_by_bronze_load_ts_date
+
+data_quality_rules:
+  - rule: unique_customer_id
+    description: customer_id must be unique
+    
+  - rule: customer_id_not_null
+    description: customer_id is required
+    
+  - rule: customer_id_numeric
+    description: customer_id must successfully convert to BIGINT
+    
+  - rule: profile_hash_length
+    description: profile_hash must be exactly 64 characters
+    
+  - rule: set_hash_length
+    description: Set hashes must be exactly 64 characters or empty set constant
+    
+  - rule: dq_score_range
+    description: data_quality_score must be between 0.0000 and 1.0000
+    
+  - rule: other_field_consistency
+    description: When enumeration='OTHER', corresponding _other field should be populated
+    
+  - rule: hash_deterministic
+    description: Recomputing profile_hash for same inputs must produce same output
+
+transformation_summary:
+  type_conversions:
+    - customer_id VARCHAR(50) → BIGINT
+    
+  normalization:
+    - All enumeration fields: UPPER(TRIM)
+    - Text fields: TRIM (preserve case for names)
+    - Multi-valued lists: Parse, normalize, deduplicate, sort, rejoin
+    
+  computed_additions:
+    - 3 hash columns (profile_hash, 2 set hashes)
+    - 12 data quality validation flags
+    - 1 data quality score
+    - 2 Silver metadata columns
+    
+  passthrough:
+    - All 6 _other freetext fields (no transformation)
+    - All 4 name fields (preserve case)
+    - birthdate (no transformation)
+    - 3 Bronze metadata columns
+
+indexes:
+  - name: pk_silver_customer_profile
+    type: primary_key
+    columns: [customer_id]
+    
+  - name: idx_silver_profile_hash
+    type: non_unique
+    columns: [profile_hash]
+    description: Fast lookup for change detection
+    
+  - name: idx_silver_dq_status
+    type: non_unique
+    columns: [_silver_dq_status]
+    description: Query by data quality status
+    
+  - name: idx_silver_processed_ts
+    type: non_unique
+    columns: [_silver_processed_ts]
+    description: Query by processing timestamp
+
+pii_policy:
+  columns_raw_pii:
+    - evidence_unique_key
+    - firstname
+    - lastname
+    - firstname_local
+    - lastname_local
+    - birthdate
+  access_control:
+    - role: dw_etl_service
+      access: read_write
+    - role: dw_privileged
+      access: read_only
+    - role: dw_analyst
+      access: no_access
+  retention_policy: 7_years_after_relationship_end
+
+sample_rows:
+  - customer_id: 12345  # BIGINT (converted)
+    evidence_unique_key: "AB1234567890"
+    firstname: "John"
+    lastname: "Doe"
+    firstname_local: "สมชาย"
+    lastname_local: "โด"
+    person_title: "MR"
+    person_title_other: null
+    marital_status: "MARRIED"
+    nationality: "TH"
+    nationality_other: null
+    occupation: "OTHER"
+    occupation_other: "Astronaut"
+    education_level: "BACHELOR"
+    education_level_other: null
+    business_type: "FINANCE"
+    business_type_other: null
+    birthdate: "1985-03-10"
+    total_asset: "ASSET_BAND_3"
+    monthly_income: "INCOME_BAND_2"
+    income_country: "TH"
+    income_country_other: null
+    source_of_income_list: "DIVIDEND|SALARY"
+    purpose_of_investment_list: "EDUCATION|RETIREMENT"
+    last_modified_ts: "2025-12-01T07:55:00Z"
+    _bronze_load_ts: "2025-12-01T08:00:00Z"
+    _bronze_source_file: "opdb. vw_customer_profile_standardized"
+    _bronze_batch_id: 20251201001
+    # COMPUTED COLUMNS:
+    source_of_income_set_hash: "a3c5f2b8d9e1a4c7f6b2e9d8c5a3f1b7e9d8a5c2f1b4e7d9a6c3f8b1e5d2a9c7"
+    purpose_of_investment_set_hash: "7b2d9e4a1c8f5b3d6a9c2e8f1b4d7a5c3e9f2b8d1a7c4f6e3b9d5a2c8f1e4b7"
+    profile_hash: "5e884898da28047151d0e56f8dc62927973b1dd51ba4a0a3dbf9c3cd58db57fa"
+    is_valid_person_title: true
+    is_valid_marital_status: true
+    is_valid_nationality: true
+    is_valid_occupation: true  # "OTHER" is valid enumeration value
+    is_valid_education_level: true
+    is_valid_business_type: true
+    is_valid_total_asset: true
+    is_valid_monthly_income: true
+    is_valid_income_country: true
+    is_valid_birthdate: true
+    is_valid_source_of_income_list: true
+    is_valid_purpose_of_investment_list: true
+    data_quality_score: 1.0000
+    _silver_processed_ts: "2025-12-01T08:05:00Z"
+    _silver_dq_status: "VALID_WITH_OTHER"
+
+version: 1.0
+last_updated: 2025-12-01
+owner: Data Warehouse Team
