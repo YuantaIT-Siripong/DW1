@@ -1,4 +1,20 @@
-' # Modeling Decisions (Phase 1)
+# Modeling Decisions Index
+
+All modeling decisions governed by authoritative standards in [STANDARDS_INDEX.md](STANDARDS_INDEX.md).
+
+## Phase 1 Scope Decisions
+| Decision | Rationale | Documentation |
+|----------|-----------|---------------|
+| Customer Profile as SCD2 | Track historical demographics for compliance | [ADR-001](adr/ADR-001-scd2-customer-profile.md), [Customer Module](business/modules/customer_module.md) |
+| Investment Profile Separation | Prevent demographic churn in suitability history | [ADR-INV-001](adr/ADR-INV-001-investment-profile. md) |
+| Multi-Valued Sets via Bridges | Set membership versioning without profile duplication | [ADR-002](adr/ADR-002-multi-valued-sets.md) |
+| SHA256 Hashing | Collision resistance, industry standard | [Hashing Standards](data-modeling/hashing_standards. md) |
+| Derived Scores in Gold Layer | Prevent spurious SCD2 versioning | [SCD2 Policy](../contracts/scd2/STANDARD_SCD2_POLICY. md#derived-metrics-exclusion) |
+
+## Quick Links
+- Standards: [STANDARDS_INDEX.md](STANDARDS_INDEX.md)
+- Customer Module: [customer_module.md](business/modules/customer_module.md)
+- Investment Module: [investment_profile_module.md](business/modules/investment_profile_module.md)
 
 ## Authoritative Policies
 All modeling decisions in this document are governed by the following authoritative policies:
