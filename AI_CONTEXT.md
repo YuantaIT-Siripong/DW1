@@ -8,8 +8,7 @@ Single reference for AI assistants.   Points to authoritative sources and establ
 
 ## Project Status
 - **Phase**: Customer Profile Module - Gold/Curated Layer Complete
-- **Completed**: Enumeration files, Gold/Curated contracts (dimension, bridges, audit fact)
-- **Next**: Bronze and Silver layer contracts + DDL generation
+- **Completed**: Enumeration files, Bronze/Silver/Gold/Curated contracts (dimension, bridges, audit fact)
 - **Repository**: YuantaIT-Siripong/DW1
 
 ---
@@ -390,5 +389,5 @@ All in `enumerations/` folder:
 See [CONTEXT_MANIFEST.yaml](CONTEXT_MANIFEST.yaml) for machine-readable index.  
 
 **Last Updated**: 2025-12-01  
-**Current Phase**: Gold/Curated contracts complete; Bronze/Silver contracts pending  
+**Current Phase**: Bronze/Silver/Gold/Curated contracts complete;
 **Maintained By**: Data Architecture

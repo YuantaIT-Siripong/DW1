@@ -86,9 +86,9 @@ contracts:
     bridge_income: "contracts/customer/bridge_customer_income_source_version.yaml"
     bridge_investment: "contracts/customer/bridge_customer_investment_purpose_version.yaml"
     audit_fact: "contracts/customer/fact_customer_profile_audit.yaml"
-    bronze_pending: "contracts/bronze/customer_profile_standardized.yaml"
-    silver_pending: "contracts/silver/customer_profile_standardized.yaml"
-    status: "gold_complete_bronze_silver_pending"
+    bronze: "contracts/bronze/customer_profile_standardized.yaml"
+    silver: "contracts/silver/customer_profile_standardized.yaml"
+
 
 # UPDATE governance section
 governance:
