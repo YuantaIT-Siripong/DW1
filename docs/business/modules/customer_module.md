@@ -2,6 +2,8 @@
 
 Revision Date: 2025-12-01
 
+**For AI Assistants**: See [AI_CONTEXT.md](../../AI_CONTEXT.md) for quick reference and cross-chat standards. 
+
 ## 1. Module Overview
 The Customer Module establishes the canonical, versioned representation of a client's profile (identity evidence, demographics, names, economic bands, and multi‑valued investment context).  It provides the foundation for suitability assessment, regulatory compliance, and customer segmentation.
 

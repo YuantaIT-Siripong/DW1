@@ -1,97 +1,52 @@
-# DW1 Data Warehouse Standards - Quick Reference
+## Customer Profile Standards (Updated 2025-12-01)
 
-**Purpose**: Single entry point for all authoritative standards.  AI agents and contributors should reference this index first.
+### Enumeration + Freetext Pattern
+**Decision**: Direct enumeration codes (VARCHAR) in dimension + `_other` Type 1 freetext fields
 
-## Core Standards
+**Type 2 Fields** (versioned, in hash):
+- Enumerations: person_title, marital_status, nationality, occupation, education_level, business_type, income_country
+- Bands (no OTHER): total_asset, monthly_income
+- All stored as VARCHAR codes (e.g., "MR", "MARRIED", "TH")
 
-| Standard | File Location | Version | Purpose |
-|----------|--------------|---------|---------|
-| **Naming Conventions** | [docs/data-modeling/naming_conventions.md](docs/data-modeling/naming_conventions.md) | 1.0 | snake_case physical, camelCase API, suffix patterns |
-| **Hashing Standards** | [docs/data-modeling/hashing_standards.md](docs/data-modeling/hashing_standards.md) | 1.0 | SHA256 algorithm, profile/set hashing, normalization |
-| **SCD2 Policy** | [contracts/scd2/STANDARD_SCD2_POLICY.md](contracts/scd2/STANDARD_SCD2_POLICY.md) | 1.1 | Temporal precision, closure rules, surrogate keys |
-| **Data Quality Framework** | [docs/data-quality/framework.md](docs/data-quality/framework.md) | 0.1 | Component metrics, gold layer scoring (planned) |
-| **Enumeration Management** | [enumerations/audit_event_types.yaml](enumerations/audit_event_types.yaml) | 2025.11.25-1 | Enumeration versioning, governance |
+**Type 1 Fields** (NOT versioned, NOT in hash):
+- Freetext: person_title_other, nationality_other, occupation_other, education_level_other, business_type_other, income_country_other
+- Populated ONLY when enumeration = "OTHER"
 
-## Quick Lookup Tables
+**Removed**: Separate lookup dimensions (dim_marital_status, dim_nationality, etc.)  
+**Replaced with**: Enumeration YAML files in `enumerations/` folder
 
-### Naming Standards
-```sql
--- Physical Layer (Database)
-dim_customer_profile              -- Tables: snake_case
-customer_profile_version_sk       -- Surrogate keys: <entity>_version_sk
-is_current, has_margin_agreement  -- Booleans: is_, has_
-effective_start_ts                -- Timestamps: _ts suffix
-effective_start_date              -- Dates: _date suffix
-profile_hash                      -- Hashes: _hash suffix
-data_quality_score                -- Scores: _score suffix
-MARRIED, APPROVED                 -- Enumerations: UPPERCASE_SNAKE_CASE
+### Hash Normalization (Customer Profile)
+**Storage**: Preserve original case for names (firstname, lastname, firstname_local, lastname_local)
+
+**Hash Computation**:
+```
+- English fields: UPPER(TRIM)
+- Local fields: TRIM (preserve case)
+- Enumerations: UPPER(TRIM)
+- Dates: YYYY-MM-DD
+- NULLs: "__NULL__"
+- Delimiter: "|"
+- Exclude: _other freetext fields
 ```
 
-```json
-// API Layer (JSON)
-{
-  "customerProfileVersionSk": 1001,      // camelCase
-  "isCurrent": true,                     // camelCase booleans
-  "effectiveStartTs": "2025-01-15.. .",  // camelCase timestamps
-  "maritalStatusId": "MARRIED"           // Keep enums UPPERCASE
-}
+**Profile Hash**: SHA256 of 17 ordered fields (includes 2 set hashes)  
+**Empty Set Hash**: `e3b0c44298fc1c149afbf4c8996fb92427ae41e4649b934ca495991b7852b855`
+
+### Bridge Tables
+- **Naming**: `bridge_customer_*` (not `dim_*_version`)
+- **PK**: (customer_profile_version_sk, code)
+- **Direct codes**: No FK to lookup dimensions
+- **Tables**: bridge_customer_source_of_income, bridge_customer_purpose_of_investment
+
+### Data Types
+```
+customer_id: BIGINT (not STRING)
+evidence_unique_key: VARCHAR(100) (not national_id)
+Enumeration codes: VARCHAR(length) (not INT FK)
+Timestamps: TIMESTAMP (UTC, microsecond precision)
 ```
 
-### Hashing Standards
-```
-Algorithm: SHA256 (64-char hex)
-Profile Hash: Concatenate sorted normalized SCD2 attributes with '|'
-Set Hash: Concatenate sorted member IDs with ','
-NULL Token: "__NULL__"
-Exclusions: Surrogate keys, timestamps, derived scores, audit fields
-```
-
-### SCD2 Standards
-```
-Temporal Precision: TIMESTAMP(6) for investment, DATE for customer
-Closure Rule: prev. effective_end_ts = new.effective_start_ts - 1 microsecond
-Surrogate Key Pattern: <entity>_version_sk
-Current Flag: is_current (exactly one TRUE per natural key)
-```
-
-## Domain-Specific Standards
-
-### Customer Module
-- **Contract**: [contracts/scd2/dim_customer_profile_columns.yaml](contracts/scd2/dim_customer_profile_columns.yaml)
-- **Spec**: [docs/business/modules/customer_module.md](docs/business/modules/customer_module.md)
-- **Granularity**: DATE (effective_start_date, effective_end_date)
-- **Versioned Attributes**: marital_status, nationality, occupation, education_level, birthdate, income_source_set, investment_purpose_set
-
-### Investment Module
-- **Contract**: [contracts/scd2/dim_investment_profile_version_columns.yaml](contracts/scd2/dim_investment_profile_version_columns.yaml)
-- **Spec**: [docs/business/modules/investment_profile_module.md](docs/business/modules/investment_profile_module.md)
-- **Granularity**: TIMESTAMP(6) with microsecond precision
-- **Versioned Attributes**: risk_level_code, suitability_score, kyc_status, product eligibility flags, acknowledgements, vulnerability classification
-
-## Governance Rules
-
-### Standard Changes Require
-| Change Type | Approval Required | Files to Update |
-|------------|-------------------|-----------------|
-| Naming pattern change | Team approval | This index + naming_conventions.md |
-| Hash algorithm change | ADR + all contracts | hashing_standards.md + all SCD2 contracts |
-| SCD2 attribute addition | ADR + contract update | Module spec + contract YAML + SCD2 policy |
-| Enumeration value addition | Governance ticket | enumeration YAML + version bump |
-
-### AI Agent Prompts
-Use these reference patterns when working with AI:
-
-```
-"Follow naming conventions from STANDARDS_INDEX.md section 'Naming Standards'"
-"Apply SHA256 hashing per STANDARDS_INDEX.md 'Hashing Standards'"
-"Implement SCD2 dimension following STANDARDS_INDEX.md 'SCD2 Standards'"
-```
-
-## Related Documentation
-- [AI_CONTEXT.md](AI_CONTEXT.md) - AI agent entry point
-- [CONTEXT_MANIFEST.yaml](CONTEXT_MANIFEST.yaml) - Machine-readable artifact index
-- [CONTRIBUTING.md](CONTRIBUTING.md) - Contribution guidelines
-- [README.md](README.md) - Repository overview
-
-**Last Updated**: 2025-12-01  
-**Maintained By**: Data Architecture
+### References
+- **Full Spec**: [docs/business/modules/customer_module.md](docs/business/modules/customer_module.md)
+- **Contract**: [contracts/customer/dim_customer_profile.yaml](contracts/customer/dim_customer_profile.yaml)
+- **Enumerations**: `enumerations/customer_*. yaml` (11 files)

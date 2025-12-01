@@ -1,13 +1,54 @@
-manifest_version: 2025.11.25-1
-generated_at_utc: "2025-11-25T15:55:00Z"
-description: "Authoritative machine-consumable manifest of modeling, audit, and enumeration artifacts for DW1. Used for rapid AI thread rehydration."
+manifest_version: 2025. 12.01-1
+generated_at_utc: "2025-12-01T12:00:00Z"
+description: "Authoritative machine-consumable manifest of modeling, audit, and enumeration artifacts for DW1.  Used for rapid AI thread rehydration."
 ai_context_file: "AI_CONTEXT.md"
 
+# ADD THIS SECTION
+customer_profile_standards:
+  status: "gold_contracts_complete"
+  last_updated: "2025-12-01"
+  enumeration_pattern: "direct_codes_with_other_freetext"
+  layer_architecture: "bronze_silver_gold"
+  
 enumeration_files:
   - path: "enumerations/audit_event_types.yaml"
     enumeration_version: "2025.11.25-1"
-  - path: "docs/data-modeling/enumerations.md"
+  - path: "docs/data-modeling/enumerations. md"
     enum_version: "2025.11.25-2"
+  # ADD THESE
+  - path: "enumerations/customer_person_title.yaml"
+    enumeration_version: "1.0"
+    domain: "customer"
+  - path: "enumerations/customer_marital_status.yaml"
+    enumeration_version: "1.0"
+    domain: "customer"
+  - path: "enumerations/customer_nationality.yaml"
+    enumeration_version: "1.0"
+    domain: "customer"
+  - path: "enumerations/customer_occupation.yaml"
+    enumeration_version: "1.0"
+    domain: "customer"
+  - path: "enumerations/customer_education_level.yaml"
+    enumeration_version: "1.0"
+    domain: "customer"
+  - path: "enumerations/customer_business_type.yaml"
+    enumeration_version: "1.0"
+    domain: "customer"
+  - path: "enumerations/customer_total_asset_bands.yaml"
+    enumeration_version: "1.0"
+    domain: "customer"
+  - path: "enumerations/customer_monthly_income_bands.yaml"
+    enumeration_version: "1.0"
+    domain: "customer"
+  - path: "enumerations/customer_income_country.yaml"
+    enumeration_version: "1.0"
+    domain: "customer"
+  - path: "enumerations/customer_source_of_income.yaml"
+    enumeration_version: "1.0"
+    domain: "customer"
+  - path: "enumerations/customer_purpose_of_investment. yaml"
+    enumeration_version: "1.0"
+    domain: "customer"
 
 standards:
   master_index: "STANDARDS_INDEX.md" 
@@ -18,57 +59,36 @@ standards:
   naming: "docs/data-modeling/naming_conventions.md"
   fact_vs_dimension_matrix: "docs/data-modeling/fact_vs_dimension_decisions.md"
   
-adrs:
-  - "docs/adr/ADR-AUDIT-001-audit-artifacts-standard.md"
-  - "docs/adr/ADR-INV-001-investment-profile.md"
-  - "docs/adr/ADR-002-multi-valued-sets.md"
-
+# UPDATE THIS SECTION
 modules:
-  customer: "docs/business/modules/customer_module.md"
+  customer: 
+    spec: "docs/business/modules/customer_module.md"
+    status: "section_5_complete"  # Attribute inventory complete
+    key_sections: 
+      - "Section 5: Attribute Inventory (31 attributes)"
+      - "Section 8: Hashing Standard"
+      - "Section 18: IT View Specification"
   investment_profile: "docs/business/modules/investment_profile_module.md"
   company: "docs/business/modules/company_module.md"
-  
-matrices:
-  - entity: "dim_customer_profile"
-    path: "docs/business/matrices/customer_profile_attribute_matrix.yaml"
-    matrix_version: "2025.11.28-1"
-    purpose: "Governance crosswalk for customer profile attributes (business-to-technical)."
 
-audit_fact_tables:
-  customer_profile_audit: "db/audit/fact_customer_profile_audit.sql"
-  investment_acknowledgement: "db/audit/fact_investment_acknowledgement.sql"
-  vulnerability_assessment: "db/audit/fact_vulnerability_assessment.sql"
-  supervisory_override: "db/audit/fact_supervisory_override.sql"
+# ADD THIS SECTION
+contracts:
+  customer_profile:
+    dimension: "contracts/customer/dim_customer_profile.yaml"
+    bridge_income: "contracts/customer/bridge_customer_income_source_version.yaml"
+    bridge_investment: "contracts/customer/bridge_customer_investment_purpose_version.yaml"
+    audit_fact: "contracts/customer/fact_customer_profile_audit.yaml"
+    bronze_pending: "contracts/bronze/customer_profile_standardized.yaml"
+    silver_pending: "contracts/silver/customer_profile_standardized.yaml"
+    status: "gold_complete_bronze_silver_pending"
 
-future_audit_artifacts:
-  - fact_profile_scope_fallback
-  - fact_backdated_request
-  - vw_audit_quality_issues (monitoring view)
-
-backlog_focus:
-  - "Design vw_audit_quality_issues view (hash aging, UNKNOWN rationale usage)"
-  - "Define fallback audit event semantics (SCOPE_FALLBACK_USED KPI, conditions)"
-  - "Approval reference pattern for backdated + override events (field design)"
-  - "Enumeration deprecation example stub"
-  - "Add monitoring thresholds to audit standard (UNKNOWN rationale <=2%)"
-
+# UPDATE governance section
 governance:
   enumeration_change_requires: "ADR reference + version bump"
   audit_event_requires: "Enumeration entry + rationale code classification"
-  hash_algorithm_change_requires: "Update hashing_standards.md + impacted contracts"
+  hash_algorithm_change_requires: "Update hashing_standards.md + impacted contracts + ADR"
+  enumeration_pattern: "direct_codes_with_other_freetext"  # ADD THIS
+  other_field_rule: "Type 1 only, excluded from hash"  # ADD THIS
+  lookup_dimension_policy: "deprecated_use_enumerations"  # ADD THIS
 
-surrogate_key_patterns:
-  - "SCD2 dimensions: <entity>_version_sk"
-  - "Facts & audit facts: <entity>_sk"
-  - "Bridge dimensions: <entity>_version_sk per membership"
-
-hash_exclusion_policy_ref: "contracts/scd2/STANDARD_SCD2_POLICY.md#Derived-Metrics-Exclusion"
-
-monitoring_targets_planned:
-  - "Pending event hashes older than 1 hour"
-  - "Unknown rationale_code usage >2% monthly"
-  - "Orphan dimension versions (no audit event)"
-  - "Backdated events missing approval reference"
-
-last_reviewed_by: "Data Architecture"
-last_review_date: "2025-11-25"
+# Keep rest of file as-is... 
