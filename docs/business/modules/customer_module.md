@@ -106,7 +106,7 @@ Canonical order for profile_hash:
 17. purpose_of_investment_set_hash (same rule)
 
 Assembly:
-- Nulls become empty strings.
+- Nulls become "__NULL__".
 - Canonical string = concat_ws('|', values in the order above).
 - profile_hash = SHA256(canonical string) → lowercase hex.
 
