@@ -59,6 +59,7 @@ attributes:
     datatype: VARCHAR(50)
     business_definition: Categorized reason for profile version creation
     nullable: false
+    enumeration_ref: enumerations/customer_profile_audit_change_reason.yaml
     valid_values: [INITIAL_LOAD, SOURCE_UPDATE, CORRECTION, DATA_QUALITY_FIX, BACKDATED_CORRECTION, RECOMPUTE_HASH]
 
   - name: changed_scalar_attributes
@@ -66,6 +67,8 @@ attributes:
     business_definition: JSON array of scalar attribute names that changed (e.g., ["firstname","occupation","birthdate"])
     nullable: false
     format: JSON array
+    enumeration_ref: enumerations/customer_profile_attribute_names.yaml
+    example: '["firstname","occupation","birthdate"]'
 
   - name: changed_set_names
     datatype: TEXT

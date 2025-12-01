@@ -49,7 +49,15 @@ enumeration_files:
   - path: "enumerations/customer_purpose_of_investment. yaml"
     enumeration_version: "1.0"
     domain: "customer"
-
+  - path: "enumerations/customer_profile_audit_change_reason. yaml"
+    enumeration_version: "1.0"
+    domain: "customer"
+    purpose: "Valid change_reason codes for fact_customer_profile_audit"
+  - path: "enumerations/customer_profile_attribute_names.yaml"
+    enumeration_version: "1.0"
+    domain: "customer"
+    purpose: "Valid attribute names for audit change tracking JSON"
+    
 standards:
   master_index: "STANDARDS_INDEX.md" 
   enumeration_management: "docs/data-modeling/enumeration_standards.md"

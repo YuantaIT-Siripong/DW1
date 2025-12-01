@@ -382,7 +382,8 @@ All in `enumerations/` folder:
 - customer_income_country.yaml - ISO 3166-1 alpha-2 codes + OTHER
 - customer_source_of_income.yaml - SALARY, DIVIDEND, RENTAL, etc. + OTHER, UNKNOWN
 - customer_purpose_of_investment. yaml - RETIREMENT, EDUCATION, SPECULATION, etc. + OTHER, UNKNOWN
-
+- customer_profile_audit_change_reason.yaml - INITIAL_LOAD, SOURCE_UPDATE, CORRECTION, etc.
+- customer_profile_attribute_names.yaml - 15 versioned attributes + 2 set names
 ---
 
 ## Artifact Index
