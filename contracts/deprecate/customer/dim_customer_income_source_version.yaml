@@ -1,0 +1,52 @@
+entity_name: dim_customer_income_source_version
+domain: customer
+table_type: bridge
+grain_description: One row per income source membership for a profile version.
+primary_keys:
+  - profile_version_id
+  - income_source_code
+foreign_keys:
+  - column: profile_version_id
+    references: dim_customer_profile.profile_version_id
+  - column: income_source_code
+    references: dim_income_source.income_source_code
+attributes:
+  - name: profile_version_id
+    datatype: integer
+    business_definition: Link to historical profile version
+  - name: customer_id
+    datatype: string
+    business_definition: Denormalized stable customer identity
+  - name: income_source_code
+    datatype: string
+    business_definition: Selected income source code
+  - name: source_rank
+    datatype: integer
+    business_definition: Ordinal position if provided (null if not supplied)
+  - name: load_ts
+    datatype: timestamp
+    business_definition: Ingestion timestamp
+set_membership_behavior: Full set re-materialized only when membership changes.
+hash_dependency:
+  parent_set_hash_column: income_source_set_hash
+  recomputation_logic: |
+    SELECT SHA256(STRING_AGG(income_source_code, '|' ORDER BY income_source_code))
+    FROM dim_customer_income_source_version
+    WHERE profile_version_id = :pv_id;
+data_quality_rules:
+  - "No duplicate (profile_version_id, income_source_code)"
+  - "All income_source_code values valid in dim_income_source"
+  - "source_rank IS NULL OR source_rank >= 1"
+adr_refs:
+  - ADR-002-multi-valued-sets.md
+sample_rows:
+  - profile_version_id: 10
+    customer_id: C123456
+    income_source_code: SALARY
+    source_rank: 1
+  - profile_version_id: 10
+    customer_id: C123456
+    income_source_code: DIVIDEND
+    source_rank: 2
+open_questions:
+  - "Do we enforce consecutive ranking or allow gaps?"
