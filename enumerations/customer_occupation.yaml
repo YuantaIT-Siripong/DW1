@@ -1,0 +1,82 @@
+enumeration_name: customer_occupation
+description: Customer occupational classification
+domain: customer
+attribute: occupation
+data_type: VARCHAR(100)
+case_sensitivity: case_insensitive
+normalization: UPPER(TRIM)
+null_handling: allowed
+has_other_option: true
+other_field: occupation_other
+
+valid_values:
+  - code: EMPLOYEE
+    display_name: Employee
+    description: Salaried employee working for organization
+    sort_order: 1
+    
+  - code: SELF_EMPLOYED
+    display_name: Self-Employed
+    description: Self-employed individual/freelancer
+    sort_order: 2
+    
+  - code: BUSINESS_OWNER
+    display_name: Business Owner
+    description: Owner/proprietor of business
+    sort_order: 3
+    
+  - code: GOVERNMENT_OFFICER
+    display_name: Government Officer
+    description: Government employee/civil servant
+    sort_order: 4
+    
+  - code: PROFESSIONAL
+    display_name: Professional
+    description: Licensed professional (lawyer, doctor, accountant, etc.)
+    sort_order: 5
+    
+  - code: RETIRED
+    display_name: Retired
+    description: Retired from workforce
+    sort_order: 6
+    
+  - code: STUDENT
+    display_name: Student
+    description: Full-time student
+    sort_order: 7
+    
+  - code: HOMEMAKER
+    display_name: Homemaker
+    description: Homemaker/stay-at-home parent
+    sort_order: 8
+    
+  - code: UNEMPLOYED
+    display_name: Unemployed
+    description: Currently unemployed
+    sort_order: 9
+    
+  - code: OTHER
+    display_name: Other
+    description: Other occupation (use occupation_other field)
+    sort_order: 98
+    
+  - code: UNKNOWN
+    display_name: Unknown
+    description: Occupation not provided
+    sort_order: 99
+
+mapping_rules:
+  - source_value: ["emp", "employed", "worker"]
+    target_code: EMPLOYEE
+  - source_value: ["freelance", "contractor", "consultant"]
+    target_code: SELF_EMPLOYED
+  - source_value: ["owner", "entrepreneur", "business"]
+    target_code: BUSINESS_OWNER
+  - source_value: ["gov", "government", "civil servant", "public sector"]
+    target_code: GOVERNMENT_OFFICER
+  - source_value: ["doctor", "lawyer", "engineer", "accountant"]
+    target_code: PROFESSIONAL
+
+version: 1.0
+last_updated: 2025-12-01
+owner: Data Architecture

@@ -1,0 +1,91 @@
+enumeration_name: customer_purpose_of_investment
+description: Customer's investment objectives (multi-valued via bridge table)
+domain: customer
+attribute: purpose_of_investment
+data_type: VARCHAR(100)
+case_sensitivity: case_insensitive
+normalization: UPPER(TRIM)
+null_handling: not_allowed
+has_other_option: true
+multi_valued: true
+delimiter: "|"
+
+valid_values:
+  - code: RETIREMENT
+    display_name: Retirement Planning
+    description: Long-term retirement savings and planning
+    sort_order: 1
+    
+  - code: EDUCATION
+    display_name: Education Funding
+    description: Education expenses for self or family
+    sort_order: 2
+    
+  - code: SPECULATION
+    display_name: Speculation/Trading
+    description: Short-term trading and speculation
+    sort_order: 3
+    
+  - code: INCOME
+    display_name: Income Generation
+    description: Generate regular income stream
+    sort_order: 4
+    
+  - code: WEALTH_PRESERVATION
+    display_name: Wealth Preservation
+    description: Capital preservation and wealth protection
+    sort_order: 5
+    
+  - code: GROWTH
+    display_name: Capital Growth
+    description: Long-term capital appreciation
+    sort_order: 6
+    
+  - code: TAX_PLANNING
+    display_name: Tax Planning
+    description: Tax efficiency and planning
+    sort_order: 7
+    
+  - code: ESTATE_PLANNING
+    display_name: Estate Planning
+    description: Wealth transfer and estate planning
+    sort_order: 8
+    
+  - code: OTHER
+    display_name: Other
+    description: Other investment purpose
+    sort_order: 98
+    
+  - code: UNKNOWN
+    display_name: Unknown
+    description: Investment purpose not specified
+    sort_order: 99
+
+mapping_rules:
+  - source_value: ["retire", "retirement", "pension planning"]
+    target_code: RETIREMENT
+  - source_value: ["education", "school", "university", "tuition"]
+    target_code: EDUCATION
+  - source_value: ["trading", "speculation", "short term", "day trading"]
+    target_code: SPECULATION
+  - source_value: ["income", "cash flow", "dividends", "interest income"]
+    target_code: INCOME
+  - source_value: ["preservation", "protect", "safety", "capital protection"]
+    target_code: WEALTH_PRESERVATION
+  - source_value: ["growth", "appreciation", "long term"]
+    target_code: GROWTH
+
+usage_notes: |
+  Multi-valued attribute stored via bridge table. 
+  In IT view, provide as pipe-delimited string sorted alphabetically.
+  Example: "EDUCATION|RETIREMENT"
+  DW team will calculate set_hash for SCD2 change detection.
+
+regulatory_notes: |
+  Investment purpose affects suitability assessment.
+  Must be reviewed and updated during customer profile reviews.
+  Certain purposes (SPECULATION) may require additional risk disclosures.
+
+version: 1.0
+last_updated: 2025-12-01
+owner: Data Architecture

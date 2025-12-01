@@ -1,0 +1,67 @@
+enumeration_name: customer_person_title
+description: Honorific titles for customer profiles
+domain: customer
+attribute: person_title
+data_type: VARCHAR(50)
+case_sensitivity: case_insensitive
+normalization: UPPER(TRIM)
+null_handling: allowed
+has_other_option: true
+other_field: person_title_other
+
+valid_values:
+  - code: MR
+    display_name: Mr.
+    description: Mister
+    sort_order: 1
+    
+  - code: MRS
+    display_name: Mrs.
+    description: Married woman
+    sort_order: 2
+    
+  - code: MS
+    display_name: Ms. 
+    description: Unmarried or unspecified marital status woman
+    sort_order: 3
+    
+  - code: MISS
+    display_name: Miss
+    description: Unmarried woman
+    sort_order: 4
+    
+  - code: DR
+    display_name: Dr. 
+    description: Doctor
+    sort_order: 5
+    
+  - code: PROF
+    display_name: Prof.
+    description: Professor
+    sort_order: 6
+    
+  - code: REV
+    display_name: Rev.
+    description: Reverend
+    sort_order: 7
+    
+  - code: OTHER
+    display_name: Other
+    description: Other title not listed (use person_title_other field)
+    sort_order: 99
+
+mapping_rules:
+  - source_value: ["Mr", "mr", "MR.", "Mr. "]
+    target_code: MR
+  - source_value: ["Mrs", "mrs", "MRS.", "Mrs."]
+    target_code: MRS
+  - source_value: ["Ms", "ms", "MS.", "Ms."]
+    target_code: MS
+  - source_value: ["Dr", "dr", "DR.", "Dr.", "Doctor"]
+    target_code: DR
+  - source_value: ["Prof", "prof", "PROF.", "Professor"]
+    target_code: PROF
+
+version: 1.0
+last_updated: 2025-12-01
+owner: Data Architecture

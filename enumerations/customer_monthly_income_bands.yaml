@@ -1,0 +1,73 @@
+enumeration_name: customer_monthly_income_bands
+description: Monthly income bands for customer segmentation
+domain: customer
+attribute: monthly_income
+data_type: VARCHAR(50)
+case_sensitivity: case_insensitive
+normalization: UPPER(TRIM)
+null_handling: allowed
+has_other_option: false
+
+valid_values:
+  - code: INCOME_BAND_1
+    display_name: < 30K THB
+    description: Monthly income less than 30,000 THB
+    min_value: 0
+    max_value: 29999
+    sort_order: 1
+    
+  - code: INCOME_BAND_2
+    display_name: 30K - 50K THB
+    description: Monthly income 30,000-50,000 THB
+    min_value: 30000
+    max_value: 50000
+    sort_order: 2
+    
+  - code: INCOME_BAND_3
+    display_name: 50K - 100K THB
+    description: Monthly income 50,000-100,000 THB
+    min_value: 50001
+    max_value: 100000
+    sort_order: 3
+    
+  - code: INCOME_BAND_4
+    display_name: 100K - 200K THB
+    description: Monthly income 100,000-200,000 THB
+    min_value: 100001
+    max_value: 200000
+    sort_order: 4
+    
+  - code: INCOME_BAND_5
+    display_name: ≥ 200K THB
+    description: Monthly income 200,000 THB or more
+    min_value: 200001
+    max_value: null
+    sort_order: 5
+    
+  - code: UNKNOWN
+    display_name: Unknown
+    description: Income level not provided
+    min_value: null
+    max_value: null
+    sort_order: 99
+
+mapping_rules:
+  - source_range: [0, 29999]
+    target_code: INCOME_BAND_1
+  - source_range: [30000, 50000]
+    target_code: INCOME_BAND_2
+  - source_range: [50001, 100000]
+    target_code: INCOME_BAND_3
+  - source_range: [100001, 200000]
+    target_code: INCOME_BAND_4
+  - source_range: [200001, 99999999]
+    target_code: INCOME_BAND_5
+
+notes: |
+  Bands defined in Thai Baht (THB) per month.
+  Boundaries are inclusive on lower bound, exclusive on upper bound.
+  Band definitions aligned with Thai income tax brackets and market segmentation.
+
+version: 1. 0
+last_updated: 2025-12-01
+owner: Data Architecture

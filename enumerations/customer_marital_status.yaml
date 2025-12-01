@@ -1,0 +1,56 @@
+enumeration_name: customer_marital_status
+description: Marital status classification
+domain: customer
+attribute: marital_status
+data_type: VARCHAR(50)
+case_sensitivity: case_insensitive
+normalization: UPPER(TRIM)
+null_handling: allowed
+has_other_option: false
+
+valid_values:
+  - code: SINGLE
+    display_name: Single
+    description: Never married
+    sort_order: 1
+    
+  - code: MARRIED
+    display_name: Married
+    description: Currently married
+    sort_order: 2
+    
+  - code: DIVORCED
+    display_name: Divorced
+    description: Legally divorced
+    sort_order: 3
+    
+  - code: WIDOWED
+    display_name: Widowed
+    description: Spouse deceased
+    sort_order: 4
+    
+  - code: SEPARATED
+    display_name: Separated
+    description: Legally separated but not divorced
+    sort_order: 5
+    
+  - code: UNKNOWN
+    display_name: Unknown
+    description: Marital status not provided or unknown
+    sort_order: 99
+
+mapping_rules:
+  - source_value: ["S", "single", "Single"]
+    target_code: SINGLE
+  - source_value: ["M", "married", "Married"]
+    target_code: MARRIED
+  - source_value: ["D", "divorced", "Divorced"]
+    target_code: DIVORCED
+  - source_value: ["W", "widowed", "Widowed", "Widow"]
+    target_code: WIDOWED
+  - source_value: [null, "", "N/A", "Unknown"]
+    target_code: UNKNOWN
+
+version: 1.0
+last_updated: 2025-12-01
+owner: Data Architecture

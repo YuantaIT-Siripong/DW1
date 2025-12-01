@@ -1,0 +1,74 @@
+enumeration_name: customer_education_level
+description: Educational attainment level
+domain: customer
+attribute: education_level
+data_type: VARCHAR(100)
+case_sensitivity: case_insensitive
+normalization: UPPER(TRIM)
+null_handling: allowed
+has_other_option: true
+other_field: education_level_other
+
+valid_values:
+  - code: PRIMARY
+    display_name: Primary Education
+    description: Elementary/primary school
+    sort_order: 1
+    
+  - code: SECONDARY
+    display_name: Secondary Education
+    description: High school/secondary school
+    sort_order: 2
+    
+  - code: VOCATIONAL
+    display_name: Vocational Training
+    description: Vocational certificate or diploma
+    sort_order: 3
+    
+  - code: DIPLOMA
+    display_name: Diploma
+    description: Post-secondary diploma
+    sort_order: 4
+    
+  - code: BACHELOR
+    display_name: Bachelor's Degree
+    description: Undergraduate degree
+    sort_order: 5
+    
+  - code: MASTER
+    display_name: Master's Degree
+    description: Graduate degree
+    sort_order: 6
+    
+  - code: DOCTORATE
+    display_name: Doctorate
+    description: PhD or doctoral degree
+    sort_order: 7
+    
+  - code: OTHER
+    display_name: Other
+    description: Other education level (use education_level_other field)
+    sort_order: 98
+    
+  - code: UNKNOWN
+    display_name: Unknown
+    description: Education level not provided
+    sort_order: 99
+
+mapping_rules:
+  - source_value: ["elementary", "grade school", "primary school"]
+    target_code: PRIMARY
+  - source_value: ["high school", "secondary school", "HS"]
+    target_code: SECONDARY
+  - source_value: ["trade school", "technical school", "vocational"]
+    target_code: VOCATIONAL
+  - source_value: ["bachelor", "undergraduate", "BA", "BS", "BSc"]
+    target_code: BACHELOR
+  - source_value: ["master", "masters", "graduate", "MA", "MS", "MSc", "MBA"]
+    target_code: MASTER
+  - source_value: ["PhD", "doctoral", "doctorate", "DPhil"]
+    target_code: DOCTORATE
+
+version: 1.0
+last_updated: 2025-12-01
+owner: Data Architecture

@@ -1,0 +1,111 @@
+enumeration_name: customer_nationality
+description: Nationality using ISO 3166-1 alpha-2 codes
+domain: customer
+attribute: nationality
+data_type: VARCHAR(2)
+case_sensitivity: case_insensitive
+normalization: UPPER(TRIM)
+null_handling: allowed
+has_other_option: true
+other_field: nationality_other
+standard_reference: ISO 3166-1 alpha-2
+
+valid_values:
+  - code: TH
+    display_name: Thailand
+    description: Thai nationality
+    sort_order: 1
+    
+  - code: US
+    display_name: United States
+    description: United States nationality
+    sort_order: 2
+    
+  - code: GB
+    display_name: United Kingdom
+    description: British nationality
+    sort_order: 3
+    
+  - code: CN
+    display_name: China
+    description: Chinese nationality
+    sort_order: 4
+    
+  - code: JP
+    display_name: Japan
+    description: Japanese nationality
+    sort_order: 5
+    
+  - code: KR
+    display_name: South Korea
+    description: South Korean nationality
+    sort_order: 6
+    
+  - code: SG
+    display_name: Singapore
+    description: Singaporean nationality
+    sort_order: 7
+    
+  - code: MY
+    display_name: Malaysia
+    description: Malaysian nationality
+    sort_order: 8
+    
+  - code: PH
+    display_name: Philippines
+    description: Filipino nationality
+    sort_order: 9
+    
+  - code: VN
+    display_name: Vietnam
+    description: Vietnamese nationality
+    sort_order: 10
+    
+  - code: ID
+    display_name: Indonesia
+    description: Indonesian nationality
+    sort_order: 11
+    
+  - code: IN
+    display_name: India
+    description: Indian nationality
+    sort_order: 12
+    
+  - code: AU
+    display_name: Australia
+    description: Australian nationality
+    sort_order: 13
+    
+  - code: DE
+    display_name: Germany
+    description: German nationality
+    sort_order: 14
+    
+  - code: FR
+    display_name: France
+    description: French nationality
+    sort_order: 15
+    
+  - code: OTHER
+    display_name: Other
+    description: Other nationality (use nationality_other field)
+    sort_order: 99
+
+mapping_rules:
+  - source_value: ["Thailand", "thai", "THAI"]
+    target_code: TH
+  - source_value: ["USA", "United States", "America"]
+    target_code: US
+  - source_value: ["UK", "Britain", "United Kingdom"]
+    target_code: GB
+  - source_value: ["China", "chinese", "PRC"]
+    target_code: CN
+
+notes: |
+  Full ISO 3166-1 alpha-2 code list should be supported.
+  This is a representative sample of common nationalities.
+  For complete list, see https://en.wikipedia.org/wiki/ISO_3166-1_alpha-2
+
+version: 1.0
+last_updated: 2025-12-01
+owner: Data Architecture

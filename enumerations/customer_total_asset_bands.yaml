@@ -1,0 +1,73 @@
+enumeration_name: customer_total_asset_bands
+description: Total asset value bands for customer segmentation
+domain: customer
+attribute: total_asset
+data_type: VARCHAR(50)
+case_sensitivity: case_insensitive
+normalization: UPPER(TRIM)
+null_handling: allowed
+has_other_option: false
+
+valid_values:
+  - code: ASSET_BAND_1
+    display_name: < 1M THB
+    description: Assets less than 1 million THB
+    min_value: 0
+    max_value: 999999
+    sort_order: 1
+    
+  - code: ASSET_BAND_2
+    display_name: 1M - 5M THB
+    description: Assets between 1-5 million THB
+    min_value: 1000000
+    max_value: 5000000
+    sort_order: 2
+    
+  - code: ASSET_BAND_3
+    display_name: 5M - 10M THB
+    description: Assets between 5-10 million THB
+    min_value: 5000001
+    max_value: 10000000
+    sort_order: 3
+    
+  - code: ASSET_BAND_4
+    display_name: 10M - 50M THB
+    description: Assets between 10-50 million THB
+    min_value: 10000001
+    max_value: 50000000
+    sort_order: 4
+    
+  - code: ASSET_BAND_5
+    display_name: ≥ 50M THB
+    description: Assets 50 million THB or more
+    min_value: 50000001
+    max_value: null
+    sort_order: 5
+    
+  - code: UNKNOWN
+    display_name: Unknown
+    description: Asset level not provided
+    min_value: null
+    max_value: null
+    sort_order: 99
+
+mapping_rules:
+  - source_range: [0, 999999]
+    target_code: ASSET_BAND_1
+  - source_range: [1000000, 5000000]
+    target_code: ASSET_BAND_2
+  - source_range: [5000001, 10000000]
+    target_code: ASSET_BAND_3
+  - source_range: [10000001, 50000000]
+    target_code: ASSET_BAND_4
+  - source_range: [50000001, 999999999999]
+    target_code: ASSET_BAND_5
+
+notes: |
+  Bands defined in Thai Baht (THB). 
+  Boundaries are inclusive on lower bound, exclusive on upper bound.
+  Band definitions may be revised based on business requirements.
+
+version: 1.0
+last_updated: 2025-12-01
+owner: Data Architecture

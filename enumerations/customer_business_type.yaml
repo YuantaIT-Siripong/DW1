@@ -1,0 +1,107 @@
+enumeration_name: customer_business_type
+description: Type of business/industry sector
+domain: customer
+attribute: business_type
+data_type: VARCHAR(100)
+case_sensitivity: case_insensitive
+normalization: UPPER(TRIM)
+null_handling: allowed
+has_other_option: true
+other_field: business_type_other
+
+valid_values:
+  - code: FINANCE
+    display_name: Finance & Banking
+    description: Financial services, banking, insurance (การเงินและธนาคาร)
+    sort_order: 1
+    
+  - code: MANUFACTURING
+    display_name: Manufacturing
+    description: Manufacturing and production (การผลิต)
+    sort_order: 2
+    
+  - code: RETAIL
+    display_name: Retail & Trade
+    description: Retail sales and trading (ค้าปลีก)
+    sort_order: 3
+    
+  - code: SERVICES
+    display_name: Professional Services
+    description: Professional and business services (บริการ)
+    sort_order: 4
+    
+  - code: AGRICULTURE
+    display_name: Agriculture
+    description: Farming, agriculture, fisheries (เกษตรกรรม)
+    sort_order: 5
+    
+  - code: TECHNOLOGY
+    display_name: Technology & IT
+    description: Information technology and software (เทคโนโลยี)
+    sort_order: 6
+    
+  - code: HEALTHCARE
+    display_name: Healthcare
+    description: Healthcare and medical services (สาธารณสุข)
+    sort_order: 7
+    
+  - code: EDUCATION
+    display_name: Education
+    description: Educational services (การศึกษา)
+    sort_order: 8
+    
+  - code: CONSTRUCTION
+    display_name: Construction
+    description: Construction and real estate (ก่อสร้าง)
+    sort_order: 9
+    
+  - code: HOSPITALITY
+    display_name: Hospitality & Tourism
+    description: Hotels, restaurants, tourism (การโรงแรมและท่องเที่ยว)
+    sort_order: 10
+    
+  - code: TRANSPORTATION
+    display_name: Transportation & Logistics
+    description: Transport and logistics services (ขนส่งและโลจิสติกส์)
+    sort_order: 11
+    
+  - code: ENERGY
+    display_name: Energy & Utilities
+    description: Energy, utilities, oil & gas (พลังงานและสาธารณูปโภค)
+    sort_order: 12
+    
+  - code: MEDIA
+    display_name: Media & Entertainment
+    description: Media, publishing, entertainment (สื่อและบันเทิง)
+    sort_order: 13
+    
+  - code: GOVERNMENT
+    display_name: Government
+    description: Government and public sector (ภาครัฐ)
+    sort_order: 14
+    
+  - code: OTHER
+    display_name: Other
+    description: Other business type (use business_type_other field)
+    sort_order: 98
+    
+  - code: UNKNOWN
+    display_name: Unknown
+    description: Business type not provided
+    sort_order: 99
+
+mapping_rules:
+  - source_value: ["bank", "banking", "financial", "insurance"]
+    target_code: FINANCE
+  - source_value: ["factory", "production", "manufacturing"]
+    target_code: MANUFACTURING
+  - source_value: ["shop", "store", "retail", "trading"]
+    target_code: RETAIL
+  - source_value: ["IT", "software", "tech", "technology"]
+    target_code: TECHNOLOGY
+  - source_value: ["hospital", "clinic", "medical", "healthcare"]
+    target_code: HEALTHCARE
+
+version: 1.0
+last_updated: 2025-12-01
+owner: Data Architecture

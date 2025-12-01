@@ -1,0 +1,86 @@
+enumeration_name: customer_source_of_income
+description: Sources of customer income (multi-valued via bridge table)
+domain: customer
+attribute: source_of_income
+data_type: VARCHAR(100)
+case_sensitivity: case_insensitive
+normalization: UPPER(TRIM)
+null_handling: not_allowed
+has_other_option: true
+multi_valued: true
+delimiter: "|"
+
+valid_values:
+  - code: SALARY
+    display_name: Salary/Wages
+    description: Employment salary or wages
+    sort_order: 1
+    
+  - code: DIVIDEND
+    display_name: Dividends
+    description: Stock dividends and distributions
+    sort_order: 2
+    
+  - code: RENTAL
+    display_name: Rental Income
+    description: Property or asset rental income
+    sort_order: 3
+    
+  - code: BUSINESS
+    display_name: Business Income
+    description: Income from own business
+    sort_order: 4
+    
+  - code: PENSION
+    display_name: Pension
+    description: Retirement pension or annuity
+    sort_order: 5
+    
+  - code: INVESTMENT
+    display_name: Investment Returns
+    description: Capital gains, interest, investment returns
+    sort_order: 6
+    
+  - code: INHERITANCE
+    display_name: Inheritance
+    description: Inherited wealth or assets
+    sort_order: 7
+    
+  - code: GIFT
+    display_name: Gift
+    description: Gifted funds from family/others
+    sort_order: 8
+    
+  - code: OTHER
+    display_name: Other
+    description: Other income source
+    sort_order: 98
+    
+  - code: UNKNOWN
+    display_name: Unknown
+    description: Income source not specified
+    sort_order: 99
+
+mapping_rules:
+  - source_value: ["salary", "wage", "employment", "employed"]
+    target_code: SALARY
+  - source_value: ["stock dividend", "dividends", "equity"]
+    target_code: DIVIDEND
+  - source_value: ["rent", "rental", "lease"]
+    target_code: RENTAL
+  - source_value: ["business income", "entrepreneurship", "self-employed"]
+    target_code: BUSINESS
+  - source_value: ["retirement", "pension", "annuity"]
+    target_code: PENSION
+  - source_value: ["investment", "capital gains", "interest", "returns"]
+    target_code: INVESTMENT
+
+usage_notes: |
+  Multi-valued attribute stored via bridge table.
+  In IT view, provide as pipe-delimited string sorted alphabetically.
+  Example: "DIVIDEND|SALARY|RENTAL"
+  DW team will calculate set_hash for SCD2 change detection.
+
+version: 1. 0
+last_updated: 2025-12-01
+owner: Data Architecture

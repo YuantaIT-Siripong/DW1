@@ -1,0 +1,64 @@
+enumeration_name: customer_income_country
+description: Country of income origin using ISO 3166-1 alpha-2 codes
+domain: customer
+attribute: income_country
+data_type: VARCHAR(2)
+case_sensitivity: case_insensitive
+normalization: UPPER(TRIM)
+null_handling: allowed
+has_other_option: true
+other_field: income_country_other
+standard_reference: ISO 3166-1 alpha-2
+
+notes: |
+  This enumeration shares the same value set as customer_nationality.yaml
+  but represents different semantics (income origin vs citizenship).
+  Refer to customer_nationality.yaml for full valid values list.
+
+valid_values:
+  - code: TH
+    display_name: Thailand
+    description: Income from Thailand
+    sort_order: 1
+    
+  - code: US
+    display_name: United States
+    description: Income from United States
+    sort_order: 2
+    
+  - code: GB
+    display_name: United Kingdom
+    description: Income from United Kingdom
+    sort_order: 3
+    
+  - code: CN
+    display_name: China
+    description: Income from China
+    sort_order: 4
+    
+  - code: JP
+    display_name: Japan
+    description: Income from Japan
+    sort_order: 5
+    
+  - code: SG
+    display_name: Singapore
+    description: Income from Singapore
+    sort_order: 6
+    
+  - code: OTHER
+    display_name: Other
+    description: Income from other country (use income_country_other field)
+    sort_order: 99
+
+mapping_rules:
+  - source_value: ["Thailand", "thai"]
+    target_code: TH
+  - source_value: ["USA", "United States", "America"]
+    target_code: US
+
+shared_with: customer_nationality
+
+version: 1.0
+last_updated: 2025-12-01
+owner: Data Architecture
