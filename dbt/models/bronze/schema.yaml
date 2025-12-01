@@ -1,0 +1,63 @@
+version: 2
+
+sources:
+  - name: opdb
+    description: "IT operational database views"
+    database: operational_db  # Adjust to your database name
+    schema: public
+    tables:
+      - name: vw_customer_profile_standardized
+        description: "IT-provided standardized customer profile view"
+        identifier: vw_customer_profile_standardized
+        columns:
+          - name: customer_id
+            description: "Unique business key from operational system"
+            tests:
+              - not_null
+              - unique
+          - name: last_modified_ts
+            description: "Last modified timestamp for incremental loading"
+            tests:
+              - not_null
+
+models:
+  - name: customer_profile_standardized
+    description: "Bronze layer - raw landing from IT operational view"
+    config:
+      materialized: incremental
+      unique_key: customer_id
+      schema: bronze
+    columns:
+      - name: customer_id
+        description: "Unique business key (VARCHAR in Bronze)"
+        tests:
+          - not_null
+          - unique
+          
+      - name: evidence_unique_key
+        description: "National ID/Passport (PII)"
+        
+      - name: firstname
+        description: "Given name (PII)"
+        
+      - name: lastname
+        description: "Family name (PII)"
+        
+      - name: birthdate
+        description: "Date of birth (PII)"
+        tests:
+          - dbt_utils.expression_is_true:
+              expression: "<= CURRENT_DATE"
+              
+      - name: _bronze_load_ts
+        description: "UTC timestamp when record was landed into Bronze"
+        tests:
+          - not_null
+          
+      - name: _bronze_batch_id
+        description: "ETL batch identifier for lineage tracking"
+
+    tests:
+      - dbt_utils.expression_is_true:
+          name: bronze_immutability_check
+          expression: "_bronze_load_ts IS NOT NULL"

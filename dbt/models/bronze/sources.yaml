@@ -1,0 +1,119 @@
+version: 2
+
+sources:
+  - name: opdb
+    description: Operational database maintained by IT department
+    database: "{{ var('source_database', 'operational_db') }}"
+    schema: public
+    
+    freshness:
+      warn_after: {count: 24, period: hour}
+      error_after: {count: 48, period: hour}
+    
+    loaded_at_field: last_modified_ts
+    
+    tables:
+      - name: vw_customer_profile_standardized
+        description: |
+          IT-provided standardized customer profile view. 
+          Specification: docs/business/modules/customer_module.md Section 18
+        
+        columns:
+          - name: customer_id
+            description: Unique customer identifier (VARCHAR format from source)
+            tests:
+              - not_null
+              - unique
+              
+          - name: evidence_unique_key
+            description: National ID or Passport (PII - already normalized by IT)
+            
+          - name: firstname
+            description: Given name (PII - trimmed by IT, case preserved)
+            
+          - name: lastname
+            description: Family name (PII - trimmed by IT, case preserved)
+            
+          - name: firstname_local
+            description: Local script given name (PII)
+            
+          - name: lastname_local
+            description: Local script family name (PII)
+            
+          - name: person_title
+            description: "Enumeration: MR, MRS, MS, MISS, DR, PROF, REV, OTHER"
+            tests:
+              - accepted_values:
+                  values: ['MR', 'MRS', 'MS', 'MISS', 'DR', 'PROF', 'REV', 'OTHER']
+                  quote: true
+                  severity: warn
+                  
+          - name: person_title_other
+            description: Freetext when person_title=OTHER
+            
+          - name: marital_status
+            description: "Enumeration: SINGLE, MARRIED, DIVORCED, WIDOWED, SEPARATED, UNKNOWN"
+            tests:
+              - accepted_values:
+                  values: ['SINGLE', 'MARRIED', 'DIVORCED', 'WIDOWED', 'SEPARATED', 'UNKNOWN']
+                  quote: true
+                  severity: warn
+                  
+          - name: nationality
+            description: ISO 3166-1 alpha-2 country code or OTHER
+            tests:
+              - dbt_utils.expression_is_true:
+                  expression: "LENGTH(nationality) = 2 OR nationality = 'OTHER'"
+                  severity: warn
+                  
+          - name: nationality_other
+            description: Freetext when nationality=OTHER
+            
+          - name: occupation
+            description: Occupational classification code
+            
+          - name: occupation_other
+            description: Freetext when occupation=OTHER
+            
+          - name: education_level
+            description: Education attainment code
+            
+          - name: education_level_other
+            description: Freetext when education_level=OTHER
+            
+          - name: business_type
+            description: Business/industry sector code
+            
+          - name: business_type_other
+            description: Freetext when business_type=OTHER
+            
+          - name: birthdate
+            description: Date of birth (YYYY-MM-DD)
+            tests:
+              - not_null:
+                  severity: warn
+              - dbt_utils.expression_is_true:
+                  expression: "<= CURRENT_DATE"
+                  
+          - name: total_asset
+            description: Total asset value band (no OTHER option)
+            
+          - name: monthly_income
+            description: Monthly income band (no OTHER option)
+            
+          - name: income_country
+            description: Country of income origin (ISO 3166-1 alpha-2 or OTHER)
+            
+          - name: income_country_other
+            description: Freetext when income_country=OTHER
+            
+          - name: source_of_income_list
+            description: Pipe-delimited list sorted alphabetically by IT
+            
+          - name: purpose_of_investment_list
+            description: Pipe-delimited list sorted alphabetically by IT
+            
+          - name: last_modified_ts
+            description: Last modified timestamp from operational system
+            tests:
+              - not_null

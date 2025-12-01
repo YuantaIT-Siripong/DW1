@@ -1,0 +1,26 @@
+dw1:
+  target: dev
+  outputs:
+    dev:
+      type: postgres
+      host: localhost  # Change to your PostgreSQL host
+      port: 5432
+      user: dw_etl_service  # Your PostgreSQL username
+      password: "{{ env_var('DBT_PASSWORD') }}"  # Use environment variable
+      dbname: dw1  # Your database name
+      schema: public
+      threads: 4
+      keepalives_idle: 0
+      connect_timeout: 10
+      
+    prod:
+      type: postgres
+      host: prod-db-server. example.com
+      port: 5432
+      user: dw_etl_service
+      password: "{{ env_var('DBT_PASSWORD') }}"
+      dbname: dw1_prod
+      schema: public
+      threads: 8
+      keepalives_idle: 0
+      connect_timeout: 10
