@@ -56,7 +56,7 @@ ORDER BY effective_start_ts DESC LIMIT 1;
 
 ## Module Index
 - [Customer Module](docs/business/modules/customer_module.md)
-- [Investment Module](docs/business/modules/investment_profile_module. md)
+- [Investment Module](docs/business/modules/investment_profile_module.md)
 - [Data Quality Rules](docs/business/data_quality_rules.md)
 
 ## Artifact Index
