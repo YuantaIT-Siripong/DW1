@@ -1,129 +1,233 @@
 entity_name: fact_customer_profile_audit
 domain: customer
 table_type: fact_audit
-grain_description: One row per profile change event causing a new SCD2 version in dim_customer_profile.
+layer: curated
+grain_description: One row per profile change event that created a new SCD2 version in dim_customer_profile. Tracks what changed, when, why, and who initiated it.
+
 primary_keys:
   - audit_event_id
+
 surrogate_keys:
   - audit_event_id
+
 natural_keys:
   - customer_id
-  - profile_version_id_new
+  - customer_profile_version_sk_new
+
 foreign_keys:
-  - column: profile_version_id_new
-    references: dim_customer_profile.profile_version_id
-  - column: profile_version_id_old
-    references: dim_customer_profile.profile_version_id
+  - column: customer_profile_version_sk_new
+    references: dim_customer_profile.customer_profile_version_sk
+    description: Newly created profile version
+    
+  - column: customer_profile_version_sk_old
+    references: dim_customer_profile. customer_profile_version_sk
+    description: Previous profile version (nullable for initial load)
+
 attributes:
   - name: audit_event_id
-    datatype: bigint
-    business_definition: Surrogate identifier for the audit event
+    datatype: BIGINT
+    business_definition: Surrogate identifier for the audit event (auto-increment)
+    nullable: false
+    primary_key: true
+
   - name: customer_id
-    datatype: string
-    business_definition: Customer identity key affected
-  - name: profile_version_id_new
-    datatype: integer
-    business_definition: Newly created profile version identifier
-  - name: profile_version_id_old
-    datatype: integer
-    business_definition: Previous profile version identifier (null if INITIAL_LOAD)
+    datatype: BIGINT
+    business_definition: Customer identifier affected by this change
+    nullable: false
+
+  - name: customer_profile_version_sk_new
+    datatype: BIGINT
+    business_definition: Surrogate key of newly created profile version
+    nullable: false
+
+  - name: customer_profile_version_sk_old
+    datatype: BIGINT
+    business_definition: Surrogate key of previous profile version (NULL for INITIAL_LOAD)
+    nullable: true
+
+  - name: version_num_new
+    datatype: INT
+    business_definition: Version number of new profile version
+    nullable: false
+
+  - name: version_num_old
+    datatype: INT
+    business_definition: Version number of old profile version (NULL for initial)
+    nullable: true
+
   - name: change_reason
-    datatype: string
-    business_definition: Categorized reason (INITIAL_LOAD, SOURCE_UPDATE, CORRECTION, DATA_QUALITY_FIX, MERGE_FLAG, RECOMPUTE_HASH)
+    datatype: VARCHAR(50)
+    business_definition: Categorized reason for profile version creation
+    nullable: false
+    valid_values: [INITIAL_LOAD, SOURCE_UPDATE, CORRECTION, DATA_QUALITY_FIX, BACKDATED_CORRECTION, RECOMPUTE_HASH]
+
   - name: changed_scalar_attributes
-    datatype: string
-    business_definition: JSON array of scalar attribute names changed
+    datatype: TEXT
+    business_definition: JSON array of scalar attribute names that changed (e.g., ["firstname","occupation","birthdate"])
+    nullable: false
+    format: JSON array
+
   - name: changed_set_names
-    datatype: string
-    business_definition: JSON array of multi-valued set names changed
+    datatype: TEXT
+    business_definition: JSON array of multi-valued set names that changed (e.g., ["source_of_income","purpose_of_investment"])
+    nullable: false
+    format: JSON array
+
   - name: scalar_attribute_old_values
-    datatype: string
-    business_definition: JSON object of old scalar values (subset for changed attributes)
+    datatype: TEXT
+    business_definition: JSON object with old values of changed scalar attributes only (e.g., {"occupation":"EMPLOYEE","birthdate":"1985-03-10"})
+    nullable: true
+    format: JSON object
+
   - name: scalar_attribute_new_values
-    datatype: string
-    business_definition: JSON object of new scalar values (subset for changed attributes)
+    datatype: TEXT
+    business_definition: JSON object with new values of changed scalar attributes only
+    nullable: false
+    format: JSON object
+
   - name: set_membership_diff_summary
-    datatype: string
-    business_definition: JSON object summarizing counts of added/removed members per changed set
+    datatype: TEXT
+    business_definition: JSON object with counts of added/removed members per set (e.g., {"source_of_income":{"added":1,"removed":0}})
+    nullable: true
+    format: JSON object
+
   - name: old_profile_hash
-    datatype: string
-    business_definition: Profile hash of previous version
+    datatype: VARCHAR(64)
+    business_definition: Profile hash of previous version (NULL for initial load)
+    nullable: true
+
   - name: new_profile_hash
-    datatype: string
-    business_definition: Profile hash of new version (must match dim row)
+    datatype: VARCHAR(64)
+    business_definition: Profile hash of new version (must match dim_customer_profile)
+    nullable: false
+
   - name: event_source_ts
-    datatype: timestamp
-    business_definition: Business-effective timestamp when source system says change occurred
+    datatype: TIMESTAMP
+    business_definition: Business timestamp when source system recorded the change
+    nullable: false
+
   - name: event_detected_ts
-    datatype: timestamp
-    business_definition: Timestamp when change was detected by ETL
+    datatype: TIMESTAMP
+    business_definition: Timestamp when ETL process detected the change
+    nullable: false
+
   - name: effective_start_ts_new
-    datatype: timestamp
-    business_definition: Effective start timestamp of new version (copied from dimension)
+    datatype: TIMESTAMP
+    business_definition: Effective start timestamp of new version (copied from dimension for convenience)
+    nullable: false
+
   - name: processing_latency_seconds
-    datatype: integer
-    business_definition: Difference in seconds (event_detected_ts - event_source_ts); may be positive for backdated corrections
+    datatype: INT
+    business_definition: Seconds between event_source_ts and event_detected_ts (may be negative for backdated corrections)
+    nullable: true
+
   - name: initiated_by_system
-    datatype: string
-    business_definition: Source system code initiating change (e.g., CRM, KYC, SURVEY, PURPOSE_APP)
+    datatype: VARCHAR(100)
+    business_definition: Source system code that initiated change (e.g., CRM, KYC_PORTAL, SURVEY_APP, ETL_CORRECTION)
+    nullable: true
+
   - name: initiated_by_user_id
-    datatype: string
-    business_definition: User identifier if manual correction (null otherwise)
+    datatype: VARCHAR(100)
+    business_definition: User identifier if manual correction/update (NULL for automated processes)
+    nullable: true
+
   - name: load_ts
-    datatype: timestamp
-    business_definition: Ingestion timestamp for this audit event
+    datatype: TIMESTAMP
+    business_definition: ETL ingestion timestamp for this audit event
+    nullable: false
+
 data_quality_rules:
-  - "No duplicate (customer_id, profile_version_id_new)"
-  - "profile_version_id_old IS NULL only when change_reason = INITIAL_LOAD"
-  - "changed_scalar_attributes <> '[]' OR changed_set_names <> '[]' (no-op events prohibited)"
-  - "new_profile_hash length=64 and equals dim_customer_profile.profile_hash for profile_version_id_new"
-  - "old_profile_hash length=64 OR old_profile_hash IS NULL (initial load)"
-  - "processing_latency_seconds >= 0 OR change_reason IN ('CORRECTION','MERGE_FLAG')"
-  - "effective_start_ts_new = dim_customer_profile.effective_start_ts for profile_version_id_new"
-  - "If change_reason='RECOMPUTE_HASH' then changed_scalar_attributes='[]' AND changed_set_names='[]'"
+  - rule: unique_new_version
+    description: No duplicate (customer_id, customer_profile_version_sk_new)
+    
+  - rule: initial_load_null_old
+    description: customer_profile_version_sk_old IS NULL only when change_reason = 'INITIAL_LOAD'
+    
+  - rule: change_not_empty
+    description: At least one of changed_scalar_attributes or changed_set_names must be non-empty array
+    
+  - rule: hash_format
+    description: new_profile_hash must be 64 hex characters and match dim_customer_profile
+    
+  - rule: old_hash_format
+    description: old_profile_hash must be 64 hex characters OR NULL (initial load)
+    
+  - rule: version_sequence
+    description: version_num_new = version_num_old + 1 (except initial load where old is NULL)
+    
+  - rule: effective_ts_match
+    description: effective_start_ts_new must match dim_customer_profile. effective_start_ts for the same version
+
+indexes:
+  - name: pk_audit_event
+    type: primary_key
+    columns: [audit_event_id]
+    
+  - name: idx_customer_id
+    type: non_unique
+    columns: [customer_id]
+    description: Fast lookup of all changes for a customer
+    
+  - name: idx_event_source_ts
+    type: non_unique
+    columns: [event_source_ts]
+    description: Time-based queries
+    
+  - name: idx_change_reason
+    type: non_unique
+    columns: [change_reason]
+    description: Analysis by change type
+
 adr_refs:
   - ADR-001-scd2-customer-profile.md
-  - ADR-002-multi-valued-sets.md
-open_questions:
-  - "Do we persist full old/new scalar value JSON or only attribute names?"
-  - "Do we need per-item diff details for sets (added_codes, removed_codes arrays)?"
-  - "Should RECOMPUTE_HASH events be stored or just logged?"
+  - ADR-002-multi-valued-sets-via-bridge.md
+  - ADR-005-audit-event-tracking.md
+
 sample_rows:
   - audit_event_id: 50001
-    customer_id: C123456
-    profile_version_id_new: 9870
-    profile_version_id_old: null
-    change_reason: INITIAL_LOAD
-    changed_scalar_attributes: '["birthdate","marital_status_id","nationality_id","occupation_id","education_level_id"]'
-    changed_set_names: '["income_source","investment_purpose"]'
-    scalar_attribute_old_values: "{}"
-    scalar_attribute_new_values: '{"birthdate":"1985-03-10","marital_status_id":2,"nationality_id":66,"occupation_id":301,"education_level_id":5}'
-    set_membership_diff_summary: '{"income_source":{"added":2,"removed":0},"investment_purpose":{"added":2,"removed":0}}'
+    customer_id: 556677
+    customer_profile_version_sk_new: 102938
+    customer_profile_version_sk_old: null
+    version_num_new: 1
+    version_num_old: null
+    change_reason: "INITIAL_LOAD"
+    changed_scalar_attributes: '["evidence_unique_key","firstname","lastname","person_title","marital_status","nationality","occupation","birthdate","total_asset","monthly_income"]'
+    changed_set_names: '["source_of_income","purpose_of_investment"]'
+    scalar_attribute_old_values: null
+    scalar_attribute_new_values: '{"evidence_unique_key":"AB1234567890","firstname":"John","lastname":"Doe","person_title":"MR","marital_status":"MARRIED","nationality":"TH","occupation":"EMPLOYEE","birthdate":"1985-03-10","total_asset":"ASSET_BAND_3","monthly_income":"INCOME_BAND_2"}'
+    set_membership_diff_summary: '{"source_of_income":{"added":2,"removed":0},"purpose_of_investment":{"added":2,"removed":0}}'
     old_profile_hash: null
     new_profile_hash: "5e884898da28047151d0e56f8dc62927..."
-    event_source_ts: "2024-09-01T08:00:00Z"
-    event_detected_ts: "2024-09-01T08:02:05Z"
-    effective_start_ts_new: "2024-09-01T08:00:00Z"
+    event_source_ts: "2025-12-01T08:00:00Z"
+    event_detected_ts: "2025-12-01T08:02:05Z"
+    effective_start_ts_new: "2025-12-01T08:00:00Z"
     processing_latency_seconds: 125
     initiated_by_system: "CRM"
     initiated_by_user_id: null
-    load_ts: "2024-09-01T08:02:10Z"
+    load_ts: "2025-12-01T08:02:10Z"
+    
   - audit_event_id: 50002
-    customer_id: C123456
-    profile_version_id_new: 9871
-    profile_version_id_old: 9870
-    change_reason: SOURCE_UPDATE
-    changed_scalar_attributes: '["occupation_id"]'
+    customer_id: 556677
+    customer_profile_version_sk_new: 102939
+    customer_profile_version_sk_old: 102938
+    version_num_new: 2
+    version_num_old: 1
+    change_reason: "SOURCE_UPDATE"
+    changed_scalar_attributes: '["occupation","occupation_other"]'
     changed_set_names: '[]'
-    scalar_attribute_old_values: '{"occupation_id":301}'
-    scalar_attribute_new_values: '{"occupation_id":305}'
-    set_membership_diff_summary: '{"income_source":{"added":0,"removed":0},"investment_purpose":{"added":0,"removed":0}}'
+    scalar_attribute_old_values: '{"occupation":"EMPLOYEE","occupation_other":null}'
+    scalar_attribute_new_values: '{"occupation":"OTHER","occupation_other":"Astronaut"}'
+    set_membership_diff_summary: '{"source_of_income":{"added":0,"removed":0},"purpose_of_investment":{"added":0,"removed":0}}'
     old_profile_hash: "5e884898da28047151d0e56f8dc62927..."
-    new_profile_hash: "2c26b46b68ffc68ff99b453c1d304134..."
-    event_source_ts: "2024-10-10T11:15:00Z"
-    event_detected_ts: "2024-10-10T11:16:30Z"
-    effective_start_ts_new: "2024-10-10T11:15:00Z"
+    new_profile_hash: "7b2d9e4a1c8f5b3d6a9c2e8f1b4d7a5c..."
+    event_source_ts: "2025-12-05T10:15:00Z"
+    event_detected_ts: "2025-12-05T10:16:30Z"
+    effective_start_ts_new: "2025-12-05T10:15:00Z"
     processing_latency_seconds: 90
-    initiated_by_system: "CRM"
-    initiated_by_user_id: null
-    load_ts: "2024-10-10T11:16:35Z"
+    initiated_by_system: "KYC_PORTAL"
+    initiated_by_user_id: "USER_12345"
+    load_ts: "2025-12-05T10:16:35Z"
+
+version: 2.0
+last_updated: 2025-12-01
+owner: Data Architecture Team

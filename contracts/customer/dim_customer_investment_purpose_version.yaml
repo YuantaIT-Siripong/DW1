@@ -1,52 +1,101 @@
-entity_name: dim_customer_investment_purpose_version
+entity_name: bridge_customer_purpose_of_investment
 domain: customer
 table_type: bridge
-grain_description: One row per investment purpose membership for a profile version.
+layer: curated
+grain_description: One row per investment purpose membership for each customer profile version.  Multi-valued relationship between profile versions and investment purposes.
+
 primary_keys:
-  - profile_version_id
-  - investment_purpose_code
+  - customer_profile_version_sk
+  - purpose_of_investment_code
+
 foreign_keys:
-  - column: profile_version_id
-    references: dim_customer_profile.profile_version_id
-  - column: investment_purpose_code
-    references: dim_investment_purpose.investment_purpose_code
+  - column: customer_profile_version_sk
+    references: dim_customer_profile.customer_profile_version_sk
+    description: Link to specific profile version
+
 attributes:
-  - name: profile_version_id
-    datatype: integer
-    business_definition: Link to historical profile version
+  - name: customer_profile_version_sk
+    datatype: BIGINT
+    business_definition: Surrogate key of the profile version this investment purpose belongs to
+    nullable: false
+    primary_key: true
+
   - name: customer_id
-    datatype: string
-    business_definition: Denormalized stable customer identity
-  - name: investment_purpose_code
-    datatype: string
-    business_definition: Selected investment purpose code
-  - name: primary_flag
-    datatype: boolean
-    business_definition: Indicates primary purpose (at most one TRUE per profile_version_id)
+    datatype: BIGINT
+    business_definition: Denormalized stable customer identifier (for convenience queries)
+    nullable: false
+
+  - name: purpose_of_investment_code
+    datatype: VARCHAR(100)
+    business_definition: Investment purpose enumeration code
+    nullable: false
+    primary_key: true
+    enumeration_ref: enumerations/customer_purpose_of_investment.yaml
+    valid_values: [RETIREMENT, EDUCATION, SPECULATION, INCOME, WEALTH_PRESERVATION, GROWTH, TAX_PLANNING, ESTATE_PLANNING, OTHER, UNKNOWN]
+
   - name: load_ts
-    datatype: timestamp
-    business_definition: Ingestion timestamp
-set_membership_behavior: Full set re-materialized only when membership changes.
+    datatype: TIMESTAMP
+    business_definition: ETL ingestion timestamp
+    nullable: false
+
+set_membership_behavior: |
+  Full set is re-materialized for each new profile version only when membership changes.
+  Bridge rows are immutable once created (tied to specific profile version).
+  
 hash_dependency:
-  parent_set_hash_column: investment_purpose_set_hash
-  recomputation_logic: |
-    SELECT SHA256(STRING_AGG(investment_purpose_code, '|' ORDER BY investment_purpose_code))
-    FROM dim_customer_investment_purpose_version
-    WHERE profile_version_id = :pv_id;
+  parent_set_hash_column: purpose_of_investment_set_hash
+  computation_logic: |
+    1. Retrieve all purpose_of_investment_code values for given customer_profile_version_sk
+    2. Normalize each code: UPPER(TRIM)
+    3. Deduplicate (should not happen in well-formed data)
+    4. Sort codes ascending alphabetically
+    5. Join with "|" delimiter (empty set -> "")
+    6. SHA256(joined_string) -> purpose_of_investment_set_hash
+    7. Store hash in dim_customer_profile for this version
+  
+  example_sql: |
+    SELECT SHA256(STRING_AGG(purpose_of_investment_code, '|' ORDER BY purpose_of_investment_code))
+    FROM bridge_customer_purpose_of_investment
+    WHERE customer_profile_version_sk = :version_sk;
+
 data_quality_rules:
-  - "No duplicate (profile_version_id, investment_purpose_code)"
-  - "All investment_purpose_code values valid in dim_investment_purpose"
-  - "At most one primary_flag = TRUE per profile_version_id"
+  - rule: no_duplicates
+    description: No duplicate (customer_profile_version_sk, purpose_of_investment_code) combinations
+    
+  - rule: valid_enumeration
+    description: All purpose_of_investment_code values must exist in enumeration file
+    
+  - rule: fk_integrity
+    description: customer_profile_version_sk must exist in dim_customer_profile
+    
+  - rule: at_least_one_member
+    description: Each customer_profile_version_sk should have at least 1 purpose (recommended, not enforced)
+
+indexes:
+  - name: pk_bridge_investment_purpose
+    type: primary_key
+    columns: [customer_profile_version_sk, purpose_of_investment_code]
+    
+  - name: idx_customer_id
+    type: non_unique
+    columns: [customer_id]
+    description: Fast lookup by customer
+
 adr_refs:
-  - ADR-002-multi-valued-sets.md
+  - ADR-002-multi-valued-sets-via-bridge.md
+  - ADR-003-enumeration-with-other-pattern.md
+
 sample_rows:
-  - profile_version_id: 10
-    customer_id: C123456
-    investment_purpose_code: RETIREMENT
-    primary_flag: true
-  - profile_version_id: 10
-    customer_id: C123456
-    investment_purpose_code: EDUCATION
-    primary_flag: false
-open_questions:
-  - "Is primary_flag mandatory or optional?"
+  - customer_profile_version_sk: 102938
+    customer_id: 556677
+    purpose_of_investment_code: "RETIREMENT"
+    load_ts: "2025-12-01T08:05:10Z"
+    
+  - customer_profile_version_sk: 102938
+    customer_id: 556677
+    purpose_of_investment_code: "EDUCATION"
+    load_ts: "2025-12-01T08:05:10Z"
+
+version: 2.0
+last_updated: 2025-12-01
+owner: Data Architecture Team

@@ -1,52 +1,101 @@
-entity_name: dim_customer_income_source_version
+entity_name: bridge_customer_source_of_income
 domain: customer
 table_type: bridge
-grain_description: One row per income source membership for a profile version.
+layer: curated
+grain_description: One row per source of income membership for each customer profile version.  Multi-valued relationship between profile versions and income sources. 
+
 primary_keys:
-  - profile_version_id
-  - income_source_code
+  - customer_profile_version_sk
+  - source_of_income_code
+
 foreign_keys:
-  - column: profile_version_id
-    references: dim_customer_profile.profile_version_id
-  - column: income_source_code
-    references: dim_income_source.income_source_code
+  - column: customer_profile_version_sk
+    references: dim_customer_profile. customer_profile_version_sk
+    description: Link to specific profile version
+
 attributes:
-  - name: profile_version_id
-    datatype: integer
-    business_definition: Link to historical profile version
+  - name: customer_profile_version_sk
+    datatype: BIGINT
+    business_definition: Surrogate key of the profile version this income source belongs to
+    nullable: false
+    primary_key: true
+
   - name: customer_id
-    datatype: string
-    business_definition: Denormalized stable customer identity
-  - name: income_source_code
-    datatype: string
-    business_definition: Selected income source code
-  - name: source_rank
-    datatype: integer
-    business_definition: Ordinal position if provided (null if not supplied)
+    datatype: BIGINT
+    business_definition: Denormalized stable customer identifier (for convenience queries)
+    nullable: false
+
+  - name: source_of_income_code
+    datatype: VARCHAR(100)
+    business_definition: Income source enumeration code
+    nullable: false
+    primary_key: true
+    enumeration_ref: enumerations/customer_source_of_income.yaml
+    valid_values: [SALARY, DIVIDEND, RENTAL, BUSINESS, PENSION, INVESTMENT, INHERITANCE, GIFT, OTHER, UNKNOWN]
+
   - name: load_ts
-    datatype: timestamp
-    business_definition: Ingestion timestamp
-set_membership_behavior: Full set re-materialized only when membership changes.
+    datatype: TIMESTAMP
+    business_definition: ETL ingestion timestamp
+    nullable: false
+
+set_membership_behavior: |
+  Full set is re-materialized for each new profile version only when membership changes. 
+  Bridge rows are immutable once created (tied to specific profile version).
+  
 hash_dependency:
-  parent_set_hash_column: income_source_set_hash
-  recomputation_logic: |
-    SELECT SHA256(STRING_AGG(income_source_code, '|' ORDER BY income_source_code))
-    FROM dim_customer_income_source_version
-    WHERE profile_version_id = :pv_id;
+  parent_set_hash_column: source_of_income_set_hash
+  computation_logic: |
+    1. Retrieve all source_of_income_code values for given customer_profile_version_sk
+    2.  Normalize each code: UPPER(TRIM)
+    3.  Deduplicate (should not happen in well-formed data)
+    4. Sort codes ascending alphabetically
+    5. Join with "|" delimiter (empty set -> "")
+    6. SHA256(joined_string) -> source_of_income_set_hash
+    7. Store hash in dim_customer_profile for this version
+  
+  example_sql: |
+    SELECT SHA256(STRING_AGG(source_of_income_code, '|' ORDER BY source_of_income_code))
+    FROM bridge_customer_source_of_income
+    WHERE customer_profile_version_sk = :version_sk;
+
 data_quality_rules:
-  - "No duplicate (profile_version_id, income_source_code)"
-  - "All income_source_code values valid in dim_income_source"
-  - "source_rank IS NULL OR source_rank >= 1"
+  - rule: no_duplicates
+    description: No duplicate (customer_profile_version_sk, source_of_income_code) combinations
+    
+  - rule: valid_enumeration
+    description: All source_of_income_code values must exist in enumeration file
+    
+  - rule: fk_integrity
+    description: customer_profile_version_sk must exist in dim_customer_profile
+    
+  - rule: at_least_one_member
+    description: Each customer_profile_version_sk should have at least 1 source (recommended, not enforced)
+
+indexes:
+  - name: pk_bridge_income_source
+    type: primary_key
+    columns: [customer_profile_version_sk, source_of_income_code]
+    
+  - name: idx_customer_id
+    type: non_unique
+    columns: [customer_id]
+    description: Fast lookup by customer
+
 adr_refs:
-  - ADR-002-multi-valued-sets.md
+  - ADR-002-multi-valued-sets-via-bridge.md
+  - ADR-003-enumeration-with-other-pattern. md
+
 sample_rows:
-  - profile_version_id: 10
-    customer_id: C123456
-    income_source_code: SALARY
-    source_rank: 1
-  - profile_version_id: 10
-    customer_id: C123456
-    income_source_code: DIVIDEND
-    source_rank: 2
-open_questions:
-  - "Do we enforce consecutive ranking or allow gaps?"
+  - customer_profile_version_sk: 102938
+    customer_id: 556677
+    source_of_income_code: "SALARY"
+    load_ts: "2025-12-01T08:05:10Z"
+    
+  - customer_profile_version_sk: 102938
+    customer_id: 556677
+    source_of_income_code: "DIVIDEND"
+    load_ts: "2025-12-01T08:05:10Z"
+
+version: 2. 0
+last_updated: 2025-12-01
+owner: Data Architecture Team
