@@ -1,0 +1,111 @@
+enumeration_name: customer_profile_audit_change_reason
+enumeration_version: 1.0
+domain: customer
+purpose: Valid change_reason values for fact_customer_profile_audit table
+schema_version: 1
+generated_at_utc: "2025-12-01T12:00:00Z"
+
+description: |
+  Categorized reasons why a new customer profile SCD2 version was created.
+  Used in fact_customer_profile_audit. change_reason column.
+  
+valid_values:
+  - code: INITIAL_LOAD
+    display_name: Initial Load
+    description: First version creation for this customer (version 1)
+    category: NORMAL_OPERATION
+    requires_approval: false
+    allows_null_old_version: true
+    lifecycle_status: ACTIVE
+    introduced_version: 1. 0
+
+  - code: SOURCE_UPDATE
+    display_name: Source System Update
+    description: Regular source-driven change detected from IT operational view
+    category: NORMAL_OPERATION
+    requires_approval: false
+    allows_null_old_version: false
+    lifecycle_status: ACTIVE
+    introduced_version: 1.0
+
+  - code: CORRECTION
+    display_name: Manual Correction
+    description: Manual or approved correction of incorrect value
+    category: DATA_CORRECTION
+    requires_approval: true
+    allows_null_old_version: false
+    lifecycle_status: ACTIVE
+    introduced_version: 1.0
+
+  - code: DATA_QUALITY_FIX
+    display_name: Data Quality Fix
+    description: Correction of previously invalid data (e.g., fix invalid enumeration)
+    category: DATA_CORRECTION
+    requires_approval: false
+    allows_null_old_version: false
+    lifecycle_status: ACTIVE
+    introduced_version: 1.0
+
+  - code: BACKDATED_CORRECTION
+    display_name: Backdated Correction
+    description: Late-arriving change with earlier business timestamp (backdated insert)
+    category: DATA_CORRECTION
+    requires_approval: true
+    allows_null_old_version: false
+    allows_chronology_exception: true
+    lifecycle_status: ACTIVE
+    introduced_version: 1.0
+    notes: effective_start_ts may be < event_detected_ts
+
+  - code: RECOMPUTE_HASH
+    display_name: Hash Recomputation
+    description: Profile hash recalculated after algorithm or normalization change
+    category: MAINTENANCE
+    requires_approval: true
+    allows_null_old_version: false
+    lifecycle_status: ACTIVE
+    introduced_version: 1.0
+    notes: No actual attribute changes, only hash recomputation
+
+categories:
+  - name: NORMAL_OPERATION
+    description: Standard operational version creation
+    
+  - name: DATA_CORRECTION
+    description: Corrective actions (manual or automated)
+    
+  - name: MAINTENANCE
+    description: System maintenance or migration events
+
+business_rules:
+  - rule: initial_load_null_old
+    description: INITIAL_LOAD must have NULL customer_profile_version_sk_old
+    
+  - rule: non_initial_requires_old
+    description: All non-INITIAL_LOAD reasons require non-NULL customer_profile_version_sk_old
+    
+  - rule: approval_tracking
+    description: CORRECTION, BACKDATED_CORRECTION, RECOMPUTE_HASH require initiated_by_user_id populated
+    
+  - rule: hash_change_detection
+    description: RECOMPUTE_HASH is the only reason where old_profile_hash may equal new_profile_hash
+
+monitoring:
+  - metric: change_reason_distribution
+    description: Track frequency of each change_reason monthly
+    alert_threshold: RECOMPUTE_HASH > 5% indicates potential issue
+    
+  - metric: correction_rate
+    description: (CORRECTION + DATA_QUALITY_FIX + BACKDATED_CORRECTION) / total events
+    alert_threshold: > 10% indicates upstream data quality problem
+
+deprecated_values: []
+
+change_log:
+  - version: 1.0
+    date: 2025-12-01
+    change: Initial enumeration for customer profile audit
+    author: Data Architecture
+
+last_updated: 2025-12-01
+owner: Data Architecture Team

@@ -1,0 +1,130 @@
+enumeration_name: customer_profile_attribute_names
+enumeration_version: 1.0
+domain: customer
+purpose: Valid attribute names for JSON changed_scalar_attributes in fact_customer_profile_audit
+schema_version: 1
+generated_at_utc: "2025-12-01T12:00:00Z"
+
+description: |
+  All versioned (Type 2) attribute names from dim_customer_profile. 
+  Used to validate changed_scalar_attributes JSON array in audit fact.
+  
+valid_values:
+  - code: evidence_unique_key
+    display_name: Evidence Unique Key
+    data_type: VARCHAR(100)
+    pii: true
+    lifecycle_status: ACTIVE
+
+  - code: firstname
+    display_name: First Name
+    data_type: VARCHAR(200)
+    pii: true
+    lifecycle_status: ACTIVE
+
+  - code: lastname
+    display_name: Last Name
+    data_type: VARCHAR(200)
+    pii: true
+    lifecycle_status: ACTIVE
+
+  - code: firstname_local
+    display_name: First Name (Local)
+    data_type: VARCHAR(200)
+    pii: true
+    lifecycle_status: ACTIVE
+
+  - code: lastname_local
+    display_name: Last Name (Local)
+    data_type: VARCHAR(200)
+    pii: true
+    lifecycle_status: ACTIVE
+
+  - code: person_title
+    display_name: Person Title
+    data_type: VARCHAR(50)
+    pii: false
+    lifecycle_status: ACTIVE
+
+  - code: marital_status
+    display_name: Marital Status
+    data_type: VARCHAR(50)
+    pii: false
+    lifecycle_status: ACTIVE
+
+  - code: nationality
+    display_name: Nationality
+    data_type: VARCHAR(2)
+    pii: false
+    lifecycle_status: ACTIVE
+
+  - code: occupation
+    display_name: Occupation
+    data_type: VARCHAR(100)
+    pii: false
+    lifecycle_status: ACTIVE
+
+  - code: education_level
+    display_name: Education Level
+    data_type: VARCHAR(100)
+    pii: false
+    lifecycle_status: ACTIVE
+
+  - code: business_type
+    display_name: Business Type
+    data_type: VARCHAR(100)
+    pii: false
+    lifecycle_status: ACTIVE
+
+  - code: birthdate
+    display_name: Birth Date
+    data_type: DATE
+    pii: true
+    lifecycle_status: ACTIVE
+
+  - code: total_asset
+    display_name: Total Asset Band
+    data_type: VARCHAR(50)
+    pii: false
+    lifecycle_status: ACTIVE
+
+  - code: monthly_income
+    display_name: Monthly Income Band
+    data_type: VARCHAR(50)
+    pii: false
+    lifecycle_status: ACTIVE
+
+  - code: income_country
+    display_name: Income Country
+    data_type: VARCHAR(2)
+    pii: false
+    lifecycle_status: ACTIVE
+
+set_names:
+  - code: source_of_income
+    display_name: Source of Income
+    description: Multi-valued set tracked in bridge table
+    lifecycle_status: ACTIVE
+
+  - code: purpose_of_investment
+    display_name: Purpose of Investment
+    description: Multi-valued set tracked in bridge table
+    lifecycle_status: ACTIVE
+
+excluded_from_change_tracking:
+  - person_title_other
+  - nationality_other
+  - occupation_other
+  - education_level_other
+  - business_type_other
+  - income_country_other
+  note: Type 1 freetext fields excluded from versioning
+
+change_log:
+  - version: 1.0
+    date: 2025-12-01
+    change: Initial enumeration
+    author: Data Architecture
+
+last_updated: 2025-12-01
+owner: Data Architecture Team
