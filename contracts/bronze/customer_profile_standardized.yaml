@@ -1,1 +1,353 @@
-empty file, wait for generate
+entity_name: customer_profile_standardized
+domain: customer
+table_type: landing
+layer: bronze
+grain_description: One record per customer as provided by IT operational view.  Raw landing zone - exact mirror of IT view plus ETL metadata.  No transformations applied. 
+
+upstream_source:
+  system: IT Operational Database
+  view_name: opdb. vw_customer_profile_standardized
+  owner: IT Department
+  status: pending_creation
+  specification_reference: docs/business/modules/customer_module.md Section 18
+
+primary_keys:
+  - customer_id
+
+natural_keys:
+  - customer_id
+
+attributes:
+  # Natural Key
+  - name: customer_id
+    datatype: VARCHAR(50)
+    business_definition: Unique business key from operational system
+    nullable: false
+    primary_key: true
+    source_field: customer_id
+
+  # Identity Evidence (PII)
+  - name: evidence_unique_key
+    datatype: VARCHAR(100)
+    business_definition: National ID/Passport (trimmed, uppercase from IT)
+    pii: true
+    pii_category: identity_document
+    nullable: true
+    source_field: evidence_unique_key
+
+  # Names (PII)
+  - name: firstname
+    datatype: VARCHAR(200)
+    business_definition: Given name (trimmed, preserve case from IT)
+    pii: true
+    pii_category: name
+    nullable: true
+    source_field: firstname
+
+  - name: lastname
+    datatype: VARCHAR(200)
+    business_definition: Family name (trimmed, preserve case from IT)
+    pii: true
+    pii_category: name
+    nullable: true
+    source_field: lastname
+
+  - name: firstname_local
+    datatype: VARCHAR(200)
+    business_definition: Local script given name (trimmed, preserve case from IT)
+    pii: true
+    pii_category: name
+    nullable: true
+    source_field: firstname_local
+
+  - name: lastname_local
+    datatype: VARCHAR(200)
+    business_definition: Local script family name (trimmed, preserve case from IT)
+    pii: true
+    pii_category: name
+    nullable: true
+    source_field: lastname_local
+
+  # Enumeration Fields
+  - name: person_title
+    datatype: VARCHAR(50)
+    business_definition: Honorific title enumeration code (mapped by IT)
+    nullable: true
+    enumeration_ref: enumerations/customer_person_title.yaml
+    valid_values: [MR, MRS, MS, MISS, DR, PROF, REV, OTHER]
+    source_field: person_title
+
+  - name: person_title_other
+    datatype: VARCHAR(200)
+    business_definition: Freetext title when person_title=OTHER
+    nullable: true
+    population_rule: Populated by IT only when person_title='OTHER'
+    source_field: person_title_other
+
+  - name: marital_status
+    datatype: VARCHAR(50)
+    business_definition: Marital status enumeration code (mapped by IT)
+    nullable: true
+    enumeration_ref: enumerations/customer_marital_status.yaml
+    valid_values: [SINGLE, MARRIED, DIVORCED, WIDOWED, SEPARATED, UNKNOWN]
+    source_field: marital_status
+
+  - name: nationality
+    datatype: VARCHAR(2)
+    business_definition: Nationality enumeration code - ISO 3166-1 alpha-2 (mapped by IT)
+    nullable: true
+    enumeration_ref: enumerations/customer_nationality. yaml
+    standard_reference: ISO 3166-1 alpha-2
+    source_field: nationality
+
+  - name: nationality_other
+    datatype: VARCHAR(200)
+    business_definition: Freetext nationality when nationality=OTHER
+    nullable: true
+    population_rule: Populated by IT only when nationality='OTHER'
+    source_field: nationality_other
+
+  - name: occupation
+    datatype: VARCHAR(100)
+    business_definition: Occupational classification enumeration code (mapped by IT)
+    nullable: true
+    enumeration_ref: enumerations/customer_occupation.yaml
+    valid_values: [EMPLOYEE, SELF_EMPLOYED, BUSINESS_OWNER, GOVERNMENT_OFFICER, PROFESSIONAL, RETIRED, STUDENT, HOMEMAKER, UNEMPLOYED, OTHER, UNKNOWN]
+    source_field: occupation
+
+  - name: occupation_other
+    datatype: VARCHAR(200)
+    business_definition: Freetext occupation when occupation=OTHER
+    nullable: true
+    population_rule: Populated by IT only when occupation='OTHER'
+    source_field: occupation_other
+
+  - name: education_level
+    datatype: VARCHAR(100)
+    business_definition: Education attainment enumeration code (mapped by IT)
+    nullable: true
+    enumeration_ref: enumerations/customer_education_level. yaml
+    valid_values: [PRIMARY, SECONDARY, VOCATIONAL, DIPLOMA, BACHELOR, MASTER, DOCTORATE, OTHER, UNKNOWN]
+    source_field: education_level
+
+  - name: education_level_other
+    datatype: VARCHAR(200)
+    business_definition: Freetext education when education_level=OTHER
+    nullable: true
+    population_rule: Populated by IT only when education_level='OTHER'
+    source_field: education_level_other
+
+  - name: business_type
+    datatype: VARCHAR(100)
+    business_definition: Business/industry sector enumeration code (mapped by IT)
+    nullable: true
+    enumeration_ref: enumerations/customer_business_type.yaml
+    valid_values: [FINANCE, MANUFACTURING, RETAIL, SERVICES, AGRICULTURE, TECHNOLOGY, HEALTHCARE, EDUCATION, CONSTRUCTION, HOSPITALITY, TRANSPORTATION, ENERGY, MEDIA, GOVERNMENT, OTHER, UNKNOWN]
+    source_field: business_type
+
+  - name: business_type_other
+    datatype: VARCHAR(200)
+    business_definition: Freetext business type when business_type=OTHER
+    nullable: true
+    population_rule: Populated by IT only when business_type='OTHER'
+    source_field: business_type_other
+
+  - name: birthdate
+    datatype: DATE
+    business_definition: Date of birth in YYYY-MM-DD format
+    pii: true
+    pii_category: birthdate
+    nullable: true
+    quality_rules:
+      - birthdate <= CURRENT_DATE
+      - age between 18 and 120
+    source_field: birthdate
+
+  # Economic Bands
+  - name: total_asset
+    datatype: VARCHAR(50)
+    business_definition: Total asset value band enumeration code (mapped by IT)
+    nullable: true
+    enumeration_ref: enumerations/customer_total_asset_bands.yaml
+    valid_values: [ASSET_BAND_1, ASSET_BAND_2, ASSET_BAND_3, ASSET_BAND_4, ASSET_BAND_5, UNKNOWN]
+    note: No OTHER option - must select from bands
+    source_field: total_asset
+
+  - name: monthly_income
+    datatype: VARCHAR(50)
+    business_definition: Monthly income band enumeration code (mapped by IT)
+    nullable: true
+    enumeration_ref: enumerations/customer_monthly_income_bands.yaml
+    valid_values: [INCOME_BAND_1, INCOME_BAND_2, INCOME_BAND_3, INCOME_BAND_4, INCOME_BAND_5, UNKNOWN]
+    note: No OTHER option - must select from bands
+    source_field: monthly_income
+
+  - name: income_country
+    datatype: VARCHAR(2)
+    business_definition: Country of income origin - ISO 3166-1 alpha-2 (mapped by IT)
+    nullable: true
+    enumeration_ref: enumerations/customer_income_country.yaml
+    standard_reference: ISO 3166-1 alpha-2
+    source_field: income_country
+
+  - name: income_country_other
+    datatype: VARCHAR(200)
+    business_definition: Freetext income country when income_country=OTHER
+    nullable: true
+    population_rule: Populated by IT only when income_country='OTHER'
+    source_field: income_country_other
+
+  # Multi-Valued Sets (Pipe-Delimited from IT)
+  - name: source_of_income_list
+    datatype: TEXT
+    business_definition: Pipe-delimited list of income source codes (sorted alphabetically by IT)
+    nullable: true
+    format: Pipe-delimited string (e.g., "DIVIDEND|RENTAL|SALARY")
+    enumeration_ref: enumerations/customer_source_of_income. yaml
+    note: IT sorts alphabetically before joining
+    source_field: source_of_income_list
+
+  - name: purpose_of_investment_list
+    datatype: TEXT
+    business_definition: Pipe-delimited list of investment purpose codes (sorted alphabetically by IT)
+    nullable: true
+    format: Pipe-delimited string (e. g., "EDUCATION|RETIREMENT")
+    enumeration_ref: enumerations/customer_purpose_of_investment.yaml
+    note: IT sorts alphabetically before joining
+    source_field: purpose_of_investment_list
+
+  # IT Source Metadata
+  - name: last_modified_ts
+    datatype: TIMESTAMP
+    business_definition: Last modified timestamp from operational system (for change tracking)
+    nullable: true
+    source_field: last_modified_ts
+
+  # Bronze ETL Metadata (Added by DW)
+  - name: _bronze_load_ts
+    datatype: TIMESTAMP
+    business_definition: UTC timestamp when record was landed into Bronze
+    nullable: false
+    default: CURRENT_TIMESTAMP
+    etl_metadata: true
+
+  - name: _bronze_source_file
+    datatype: VARCHAR(500)
+    business_definition: Source view name or file identifier
+    nullable: true
+    default: "'opdb.vw_customer_profile_standardized'"
+    etl_metadata: true
+
+  - name: _bronze_batch_id
+    datatype: BIGINT
+    business_definition: ETL batch identifier for lineage tracking
+    nullable: true
+    etl_metadata: true
+
+data_quality_rules:
+  - rule: unique_customer_id
+    description: customer_id must be unique (no duplicates in single batch)
+    
+  - rule: customer_id_not_null
+    description: customer_id is required
+    
+  - rule: valid_enumerations
+    description: All enumeration fields should contain valid values (UNKNOWN if unmapped)
+    
+  - rule: other_field_population
+    description: When enumeration='OTHER', corresponding _other field should be populated
+    
+  - rule: birthdate_range
+    description: birthdate should be <= CURRENT_DATE and result in age 18-120
+    
+  - rule: pipe_delimited_format
+    description: Multi-valued lists should be pipe-delimited with no leading/trailing pipes
+
+transformation_rules:
+  - Applied by IT (upstream):
+    - TRIM all text fields
+    - Map operational codes to standard enumeration values
+    - Populate _other fields when enumeration=OTHER
+    - Sort multi-valued lists alphabetically
+    - Join multi-valued lists with pipe delimiter
+    - Convert dates to YYYY-MM-DD format
+    
+  - Applied by DW (Bronze load):
+    - Add _bronze_load_ts (current timestamp)
+    - Add _bronze_source_file (view identifier)
+    - Add _bronze_batch_id (batch tracking)
+    - NO other transformations (exact mirror)
+
+immutability_policy: |
+  Bronze records are immutable once landed. 
+  Never UPDATE or DELETE Bronze records.
+  Append-only pattern for historical audit trail. 
+
+retention_policy: 7_years_minimum
+
+indexes:
+  - name: pk_bronze_customer_profile
+    type: primary_key
+    columns: [customer_id]
+    
+  - name: idx_bronze_load_ts
+    type: non_unique
+    columns: [_bronze_load_ts]
+    description: Query by load timestamp
+    
+  - name: idx_bronze_batch_id
+    type: non_unique
+    columns: [_bronze_batch_id]
+    description: Query by batch
+
+pii_policy:
+  columns_raw_pii:
+    - evidence_unique_key
+    - firstname
+    - lastname
+    - firstname_local
+    - lastname_local
+    - birthdate
+  access_control:
+    - role: dw_etl_service
+      access: read_write
+    - role: dw_privileged
+      access: read_only
+    - role: dw_analyst
+      access: no_access
+  retention_policy: 7_years_after_relationship_end
+
+sample_rows:
+  - customer_id: "12345"
+    evidence_unique_key: "AB1234567890"
+    firstname: "John"
+    lastname: "Doe"
+    firstname_local: "สมชาย"
+    lastname_local: "โด"
+    person_title: "MR"
+    person_title_other: null
+    marital_status: "MARRIED"
+    nationality: "TH"
+    nationality_other: null
+    occupation: "OTHER"
+    occupation_other: "Astronaut"
+    education_level: "BACHELOR"
+    education_level_other: null
+    business_type: "FINANCE"
+    business_type_other: null
+    birthdate: "1985-03-10"
+    total_asset: "ASSET_BAND_3"
+    monthly_income: "INCOME_BAND_2"
+    income_country: "TH"
+    income_country_other: null
+    source_of_income_list: "DIVIDEND|SALARY"
+    purpose_of_investment_list: "EDUCATION|RETIREMENT"
+    last_modified_ts: "2025-12-01T07:55:00Z"
+    _bronze_load_ts: "2025-12-01T08:00:00Z"
+    _bronze_source_file: "opdb.vw_customer_profile_standardized"
+    _bronze_batch_id: 20251201001
+
+version: 1. 0
+last_updated: 2025-12-01
+owner: Data Warehouse Team
+upstream_owner: IT Department

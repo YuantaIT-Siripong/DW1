@@ -478,3 +478,13 @@ Use this for each new module:
 **Last Updated**: 2025-12-01  
 **Maintained By**: Data Architecture  
 **Questions?** Check STANDARDS_INDEX.md first
+
+
+
+
+
+
+
+
+I'm working on YuantaIT-Siripong/DW1.  
+Please read AI_CONTEXT.md to load all project standards. 
