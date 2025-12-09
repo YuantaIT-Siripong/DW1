@@ -167,7 +167,7 @@ COMMENT ON COLUMN bronze.customer_profile_standardized._bronze_batch_id IS
 
 -- Grant permissions (adjust roles as needed)
 GRANT SELECT ON bronze.customer_profile_standardized TO dw_etl_service;
-GRANT INSERT ON bronze. customer_profile_standardized TO dw_etl_service;
+GRANT INSERT ON bronze.customer_profile_standardized TO dw_etl_service;
 GRANT SELECT ON bronze.customer_profile_standardized TO dw_privileged;
 
 -- Immutability policy note
