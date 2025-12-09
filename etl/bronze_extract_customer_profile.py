@@ -50,9 +50,9 @@ POSTGRES_CONFIG = {
     'password': os. getenv('PG_PASSWORD')
 }
 
-BATCH_ID = os.getenv('BATCH_ID', int(datetime.now().strftime('%Y%m%d%H%M%S')))
+BATCH_ID = int(datetime.now().strftime('%Y%m%d%H%M%S'))
 BATCH_SIZE = int(os.getenv('BATCH_SIZE', 1000))
-SOURCE_VIEW = 'TempPOC.vw_customer_profile_standardized'
+SOURCE_VIEW = 'dbo.vw_customer_profile_standardized'
 TARGET_TABLE = 'bronze.customer_profile_standardized'
 
 

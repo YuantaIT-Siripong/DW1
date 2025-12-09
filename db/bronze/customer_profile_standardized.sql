@@ -63,7 +63,7 @@ CREATE TABLE bronze.customer_profile_standardized (
     _bronze_batch_id BIGINT,
     
     -- Primary Key
-    CONSTRAINT pk_bronze_customer_profile PRIMARY KEY (customer_id)
+    CONSTRAINT pk_bronze_customer_profile PRIMARY KEY (customer_id, last_modified_ts)
 );
 
 -- Indexes
