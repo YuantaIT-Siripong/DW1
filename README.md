@@ -113,13 +113,16 @@ This section provides quick access to authoritative policies governing data mode
 - [ADR-001 SCD2 Customer Profile](docs/adr/ADR-001-scd2-customer-profile.md)
 - [ADR-INV-001 Investment Profile](docs/adr/ADR-INV-001-investment-profile.md)
 - [ADR-002 Multi-Valued Sets](docs/adr/ADR-002-multi-valued-sets.md)
-- [Contributing Guide](CONTRIBUTING.md)
 
 ## AI-First Methodology
 Employed across design, development, operations, governance lifecycle.
 
-## Contributing
-Focus on improving clarity, adding patterns, enhancing templates, documenting lessons learned.
+## Internal Development Standards
+This is an internal repository. For standards and guidelines:
+- **Master Index**: [STANDARDS_INDEX.md](STANDARDS_INDEX.md)
+- **AI Development**: [AI_CONTEXT.md](AI_CONTEXT.md)
+- **Naming/Hashing**: [docs/data-modeling/](docs/data-modeling/)
+- **SCD2 Policy**: [contracts/scd2/STANDARD_SCD2_POLICY.md](contracts/scd2/STANDARD_SCD2_POLICY.md)
 
 ## License
 Conceptual educational repository.
