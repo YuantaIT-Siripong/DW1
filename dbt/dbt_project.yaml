@@ -1,59 +1,18 @@
 name: 'dw1'
-version: '1.0. 0'
+version: '1.0.0'
 config-version: 2
 
-profile: 'dw1'
+profile:  'dw1'
 
 model-paths: ["models"]
-analysis-paths: ["analyses"]
-test-paths: ["tests"]
-seed-paths: ["seeds"]
 macro-paths: ["macros"]
-snapshot-paths: ["snapshots"]
-
-target-path: "target"
-clean-targets:
-  - "target"
-  - "dbt_packages"
-
-vars:
-  # ETL Configuration
-  batch_id: null  # Set via CLI: --vars 'batch_id: 20251201001'
-  source_database: 'operational_db'
+test-paths: ["tests"]
 
 models:
   dw1:
-    bronze:
-      +materialized: incremental
-      +schema: bronze
-      +tags: ['bronze', 'landing']
-      +on_schema_change: 'fail'
-      
     silver:
-      +materialized: table
-      +schema: silver
-      +tags: ['silver', 'transformed']
-      +on_schema_change: 'fail'
-      
-    curated:
+      +schema:  silver
       +materialized: incremental
+    curated:
       +schema: curated
-      +tags: ['curated', 'gold']
-      +on_schema_change: 'fail'
-      
-      dimensions:
-        +materialized: incremental
-        +unique_key: 'customer_profile_version_sk'
-        
-      bridges:
-        +materialized: incremental
-        +on_schema_change: 'sync_all_columns'
-        
-      audit:
-        +materialized: incremental
-        +unique_key: 'audit_event_id'
-
-seeds:
-  dw1:
-    +schema: seeds
-    +quote_columns: false
+      +materialized: table

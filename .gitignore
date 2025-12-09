@@ -1,0 +1,22 @@
+# Python
+__pycache__/
+*.py[cod]
+*$py.class
+.env
+venv/
+*.log
+
+# dbt
+dbt/profiles.yml
+dbt/target/
+dbt/dbt_packages/
+dbt/logs/
+
+# ETL
+etl/logs/
+etl/.env
+
+# IDE
+.vscode/
+.idea/
+*.swp
