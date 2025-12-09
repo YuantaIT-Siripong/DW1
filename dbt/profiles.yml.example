@@ -1,0 +1,25 @@
+# dbt/profiles.yml.example
+# Copy to profiles.yml and update credentials
+
+dw1:
+  target:  dev
+  outputs:
+    dev:
+      type: postgres
+      host: localhost
+      port: 5432
+      user: "{{ env_var('PG_USER', 'postgres') }}"
+      password: "{{ env_var('PG_PASSWORD') }}"
+      dbname: "{{ env_var('PG_DB', 'dw1') }}"
+      schema: public
+      threads: 4
+    
+    prod:
+      type: postgres
+      host: "{{ env_var('PG_HOST_PROD') }}"
+      port: 5432
+      user: "{{ env_var('PG_USER_PROD') }}"
+      password: "{{ env_var('PG_PASSWORD_PROD') }}"
+      dbname: dw1_prod
+      schema: public
+      threads: 8

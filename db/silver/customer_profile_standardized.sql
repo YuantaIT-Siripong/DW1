@@ -86,7 +86,7 @@ CREATE TABLE silver.customer_profile_standardized (
     is_valid_purpose_of_investment_list BOOLEAN NOT NULL DEFAULT FALSE,
     
     -- Overall Data Quality Score
-    data_quality_score DECIMAL(5,4) NOT NULL DEFAULT 0. 0000,
+    data_quality_score DECIMAL(5,4) NOT NULL DEFAULT 0.0000,
     
     -- Silver Metadata
     _silver_processed_ts TIMESTAMP NOT NULL DEFAULT CURRENT_TIMESTAMP,
@@ -97,7 +97,7 @@ CREATE TABLE silver.customer_profile_standardized (
     
     -- Check Constraints
     CONSTRAINT chk_silver_profile_hash_length CHECK (LENGTH(profile_hash) = 64),
-    CONSTRAINT chk_silver_dq_score_range CHECK (data_quality_score BETWEEN 0. 0000 AND 1.0000),
+    CONSTRAINT chk_silver_dq_score_range CHECK (data_quality_score BETWEEN 0.0000 AND 1.0000),
     CONSTRAINT chk_silver_dq_status CHECK (_silver_dq_status IN ('VALID', 'VALID_WITH_OTHER', 'INVALID_ENUMERATION', 'INVALID_BIRTHDATE', 'MULTIPLE_ISSUES'))
 );
 

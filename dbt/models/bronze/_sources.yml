@@ -1,29 +1,30 @@
 version: 2
 
-sources:
+sources: 
   - name: bronze
     description: Bronze layer populated by Python extract script
-    database: dw1
-    schema: bronze
+    schema:  bronze
     
     tables:
       - name: customer_profile_standardized
         description: |
-          Raw customer profile data extracted from MSSQL opdb. vw_customer_profile_standardized
-          Loaded by:  etl/bronze_extract_customer_profile.py
+          Raw customer profile data extracted from MSSQL dbo.vw_customer_profile_standardized
+          Loaded by:   etl/bronze_extract_customer_profile.py
         
         loaded_at_field: _bronze_load_ts
         
-        freshness: 
+        freshness:  
           warn_after: {count: 24, period: hour}
           error_after: {count: 48, period: hour}
         
         columns:
           - name: customer_id
+            description: Business key
             tests:
               - not_null
               - unique
           
           - name: _bronze_load_ts
+            description: ETL load timestamp
             tests:
               - not_null

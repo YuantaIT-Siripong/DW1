@@ -1,0 +1,91 @@
+version: 2
+
+models: 
+  - name: _customer_person_title
+    description: Valid person title enumeration codes
+    columns:
+      - name: code
+        description: Title code (MR, MRS, MS, MISS, DR, PROF, REV, OTHER)
+        tests:
+          - not_null
+          - unique
+
+  - name: _customer_marital_status
+    description: Valid marital status enumeration codes
+    columns:
+      - name: code
+        tests:
+          - not_null
+          - unique
+
+  - name:  _customer_nationality
+    description:  Valid nationality codes (ISO 3166-1 alpha-2 + OTHER)
+    columns:
+      - name: code
+        tests: 
+          - not_null
+          - unique
+
+  - name: _customer_occupation
+    description: Valid occupation enumeration codes
+    columns:
+      - name: code
+        tests: 
+          - not_null
+          - unique
+
+  - name: _customer_education_level
+    description: Valid education level enumeration codes
+    columns:
+      - name:  code
+        tests:
+          - not_null
+          - unique
+
+  - name: _customer_business_type
+    description: Valid business type/industry enumeration codes
+    columns: 
+      - name: code
+        tests:
+          - not_null
+          - unique
+
+  - name:  _customer_total_asset_bands
+    description: Valid total asset band enumeration codes
+    columns: 
+      - name: code
+        tests:
+          - not_null
+          - unique
+
+  - name:  _customer_monthly_income_bands
+    description: Valid monthly income band enumeration codes
+    columns: 
+      - name: code
+        tests:
+          - not_null
+          - unique
+
+  - name:  _customer_income_country
+    description: Valid income country codes (ISO 3166-1 alpha-2 + OTHER)
+    columns:
+      - name:  code
+        tests:
+          - not_null
+          - unique
+
+  - name: _customer_source_of_income
+    description:  Valid source of income enumeration codes (used in pipe-delimited sets)
+    columns:
+      - name: code
+        tests: 
+          - not_null
+          - unique
+
+  - name: _customer_purpose_of_investment
+    description: Valid investment purpose enumeration codes (used in pipe-delimited sets)
+    columns:
+      - name: code
+        tests:
+          - not_null
+          - unique

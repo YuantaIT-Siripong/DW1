@@ -1,0 +1,71 @@
+version: 2
+
+models:
+  - name: customer_profile_standardized
+    description: |
+      Silver layer customer profile with data quality validation and hashes. 
+      
+      **Transformation logic:**
+      - Validates 12 enumeration fields against reference tables
+      - Computes set hashes for multi-valued fields (normalized for comparison)
+      - Computes profile hash for SCD2 change detection
+      - Calculates data quality score (0-100) and status (VALID/WARNING/INVALID)
+      
+      **Incremental strategy:**
+      - Loads only new records based on _bronze_load_ts watermark
+      - Unique key:  (customer_id, last_modified_ts) for versioning
+    
+    config:
+      tags:  ['silver', 'customer', 'pii']
+    
+    columns:
+      # Natural Key
+      - name: customer_id
+        description: Business key from source system
+        tests:
+          - not_null
+      
+      - name: last_modified_ts
+        description:  Source system modification timestamp
+        tests: 
+          - not_null
+      
+      # Data Quality Flags
+      - name:  dq_person_title_valid
+        description: TRUE if person_title is in valid enumeration or NULL
+      
+      - name: dq_person_title_other_complete
+        description: TRUE if person_title='OTHER' requires person_title_other to be populated
+      
+      - name: dq_score
+        description: Data quality score (0-100), percentage of passed validations
+        tests:
+          - not_null
+          - dbt_utils.accepted_range: 
+              min_value: 0
+              max_value: 100
+      
+      - name: dq_status
+        description: Data quality status (VALID=all pass, WARNING=10-11 pass, INVALID=<10 pass)
+        tests:
+          - not_null
+          - accepted_values: 
+              values: ['VALID', 'WARNING', 'INVALID']
+      
+      # Hashes
+      - name: source_of_income_set_hash
+        description: SHA256 hash of sorted source_of_income_list (normalized for change detection)
+      
+      - name: purpose_of_investment_set_hash
+        description: SHA256 hash of sorted purpose_of_investment_list
+      
+      - name: profile_hash
+        description: SHA256 hash of all profile fields (for SCD2 change detection in Gold layer)
+        tests:
+          - not_null
+      
+      # Metadata
+      - name: _silver_load_ts
+        description: Timestamp when record was loaded into Silver layer
+        tests:
+          - not_null
