@@ -1,0 +1,100 @@
+version: 2
+
+models:
+  - name: dim_customer_profile
+    description:  |
+      **SCD Type 2 Customer Profile Dimension**
+      
+      Maintains full history of customer profile changes with temporal tracking.
+      
+      **Key Features:**
+      - Surrogate key (customer_profile_sk) for fact table joins
+      - Effective dates for point-in-time queries
+      - is_current flag for latest version queries
+      - Full audit trail with lineage tracking
+      
+      **Usage Examples:**
+      ```sql
+      -- Get current profiles only
+      SELECT * FROM gold.dim_customer_profile WHERE is_current = TRUE;
+      
+      -- Point-in-time query (profile as of Nov 20, 2025)
+      SELECT * FROM gold. dim_customer_profile
+      WHERE '2025-11-20' BETWEEN effective_start_date AND effective_end_date;
+      
+      -- Customer history
+      SELECT * FROM gold.dim_customer_profile
+      WHERE customer_id = '100001'
+      ORDER BY effective_start_date;
+      ```
+      
+      **SCD Type 2 Logic:**
+      - New customer → Insert with is_current=TRUE
+      - Profile change → Insert new row, keep old row with updated effective_end_date
+      - No change → No action
+    
+    config:
+      tags: ['gold', 'dimension', 'scd2', 'pii']
+    
+    columns:
+      - name: customer_profile_sk
+        description:  Surrogate key - Use this in fact table foreign keys
+        tests:
+          - not_null
+          - unique
+      
+      - name: customer_id
+        description: Natural business key - Can have multiple rows (history)
+        tests:
+          - not_null
+      
+      - name: effective_start_date
+        description: When this version became active (inclusive)
+        tests:
+          - not_null
+      
+      - name: effective_end_date
+        description: When this version was superseded (inclusive). 9999-12-31 = current
+        tests:
+          - not_null
+      
+      - name:  is_current
+        description: TRUE = latest version, FALSE = historical
+        tests:
+          - not_null
+          - accepted_values:
+              values: [true, false]
+      
+      - name: profile_hash
+        description: SHA256 hash for change detection
+        tests:
+          - not_null
+      
+      - name: dq_score
+        description: Data quality score from Silver (0-100)
+        tests:
+          - not_null
+      
+      - name: dq_status
+        description: Data quality status (VALID/WARNING/INVALID)
+        tests:
+          - not_null
+          - accepted_values:
+              values: ['VALID', 'WARNING', 'INVALID']
+      
+      - name: record_created_ts
+        description:  When this dimension row was created
+        tests: 
+          - not_null
+
+    tests:
+      - dbt_utils.expression_is_true: 
+          name: effective_dates_logical
+          expression: "effective_start_date <= effective_end_date"
+      
+      - dbt_utils.unique_combination_of_columns: 
+          name: one_current_per_customer
+          combination_of_columns:
+            - customer_id
+            - is_current
+          where:  "is_current = TRUE"

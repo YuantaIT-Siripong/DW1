@@ -243,3 +243,8 @@ SELECT TOP 5
 FROM vw_customer_profile_standardized
 ORDER BY customer_id;
 GO
+
+
+-- Update to test SCD2 and AUDIT
+UPDATE customer_profile_raw SET marital_status = 'MARRIED', firstname = 'Update-Natthawut', last_modified_ts = GETDATE() WHERE customer_id = 100020
+GO

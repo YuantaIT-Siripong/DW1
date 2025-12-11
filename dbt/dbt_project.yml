@@ -2,17 +2,42 @@ name: 'dw1'
 version: '1.0.0'
 config-version: 2
 
-profile:  'dw1'
+profile: 'dw1'
 
 model-paths: ["models"]
 macro-paths: ["macros"]
 test-paths: ["tests"]
+seed-paths: ["seeds"]
+snapshot-paths: ["snapshots"]
+
+target-path: "target"
+clean-targets: 
+  - "target"
+  - "dbt_packages"
 
 models:
   dw1:
+    # Bronze layer (if you add dbt models here later)
+    bronze:
+      +materialized: view
+      +schema:  bronze
+    
+    # Silver layer - Validated data with DQ
     silver:
-      +schema:  silver
       +materialized: incremental
-    curated:
-      +schema: curated
+      +schema:  silver
+      
+      # Silver enumeration reference tables
+      enums:
+        +materialized: table
+        +schema: silver
+    
+    # Gold layer - Analytics-ready dimensions
+    gold:
       +materialized: table
+      +schema:  gold
+      
+    # Quarantine models (in quarantine schema)
+    quarantine:
+      +materialized: incremental
+      +schema: quarantine

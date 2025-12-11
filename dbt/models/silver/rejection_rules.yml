@@ -1,0 +1,61 @@
+# Quarantine rejection rules for customer profile
+# Define what causes a record to be rejected vs. flagged
+
+version: 2
+
+rejection_rules:
+  critical_errors:
+    # Records with these issues MUST be quarantined (cannot process)
+    - code:  MISSING_CUSTOMER_ID
+      condition: customer_id IS NULL
+      message: "Customer ID is required and cannot be NULL"
+      severity:  CRITICAL
+    
+    - code:  MISSING_EVIDENCE_KEY
+      condition: evidence_unique_key IS NULL
+      message: "Evidence unique key is required"
+      severity: CRITICAL
+    
+    - code: DUPLICATE_PRIMARY_KEY
+      condition: "Duplicate (customer_id, last_modified_ts)"
+      message: "Duplicate record detected for same customer and timestamp"
+      severity:  CRITICAL
+  
+  validation_errors:
+    # Records with these issues should be quarantined (bad data quality)
+    - code: DQ_THRESHOLD_FAILED
+      condition: dq_score < 50
+      message: "Data quality score below acceptable threshold (50%)"
+      severity: ERROR
+    
+    - code:  INVALID_PERSON_TITLE
+      condition: "person_title NOT IN (enum values) AND person_title IS NOT NULL"
+      message: "Invalid person title value - not in reference data"
+      severity: ERROR
+    
+    - code: PERSON_TITLE_OTHER_INCOMPLETE
+      condition: "person_title = 'OTHER' AND person_title_other IS NULL"
+      message: "Person title is 'OTHER' but person_title_other is not provided"
+      severity: ERROR
+    
+    - code: INVALID_MARITAL_STATUS
+      condition: "marital_status NOT IN (enum values) AND marital_status IS NOT NULL"
+      message: "Invalid marital status value"
+      severity: ERROR
+    
+    - code: INVALID_BIRTHDATE
+      condition: "birthdate > CURRENT_DATE OR birthdate < '1900-01-01'"
+      message: "Birthdate is out of valid range"
+      severity: ERROR
+  
+  warnings:
+    # Records with these issues can be processed but flagged
+    - code: LOW_DQ_SCORE
+      condition:  dq_score BETWEEN 50 AND 75
+      message: "Data quality score is low but acceptable"
+      severity: WARNING
+    
+    - code: MISSING_OPTIONAL_FIELD
+      condition: "Total of NULL optional fields > 5"
+      message: "Multiple optional fields are missing"
+      severity: WARNING
