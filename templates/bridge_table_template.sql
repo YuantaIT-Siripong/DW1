@@ -130,7 +130,9 @@ When dimension creates a new version, bridge records are recreated for that vers
 
 COMMENT ON COLUMN gold.bridge_<DOMAIN>_<SET_NAME>.<SET_NAME>_code IS
 'Enumeration code for this set member.
-Must be a valid value from the enumeration file: enumerations/<DOMAIN>_<SET_NAME>.yaml
+Must be a valid value from the enumeration YAML definition file located at:
+  enumerations/<DOMAIN>_<SET_NAME>.yaml
+These are physical YAML files in the repository, not database tables.
 Examples: SALARY, DIVIDEND, RENTAL (for source_of_income)';
 
 COMMENT ON COLUMN gold.bridge_<DOMAIN>_<SET_NAME>.created_ts IS

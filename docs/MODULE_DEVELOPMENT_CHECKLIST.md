@@ -100,7 +100,7 @@
   - [ ] ordered_attribute_list (all Type 2 attributes)
   - [ ] normalization rules for each attribute
   - [ ] delimiter: "|"
-  - [ ] null_token: "__NULL__"
+  - [ ] null_token: "__NULL__" (Note: dbt macro uses ''; normalize before macro call)
 - [ ] Document validation rules for each DQ flag
 - [ ] Update sample_rows with computed columns
 - [ ] Validate YAML syntax

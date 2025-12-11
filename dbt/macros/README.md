@@ -132,9 +132,28 @@ encode(
 #### Important Notes
 
 ⚠️ **Order Matters**: Columns must be in the exact order specified in the contract  
-⚠️ **NULL Handling**: NULLs are converted to empty string `''` (not `'__NULL__'` token)  
+⚠️ **NULL Handling**: This macro converts NULLs to empty string `''` for concatenation. **IMPORTANT**: If your contract specifies the `'__NULL__'` token for NULL handling, you must normalize columns to use that token BEFORE passing to this macro (see normalization section below).  
 ⚠️ **Normalization**: This macro does NOT apply UPPER/TRIM - do that before calling  
-⚠️ **Deterministic**: Same inputs always produce same hash  
+⚠️ **Deterministic**: Same inputs always produce same hash
+
+**Contract Alignment**: Most DW1 contracts specify `'__NULL__'` as the null token in canonical string construction. To align with contracts, normalize columns before calling this macro:
+
+```sql
+-- Align with contract specification
+WITH normalized AS (
+    SELECT 
+        COALESCE(UPPER(TRIM(firstname)), '__NULL__') AS firstname,
+        COALESCE(UPPER(TRIM(lastname)), '__NULL__') AS lastname
+    FROM source
+)
+-- Now pass to macro
+SELECT {{ compute_profile_hash('firstname', 'lastname') }} FROM normalized
+```
+
+Alternatively, modify the macro to use `'__NULL__'` token:
+```sql
+-- In macro: COALESCE({{ arg }}::TEXT, '__NULL__')
+```  
 
 #### Normalization Requirements
 

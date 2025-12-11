@@ -1210,6 +1210,13 @@ This guide provides a **complete, repeatable process** for building new modules 
 | Testing | Validation & fixes | 2-4 hours |
 | **Total** | | **13-24 hours** |
 
+**Note**: These estimates assume familiarity with the patterns. First-time users should expect:
+- **First Module**: 20-30 hours (includes learning time)
+- **Second Module**: 13-24 hours (patterns understood)
+- **Third+ Module**: 8-16 hours (full proficiency)
+
+Time may vary based on module complexity, number of multi-valued sets, and specific business rules.
+
 ### Next Steps
 
 1. ✅ Complete all 10 steps for your new module
