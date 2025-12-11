@@ -78,10 +78,25 @@ DW1/
 - Include disaster recovery and backup strategies
 
 ## Getting Started
-1. **Review Architecture Documentation**: Start with /docs/architecture/
-2. **Explore Data Modeling**: Check /docs/data-modeling/
-3. **Understand Data Flow**: Review /docs/etl-elt/ and /docs/layers/
-4. **Implement Governance**: Follow /docs/governance/
+
+### For AI Agents Building New Modules
+**⚡ Quick Start**: Follow this 10-step process to replicate the customer profile pattern for a new module (e.g., investment profile):
+
+1. 📖 **Read the Replication Guide**: [HOW_TO_REPLICATE_MODULE.md](docs/HOW_TO_REPLICATE_MODULE.md)
+2. ✅ **Use the Development Checklist**: [MODULE_DEVELOPMENT_CHECKLIST.md](docs/MODULE_DEVELOPMENT_CHECKLIST.md)
+3. 🔍 **Review the Documentation Assessment**: [DOCUMENTATION_ASSESSMENT.md](docs/DOCUMENTATION_ASSESSMENT.md)
+4. 🌉 **Use Templates**: 
+   - Bridge Tables: [templates/bridge_table_template.sql](templates/bridge_table_template.sql)
+   - Dimensions: [templates/dimension_table_template.sql](templates/dimension_table_template.sql)
+   - Facts: [templates/fact_table_template.sql](templates/fact_table_template.sql)
+5. 🔧 **dbt Macros Guide**: [dbt/macros/README.md](dbt/macros/README.md)
+
+### For Human Developers
+1. **Review Architecture Documentation**: Start with [/docs/architecture/](docs/architecture/)
+2. **Explore Data Modeling**: Check [/docs/data-modeling/](docs/data-modeling/)
+3. **Understand Data Flow**: Review [/docs/etl-elt/](docs/etl-elt/) and [/docs/layers/](docs/layers/)
+4. **Implement Governance**: Follow [/docs/governance/](docs/governance/)
+5. **See Working Example**: Review the complete customer profile module implementation
 
 ## Core Policies and Standards
 
@@ -99,17 +114,33 @@ This section provides quick access to authoritative policies governing data mode
 **AI-Assisted Development**: These policies serve as authoritative anchors for AI tools. Always reference them when generating or reviewing code related to SCD2 dimensions, change detection, or naming.
 
 ## Key References
+
+### 🚀 Quick Start Guides (New!)
+- [**How to Replicate a Module**](docs/HOW_TO_REPLICATE_MODULE.md) - 10-step guide for building new modules
+- [**Module Development Checklist**](docs/MODULE_DEVELOPMENT_CHECKLIST.md) - Complete checklist for module development
+- [**Documentation Assessment**](docs/DOCUMENTATION_ASSESSMENT.md) - Repository documentation maturity and readiness
+- [**dbt Macros Guide**](dbt/macros/README.md) - Complete guide to all dbt macros with examples
+
+### 📋 Module Specifications
 - [AI Context](AI_CONTEXT.md)
 - [Customer Module Spec](docs/business/modules/customer_module.md)
 - [Investment Profile Module Spec](docs/business/modules/investment_profile_module.md)
+
+### 📊 Data Quality & Governance
 - [Data Quality Framework](docs/data-quality/framework.md)
 - [Data Quality Rules](docs/business/data_quality_rules.md)
+
+### 🏗️ Architecture & Modeling
 - [Modeling Decisions](docs/modeling_decisions.md)
 - [Contracts Index](contracts/INDEX.yaml)
 - [Customer SCD2 Columns Contract](contracts/scd2/dim_customer_profile_columns.yaml)
 - [Investment SCD2 Columns Contract](contracts/scd2/dim_investment_profile_version_columns.yaml)
+
+### 📚 Standards & Enumerations
 - [Unified Enumerations](docs/data-modeling/enumerations.md)
 - [Investment Enumerations Detailed](docs/data-modeling/investment-profile/enumerations.md)
+
+### 📖 Architectural Decision Records
 - [ADR-001 SCD2 Customer Profile](docs/adr/ADR-001-scd2-customer-profile.md)
 - [ADR-INV-001 Investment Profile](docs/adr/ADR-INV-001-investment-profile.md)
 - [ADR-002 Multi-Valued Sets](docs/adr/ADR-002-multi-valued-sets.md)

@@ -619,8 +619,323 @@ FROM int_customer_clean;
 - Implement caching strategies
 - Document business logic
 
+## 5. Quarantine Layer
+
+### Purpose
+- Isolate invalid records for review and correction
+- Prevent bad data from polluting Silver and Gold layers
+- Enable data quality reporting and monitoring
+- Support data governance and compliance requirements
+- Facilitate root cause analysis of data quality issues
+
+### When to Use Quarantine
+
+**Quarantine records when**:
+- ❌ **Enumeration validation fails** - Value not in allowed list
+- ❌ **Required fields are missing** - NULL in NOT NULL columns
+- ❌ **Data type conversion fails** - Invalid format (e.g., "ABC" as BIGINT)
+- ❌ **Date ranges are invalid** - Future birthdates, negative durations
+- ❌ **Referential integrity violations** - Foreign key doesn't exist
+- ❌ **Business rule violations** - Age < 18, negative amounts, etc.
+- ❌ **Duplicate keys detected** - Multiple records with same natural key
+
+**Don't quarantine when**:
+- ✅ Minor formatting issues that can be corrected (trim whitespace)
+- ✅ Case normalization needed (convert to uppercase)
+- ✅ Type 1 attribute changes (non-versioned fields)
+- ✅ Optional fields are NULL
+
+### Schema Design
+
+```sql
+-- Quarantine table template
+CREATE TABLE quarantine.<entity>_rejected (
+    -- Original record (all columns from Bronze source)
+    -- ... mirror all source columns here ...
+    
+    -- Quarantine metadata
+    rejection_ts TIMESTAMP NOT NULL DEFAULT CURRENT_TIMESTAMP,
+    rejection_reason TEXT NOT NULL,
+    rejection_rule VARCHAR(100),
+    rejection_severity VARCHAR(20),  -- CRITICAL, ERROR, WARNING
+    
+    -- Source tracking
+    source_batch_id BIGINT,
+    source_load_ts TIMESTAMP,
+    
+    -- Reprocessing workflow
+    is_reprocessed BOOLEAN DEFAULT FALSE,
+    reprocessed_ts TIMESTAMP,
+    reprocessed_by VARCHAR(100),
+    reprocessing_notes TEXT,
+    
+    -- Primary Key (original key + rejection timestamp for uniqueness)
+    CONSTRAINT pk_quarantine_<entity> 
+        PRIMARY KEY ({natural_key}, rejection_ts)
+);
+
+-- Indexes for querying
+CREATE INDEX idx_quarantine_<entity>_ts 
+    ON quarantine.<entity>_rejected(rejection_ts);
+
+CREATE INDEX idx_quarantine_<entity>_rule 
+    ON quarantine.<entity>_rejected(rejection_rule);
+
+CREATE INDEX idx_quarantine_<entity>_reprocessed 
+    ON quarantine.<entity>_rejected(is_reprocessed);
+```
+
+### Rejection Reason Examples
+
+**Format**: `{rule_name}: {specific_issue}`
+
+```sql
+-- Enumeration validation
+rejection_reason: "INVALID_ENUMERATION: marital_status='INVALID' not in [SINGLE, MARRIED, DIVORCED, WIDOWED, SEPARATED, UNKNOWN]"
+
+-- Required field missing
+rejection_reason: "MISSING_REQUIRED_FIELD: firstname is NULL"
+
+-- Data type conversion
+rejection_reason: "TYPE_CONVERSION_FAILED: customer_id='ABC123' cannot convert to BIGINT"
+
+-- Date validation
+rejection_reason: "INVALID_DATE_RANGE: birthdate=2030-01-01 is in future"
+
+-- Business rule
+rejection_reason: "BUSINESS_RULE_VIOLATION: age=15 is below minimum age 18"
+
+-- Multiple issues
+rejection_reason: "MULTIPLE_ISSUES: [INVALID_ENUMERATION: person_title, MISSING_REQUIRED_FIELD: lastname]"
+```
+
+### dbt Quarantine Model Pattern
+
+```sql
+-- File: dbt/models/quarantine/<entity>_rejected.sql
+{{
+    config(
+        materialized='incremental',
+        unique_key=['customer_id', 'rejection_ts'],
+        on_schema_change='fail',
+        schema='quarantine'
+    )
+}}
+
+WITH source_data AS (
+    SELECT *
+    FROM {{ ref('silver_<entity>_standardized') }}
+    {% if is_incremental() %}
+    WHERE _silver_load_ts > (SELECT MAX(rejection_ts) FROM {{ this }})
+    {% endif %}
+),
+
+failed_validations AS (
+    SELECT 
+        *,
+        -- Build rejection reasons array
+        ARRAY_CAT(
+            CASE WHEN NOT dq_person_title_valid 
+                THEN ARRAY['INVALID_ENUMERATION: person_title'] 
+                ELSE ARRAY[]::TEXT[] END,
+            CASE WHEN NOT dq_marital_status_valid 
+                THEN ARRAY['INVALID_ENUMERATION: marital_status'] 
+                ELSE ARRAY[]::TEXT[] END
+            -- ... more validation checks ...
+        ) AS rejection_reasons_array,
+        
+        -- Determine rejection severity
+        CASE 
+            WHEN dq_score < 50 THEN 'CRITICAL'
+            WHEN dq_score < 75 THEN 'ERROR'
+            ELSE 'WARNING'
+        END AS rejection_severity
+        
+    FROM source_data
+    WHERE dq_status IN ('INVALID', 'WARNING')  -- Only quarantine invalid records
+),
+
+final AS (
+    SELECT 
+        -- Original columns (all from source)
+        customer_id,
+        evidence_unique_key,
+        firstname,
+        lastname,
+        -- ... all source columns ...
+        
+        -- Quarantine metadata
+        CURRENT_TIMESTAMP AS rejection_ts,
+        array_to_string(rejection_reasons_array, '; ') AS rejection_reason,
+        CASE 
+            WHEN array_length(rejection_reasons_array, 1) > 1 
+            THEN 'MULTIPLE_ISSUES'
+            ELSE rejection_reasons_array[1]
+        END AS rejection_rule,
+        rejection_severity,
+        
+        -- Source tracking
+        _bronze_batch_id AS source_batch_id,
+        _bronze_load_ts AS source_load_ts,
+        
+        -- Reprocessing flags
+        FALSE AS is_reprocessed,
+        NULL::TIMESTAMP AS reprocessed_ts,
+        NULL::VARCHAR AS reprocessed_by,
+        NULL::TEXT AS reprocessing_notes
+        
+    FROM failed_validations
+)
+
+SELECT * FROM final
+```
+
+### Reprocessing Workflow
+
+**Step 1: Identify Issues**
+```sql
+-- Query quarantine to find common issues
+SELECT 
+    rejection_rule,
+    rejection_severity,
+    COUNT(*) AS record_count
+FROM quarantine.customer_profile_rejected
+WHERE NOT is_reprocessed
+GROUP BY rejection_rule, rejection_severity
+ORDER BY record_count DESC;
+```
+
+**Step 2: Correct Source Data**
+- Fix data in operational system (preferred)
+- OR update Bronze records if one-time correction
+- OR update validation rules if rule was wrong
+
+**Step 3: Mark as Reprocessed**
+```sql
+-- After fixing source data, mark records for reprocessing
+UPDATE quarantine.customer_profile_rejected
+SET is_reprocessed = TRUE,
+    reprocessed_ts = CURRENT_TIMESTAMP,
+    reprocessed_by = CURRENT_USER,
+    reprocessing_notes = 'Fixed enumeration mapping in source system'
+WHERE rejection_rule = 'INVALID_ENUMERATION: person_title'
+  AND NOT is_reprocessed;
+```
+
+**Step 4: Re-run ETL**
+```bash
+# Re-run Bronze → Silver → Gold pipeline
+dbt run --models customer_profile
+
+# Verify records moved from quarantine to Silver
+SELECT COUNT(*) FROM silver.customer_profile_standardized 
+WHERE customer_id IN (
+    SELECT customer_id 
+    FROM quarantine.customer_profile_rejected 
+    WHERE is_reprocessed = TRUE
+);
+```
+
+### Monitoring & Alerting
+
+**Key Metrics to Monitor**:
+1. **Quarantine Rate**: % of records going to quarantine
+2. **Rejection Reasons Distribution**: Most common issues
+3. **Reprocessing Time**: How long issues stay in quarantine
+4. **Severity Distribution**: Critical vs Error vs Warning
+
+**Alert Thresholds**:
+```sql
+-- Alert if quarantine rate exceeds 5%
+SELECT 
+    (COUNT(*) FILTER (WHERE in_quarantine))::FLOAT / COUNT(*) * 100 AS quarantine_rate
+FROM (
+    SELECT TRUE AS in_quarantine FROM quarantine.customer_profile_rejected 
+        WHERE rejection_ts > CURRENT_DATE
+    UNION ALL
+    SELECT FALSE FROM silver.customer_profile_standardized 
+        WHERE _silver_load_ts > CURRENT_DATE
+) t;
+-- Alert if > 5.0
+
+-- Alert if critical issues present
+SELECT COUNT(*) 
+FROM quarantine.customer_profile_rejected
+WHERE rejection_severity = 'CRITICAL'
+  AND NOT is_reprocessed;
+-- Alert if > 0
+```
+
+### Retention Policy
+
+**Recommendations**:
+- **Unresolved Issues**: Keep until resolved + 30 days
+- **Resolved Issues**: Keep 90 days after resolution for audit
+- **Archive**: Move to cold storage after 1 year
+- **Delete**: After regulatory retention period (typically 7 years)
+
+```sql
+-- Archive old resolved records
+INSERT INTO quarantine_archive.customer_profile_rejected_archive
+SELECT * FROM quarantine.customer_profile_rejected
+WHERE is_reprocessed = TRUE
+  AND reprocessed_ts < CURRENT_DATE - INTERVAL '90 days';
+
+DELETE FROM quarantine.customer_profile_rejected
+WHERE is_reprocessed = TRUE
+  AND reprocessed_ts < CURRENT_DATE - INTERVAL '90 days';
+```
+
+### Best Practices
+
+✅ **DO**:
+- Quarantine at the Silver layer (after validation)
+- Provide detailed rejection reasons
+- Track all reprocessing activities
+- Monitor quarantine rates
+- Set up alerts for critical issues
+- Document common issues and resolutions
+
+❌ **DON'T**:
+- Let records sit in quarantine indefinitely
+- Delete quarantine records without archiving
+- Quarantine records with minor fixable issues
+- Ignore patterns in rejection reasons
+- Skip root cause analysis
+
+### Quarantine vs Silver Split Pattern
+
+```
+┌─────────────────┐
+│  Bronze Layer   │
+│  (Raw Data)     │
+└────────┬────────┘
+         │
+         ▼
+┌─────────────────┐
+│ Silver Process  │
+│ (Validation)    │
+└────┬───────┬────┘
+     │       │
+     ▼       ▼
+┌────────┐ ┌──────────┐
+│ Silver │ │Quarantine│
+│ (Valid)│ │(Invalid) │
+└────┬───┘ └────┬─────┘
+     │          │
+     ▼          ▼
+┌────────┐ ┌──────────┐
+│  Gold  │ │ Review & │
+│ (Star) │ │Reprocess │
+└────────┘ └──────────┘
+```
+
+---
+
 ## Next Steps
 1. Review architecture overview in `/docs/architecture/`
 2. Explore data modeling in `/docs/data-modeling/`
 3. Check ETL patterns in `/docs/etl-elt/`
 4. Use templates from `/templates/` for layer implementations
+5. Review quarantine template in `/templates/` (if exists)
+6. See module replication guide: `/docs/HOW_TO_REPLICATE_MODULE.md`
