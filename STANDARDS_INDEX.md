@@ -1,5 +1,13 @@
 ## Customer Profile Standards (Updated 2025-12-01)
 
+### Foundation Documents
+**Foundation: File & Folder Naming Conventions**: [docs/FOUNDATION_NAMING_CONVENTIONS.md](docs/FOUNDATION_NAMING_CONVENTIONS.md)
+- Comprehensive file and folder naming standards for entire repository
+- Top-level directory structure
+- Layer-specific conventions (bronze/silver/gold)
+- Documentation file naming
+- Validation rules and checklists
+
 ### Enumeration + Freetext Pattern
 **Decision**: Direct enumeration codes (VARCHAR) in dimension + `_other` Type 1 freetext fields
 
