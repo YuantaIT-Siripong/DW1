@@ -29,10 +29,10 @@ This document tracks the alignment of repository documents with the new core pol
 | contracts/silver/customer_profile_standardized.yaml | ✅ | Hashing, Naming | SHA256 hash computation documented; 37 columns with DQ flags |
 | db/bronze/customer_profile_standardized. sql | ✅ | Naming | PostgreSQL DDL follows naming conventions; comments complete |
 | db/silver/customer_profile_standardized.sql | ✅ | Hashing | Includes SHA256 hash computation functions; helper functions documented |
-| db/curated/dimensions/dim_customer_profile.sql | ✅ | SCD2, Naming | SCD2 policy compliant; effective_start_ts/effective_end_ts implemented |
-| db/curated/bridges/bridge_customer_source_of_income. sql | ✅ | Naming | Bridge table conventions followed; FK constraints enforced |
-| db/curated/bridges/bridge_customer_purpose_of_investment.sql | ✅ | Naming | Bridge table conventions followed; FK constraints enforced |
-| db/curated/audit/fact_customer_profile_audit.sql | ✅ | Audit, Hashing | Follows audit_artifacts_standard.md; JSON change tracking |
+| db/gold/dimensions/dim_customer_profile.sql | ✅ | SCD2, Naming | SCD2 policy compliant; effective_start_ts/effective_end_ts implemented |
+| db/gold/bridges/bridge_customer_source_of_income.sql | ✅ | Naming | Bridge table conventions followed; FK constraints enforced |
+| db/gold/bridges/bridge_customer_purpose_of_investment.sql | ✅ | Naming | Bridge table conventions followed; FK constraints enforced |
+| db/gold/audit/fact_customer_profile_audit.sql | ✅ | Audit, Hashing | Follows audit_artifacts_standard.md; JSON change tracking |
 | docs/business/modules/customer_module.md | ✅ | All | Section 5 (attributes), Section 8 (hashing), Section 18 (IT view spec) complete |
 | enumerations/customer_person_title. yaml | ✅ | Naming | UPPERCASE enumeration codes; lifecycle_status tracked |
 | enumerations/customer_marital_status.yaml | ✅ | Naming | UPPERCASE enumeration codes; lifecycle_status tracked |

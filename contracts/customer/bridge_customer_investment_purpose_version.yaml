@@ -1,7 +1,7 @@
 entity_name: bridge_customer_purpose_of_investment
 domain: customer
 table_type: bridge
-layer: curated
+layer: gold
 grain_description: One row per investment purpose membership for each customer profile version.  Multi-valued relationship between profile versions and investment purposes.
 
 primary_keys:

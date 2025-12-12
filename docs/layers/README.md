@@ -1,5 +1,22 @@
 # Data Warehouse Layers
 
+## Architecture Note
+
+This data warehouse implements **Medallion Architecture** (Bronze/Silver/Gold).
+
+### Layer Naming:
+- **Bronze** = Raw landing zone (replaces "Staging")
+- **Silver** = Cleaned & validated (replaces "Integration")
+- **Gold** = Dimensional models (replaces "Presentation")
+
+### Why Medallion?
+Modern cloud-native standard adopted by Databricks, Snowflake, AWS, Azure. This architecture provides:
+- **Separation of Concerns**: Each layer has a clear, single responsibility
+- **Easier Troubleshooting**: Issues can be isolated to specific transformation stages
+- **Better Data Quality Control**: Progressive refinement ensures quality improves at each layer
+- **Flexibility**: Raw data is always available for reprocessing if business rules change
+- **Performance**: Optimized data structures at each layer for their specific use cases
+
 ## Overview
 This document details the specific layers of the data warehouse architecture, their purposes, design patterns, and implementation guidelines.
 
@@ -12,23 +29,26 @@ This document details the specific layers of the data warehouse architecture, th
                      │
                      ▼
 ┌─────────────────────────────────────────────────────────────┐
-│                    1. STAGING LAYER                         │
+│                    1. BRONZE LAYER                          │
 │  Purpose: Raw data landing zone                             │
 │  Pattern: Minimal transformation                            │
+│  Technology: Python ETL scripts (etl/ folder)               │
 └────────────────────┬────────────────────────────────────────┘
                      │
                      ▼
 ┌─────────────────────────────────────────────────────────────┐
-│                  2. INTEGRATION LAYER                       │
+│                  2. SILVER LAYER                            │
 │  Purpose: Cleansed, integrated enterprise data              │
 │  Pattern: Data Vault, 3NF, or hybrid                        │
+│  Technology: dbt models (dbt/models/silver/)                │
 └────────────────────┬────────────────────────────────────────┘
                      │
                      ▼
 ┌─────────────────────────────────────────────────────────────┐
-│                 3. PRESENTATION LAYER                       │
+│                 3. GOLD LAYER                               │
 │  Purpose: Dimensional models for analytics                  │
 │  Pattern: Star schema, snowflake, cubes                     │
+│  Technology: dbt models (dbt/models/gold/)                  │
 └────────────────────┬────────────────────────────────────────┘
                      │
                      ▼
@@ -39,7 +59,7 @@ This document details the specific layers of the data warehouse architecture, th
 └─────────────────────────────────────────────────────────────┘
 ```
 
-## 1. Staging Layer
+## 1. Bronze Layer
 
 ### Purpose
 - Land raw data with minimal transformation
@@ -150,7 +170,7 @@ WHERE updated_date > (
 - **Archive strategy**: Move to cold storage after processing
 - **Replay capability**: Keep for regulatory or reprocessing needs
 
-## 2. Integration Layer
+## 2. Silver Layer
 
 ### Purpose
 - Create cleansed, integrated enterprise data
@@ -288,7 +308,7 @@ SELECT
 FROM int_customer_master;
 ```
 
-## 3. Presentation Layer
+## 3. Gold Layer
 
 ### Purpose
 - Optimize for query performance

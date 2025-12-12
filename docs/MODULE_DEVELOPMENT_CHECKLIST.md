@@ -180,7 +180,7 @@ For each multi-valued set:
 - [ ] Test SQL compiles
 
 ### Gold Dimension DDL
-**File**: `db/gold/dim_{module}.sql` or `db/curated/dimensions/dim_{module}.sql`
+**File**: `db/gold/dim_{module}.sql`
 
 - [ ] Create schema IF NOT EXISTS (gold)
 - [ ] Create table with all attributes from Gold contract
@@ -195,7 +195,7 @@ For each multi-valued set:
 - [ ] Test SQL compiles
 
 ### Bridge Table DDL (If Needed)
-**File**: `db/curated/bridges/bridge_{entity}_{set_name}.sql`
+**File**: `db/gold/bridges/bridge_{entity}_{set_name}.sql`
 
 For each multi-valued set:
 - [ ] Create schema IF NOT EXISTS (gold)
@@ -494,7 +494,7 @@ For each multi-valued set:
 2. [ ] Deploy Bronze DDL: `psql -f db/bronze/{module}_standardized.sql`
 3. [ ] Deploy Silver DDL: `psql -f db/silver/{module}_standardized.sql` (if not using dbt)
 4. [ ] Deploy Gold DDL: `psql -f db/gold/dim_{module}.sql`
-5. [ ] Deploy Bridge DDL: `psql -f db/curated/bridges/bridge_*.sql` (if applicable)
+5. [ ] Deploy Bridge DDL: `psql -f db/gold/bridges/bridge_*.sql` (if applicable)
 6. [ ] Deploy Quarantine DDL: `psql -f db/quarantine/{module}_quarantine.sql`
 7. [ ] Deploy dbt models: `dbt run --models {module}`
 8. [ ] Verify deployment: Check all objects created

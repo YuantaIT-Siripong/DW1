@@ -20,7 +20,7 @@ This document outlines the architectural foundation for a modern, scalable data 
 - Connection pooling and resource management
 - Error handling and retry mechanisms
 
-### 2. Staging Layer
+### 2. Bronze Layer (Staging)
 **Purpose**: Land raw data with minimal transformation
 
 **Components**:
@@ -35,7 +35,7 @@ This document outlines the architectural foundation for a modern, scalable data 
 - Enable data replay capabilities
 - Implement partition strategies
 
-### 3. Integration Layer
+### 3. Silver Layer (Integration)
 **Purpose**: Cleanse, transform, and integrate data
 
 **Components**:
@@ -50,7 +50,7 @@ This document outlines the architectural foundation for a modern, scalable data 
 - Deduplication and matching
 - Data enrichment
 
-### 4. Presentation Layer
+### 4. Gold Layer (Presentation)
 **Purpose**: Organize data for analytics and reporting
 
 **Components**:
@@ -195,7 +195,7 @@ This document outlines the architectural foundation for a modern, scalable data 
                      │
                      ▼
 ┌─────────────────────────────────────────────────────────────┐
-│                  Staging Layer                              │
+│                  Bronze Layer                               │
 │  (Raw Data Lake / Object Storage)                           │
 │  - CDC Data                                                 │
 │  - Batch Ingestion                                          │
@@ -204,7 +204,7 @@ This document outlines the architectural foundation for a modern, scalable data 
                      │
                      ▼
 ┌─────────────────────────────────────────────────────────────┐
-│                Integration Layer                            │
+│                Silver Layer                                 │
 │  - Data Quality & Cleansing                                 │
 │  - Transformation & Business Rules                          │
 │  - Master Data Management                                   │
@@ -213,7 +213,7 @@ This document outlines the architectural foundation for a modern, scalable data 
                      │
                      ▼
 ┌─────────────────────────────────────────────────────────────┐
-│               Presentation Layer                            │
+│               Gold Layer                                    │
 │  - Data Marts (Star/Snowflake Schemas)                      │
 │  - OLAP Cubes                                               │
 │  - Aggregates & Summaries                                   │

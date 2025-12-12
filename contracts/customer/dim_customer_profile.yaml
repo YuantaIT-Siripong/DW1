@@ -1,7 +1,7 @@
 entity_name: dim_customer_profile
 domain: customer
 table_type: dimension
-layer: curated
+layer: gold
 scd_type: 2
 grain_description: One record per historical profile version of a customer; each version identified by customer_profile_version_sk (surrogate key).  One customer_id may have multiple versions over time. 
 

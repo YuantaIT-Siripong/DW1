@@ -135,8 +135,8 @@ The repository demonstrates **strong foundational documentation** with comprehen
 - ✅ Working implementations
 
 **Example Files:**
-- `db/curated/bridges/bridge_customer_source_of_income.sql`
-- `db/curated/bridges/bridge_customer_purpose_of_investment.sql`
+- `db/gold/bridges/bridge_customer_source_of_income.sql`
+- `db/gold/bridges/bridge_customer_purpose_of_investment.sql`
 - `contracts/customer/bridge_customer_income_source_version.yaml`
 
 **Missing:**
@@ -426,7 +426,7 @@ This document visualizes how data flows through the medallion architecture.
 - [ ] Bronze DDL (db/bronze/{module}.sql)
 - [ ] Silver DDL (db/silver/{module}.sql) - if not using dbt
 - [ ] Gold dimension DDL (db/gold/dim_{module}.sql)
-- [ ] Bridge table DDL (db/curated/bridges/)
+- [ ] Bridge table DDL (db/gold/bridges/)
 - [ ] Quarantine DDL (db/quarantine/{module}_quarantine.sql)
 
 ## dbt Models (dbt/models/)
@@ -834,12 +834,10 @@ Investment Profile Module
 │   ├── silver/
 │   │   └── investment_profile_standardized.sql
 │   ├── gold/
-│   │   └── dim_investment_profile.sql
-│   └── curated/
-│       ├── dimensions/
-│       │   └── dim_investment_profile.sql
-│       └── bridges/ (if needed)
-│           └── bridge_investment_objective_version.sql
+│   │   ├── dimensions/
+│   │   │   └── dim_investment_profile.sql
+│   │   └── bridges/ (if needed)
+│   │       └── bridge_investment_objective_version.sql
 └── dbt/
     └── models/
         ├── bronze/

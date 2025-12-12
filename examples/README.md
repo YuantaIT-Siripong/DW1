@@ -44,9 +44,9 @@ example_name/
 │   ├── facts/                  # Fact table DDL
 │   └── views/                  # View definitions
 ├── etl/                        # ETL/ELT processes
-│   ├── staging/               # Staging layer scripts
-│   ├── integration/           # Integration layer scripts
-│   └── presentation/          # Presentation layer scripts
+│   ├── bronze/                # Bronze layer scripts
+│   ├── silver/                # Silver layer scripts
+│   └── gold/                  # Gold layer scripts
 ├── sample_data/                # Sample data files
 │   ├── sources/              # Source system data
 │   └── reference/            # Reference data

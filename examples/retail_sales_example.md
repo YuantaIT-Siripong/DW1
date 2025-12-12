@@ -240,19 +240,19 @@ GROUP BY CASE WHEN d.is_weekend THEN 'Weekend' ELSE 'Weekday' END;
 
 ## ETL Process Flow
 
-### 1. Staging Layer
+### 1. Bronze Layer
 ```
-Source Systems → Extract → Staging Tables (Raw Data)
-```
-
-### 2. Integration Layer
-```
-Staging → Cleanse/Validate → Integration Tables (Clean Data)
+Source Systems → Extract → Bronze Tables (Raw Data)
 ```
 
-### 3. Presentation Layer
+### 2. Silver Layer
 ```
-Integration → Transform → Dimensions & Facts (Star Schema)
+Bronze → Cleanse/Validate → Silver Tables (Clean Data)
+```
+
+### 3. Gold Layer
+```
+Silver → Transform → Dimensions & Facts (Star Schema)
 ```
 
 ## Data Quality Checks
