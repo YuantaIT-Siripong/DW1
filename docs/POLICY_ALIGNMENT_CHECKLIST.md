@@ -21,10 +21,10 @@ This document tracks the alignment of repository documents with the new core pol
 
 | Document | Status | Policy Area | Notes |
 |----------|--------|-------------|-------|
-| contracts/customer/dim_customer_profile.yaml | ✅ | SCD2, Naming, Hashing | References all policies; SHA256 hash specified; 31 attributes complete |
-| contracts/customer/bridge_customer_income_source_version. yaml | ✅ | Naming | Follows bridge table naming conventions |
-| contracts/customer/bridge_customer_investment_purpose_version.yaml | ✅ | Naming | Follows bridge table naming conventions |
-| contracts/customer/fact_customer_profile_audit.yaml | ✅ | Hashing, Audit | References audit_artifacts_standard.md; enumeration cross-links |
+| contracts/gold/dim_customer_profile.yaml | ✅ | SCD2, Naming, Hashing | References all policies; SHA256 hash specified; 31 attributes complete |
+| contracts/gold/bridge_customer_income_source_version.yaml | ✅ | Naming | Follows bridge table naming conventions |
+| contracts/gold/bridge_customer_investment_purpose_version.yaml | ✅ | Naming | Follows bridge table naming conventions |
+| contracts/gold/fact_customer_profile_audit.yaml | ✅ | Hashing, Audit | References audit_artifacts_standard.md; enumeration cross-links |
 | contracts/bronze/customer_profile_standardized.yaml | ✅ | Naming | Follows Bronze layer naming conventions; 25 columns |
 | contracts/silver/customer_profile_standardized.yaml | ✅ | Hashing, Naming | SHA256 hash computation documented; 37 columns with DQ flags |
 | db/bronze/customer_profile_standardized. sql | ✅ | Naming | PostgreSQL DDL follows naming conventions; comments complete |
@@ -120,7 +120,7 @@ This document tracks the alignment of repository documents with the new core pol
 | contracts/scd2/STANDARD_SCD2_POLICY.md | ✅ | SCD2 | Authoritative SCD2 policy document |
 | contracts/scd2/dim_customer_profile_columns.yaml | ⚠️ | SCD2, Hashing | Should add reference to STANDARD_SCD2_POLICY. md; hash algorithm should specify SHA256 not implicit |
 | contracts/scd2/dim_investment_profile_version_columns.yaml | ⚠️ | SCD2, Hashing | Should add reference to STANDARD_SCD2_POLICY.md; change_detection notes SHA256 but should reference hashing_standards.md |
-| contracts/customer/* (all 6 files) | ✅ | All | Complete and policy-compliant |
+| contracts/gold/* (all 4 files) | ✅ | All | Complete and policy-compliant |
 | contracts/bronze/customer_profile_standardized.yaml | ✅ | Naming | Complete Bronze layer contract |
 | contracts/silver/customer_profile_standardized.yaml | ✅ | Hashing | Complete Silver layer contract with hash specifications |
 | contracts/INDEX.yaml | 📝 | All | Should add section for policies/standards with links to new policy files |

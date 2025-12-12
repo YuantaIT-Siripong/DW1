@@ -2,7 +2,7 @@
 -- Curated Layer: dim_customer_profile
 -- SCD Type 2 Dimension with version management
 -- =====================================================================
--- Source Contract: contracts/customer/dim_customer_profile.yaml
+-- Source Contract: contracts/gold/dim_customer_profile.yaml
 -- Database: PostgreSQL
 -- Layer: Curated (Gold)
 -- Created: 2025-12-01

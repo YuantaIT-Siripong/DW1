@@ -30,8 +30,7 @@ attributes:
     business_definition: Investment purpose enumeration code
     nullable: false
     primary_key: true
-    enumeration_ref: enumerations/customer_purpose_of_investment.yaml
-    valid_values: [RETIREMENT, EDUCATION, SPECULATION, INCOME, WEALTH_PRESERVATION, GROWTH, TAX_PLANNING, ESTATE_PLANNING, OTHER, UNKNOWN]
+    enumeration_ref: enumerations/customer_purpose_of_investment.yamlvalid_values: [RETIREMENT, EDUCATION, SPECULATION, INCOME, WEALTH_PRESERVATION, GROWTH, TAX_PLANNING, ESTATE_PLANNING, OTHER, UNKNOWN]
 
   - name: load_ts
     datatype: TIMESTAMP
@@ -96,6 +95,5 @@ sample_rows:
     purpose_of_investment_code: "EDUCATION"
     load_ts: "2025-12-01T08:05:10Z"
 
-version: 2.0
-last_updated: 2025-12-01
+version: 2.0last_updated: 2025-12-01
 owner: Data Architecture Team

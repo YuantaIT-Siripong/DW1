@@ -354,8 +354,8 @@ GROUP BY p.customer_profile_version_sk;
 
 ### For DDL Generation
 ```
-"Generate DDL for dim_customer_profile following contracts/customer/dim_customer_profile.yaml"
-"Create bridge table DDL per contracts/customer/bridge_customer_source_of_income.yaml"
+"Generate DDL for dim_customer_profile following contracts/gold/dim_customer_profile.yaml"
+"Create bridge table DDL per contracts/gold/bridge_customer_income_source_version.yaml"
 "Apply SCD2 indexes per AI_CONTEXT.md standards"
 ```
 
@@ -412,10 +412,10 @@ GROUP BY p.customer_profile_version_sk;
 - [SCD2 Policy](contracts/scd2/STANDARD_SCD2_POLICY.md)
 
 ### Contracts (Gold)
-- [Dimension: Customer Profile](contracts/customer/dim_customer_profile.yaml) - 31 attributes, complete
-- [Bridge: Source of Income](contracts/customer/bridge_customer_income_source_version.yaml) - complete
-- [Bridge: Investment Purpose](contracts/customer/bridge_customer_investment_purpose_version.yaml) - complete
-- [Fact: Profile Audit](contracts/customer/fact_customer_profile_audit.yaml) - complete
+- [Dimension: Customer Profile](contracts/gold/dim_customer_profile.yaml) - 31 attributes, complete
+- [Bridge: Source of Income](contracts/gold/bridge_customer_income_source_version.yaml) - complete
+- [Bridge: Investment Purpose](contracts/gold/bridge_customer_investment_purpose_version.yaml) - complete
+- [Fact: Profile Audit](contracts/gold/fact_customer_profile_audit.yaml) - complete
 
 ### Contracts (Pending)
 - contracts/bronze/customer_profile_standardized.yaml - placeholder (needs generation)

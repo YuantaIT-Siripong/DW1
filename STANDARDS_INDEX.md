@@ -48,5 +48,5 @@ Timestamps: TIMESTAMP (UTC, microsecond precision)
 
 ### References
 - **Full Spec**: [docs/business/modules/customer_module.md](docs/business/modules/customer_module.md)
-- **Contract**: [contracts/customer/dim_customer_profile.yaml](contracts/customer/dim_customer_profile.yaml)
+- **Contract**: [contracts/gold/dim_customer_profile.yaml](contracts/gold/dim_customer_profile.yaml)
 - **Enumerations**: `enumerations/customer_*. yaml` (11 files)

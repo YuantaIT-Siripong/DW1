@@ -10,7 +10,7 @@ primary_keys:
 
 foreign_keys:
   - column: customer_profile_version_sk
-    references: dim_customer_profile. customer_profile_version_sk
+    references: dim_customer_profile.customer_profile_version_sk
     description: Link to specific profile version
 
 attributes:
@@ -30,8 +30,7 @@ attributes:
     business_definition: Income source enumeration code
     nullable: false
     primary_key: true
-    enumeration_ref: enumerations/customer_source_of_income.yaml
-    valid_values: [SALARY, DIVIDEND, RENTAL, BUSINESS, PENSION, INVESTMENT, INHERITANCE, GIFT, OTHER, UNKNOWN]
+    enumeration_ref: enumerations/customer_source_of_income.yamlvalid_values: [SALARY, DIVIDEND, RENTAL, BUSINESS, PENSION, INVESTMENT, INHERITANCE, GIFT, OTHER, UNKNOWN]
 
   - name: load_ts
     datatype: TIMESTAMP
@@ -46,8 +45,8 @@ hash_dependency:
   parent_set_hash_column: source_of_income_set_hash
   computation_logic: |
     1. Retrieve all source_of_income_code values for given customer_profile_version_sk
-    2.  Normalize each code: UPPER(TRIM)
-    3.  Deduplicate (should not happen in well-formed data)
+    2. Normalize each code: UPPER(TRIM)
+    3. Deduplicate (should not happen in well-formed data)
     4. Sort codes ascending alphabetically
     5. Join with "|" delimiter (empty set -> "")
     6. SHA256(joined_string) -> source_of_income_set_hash

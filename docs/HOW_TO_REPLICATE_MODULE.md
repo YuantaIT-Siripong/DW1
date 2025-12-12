@@ -354,7 +354,7 @@ immutability_policy: |
 **Objective**: Define SCD Type 2 dimension schema with version management
 
 **Actions**:
-1. Copy `contracts/customer/dim_customer_profile.yaml`
+1. Copy `contracts/gold/dim_customer_profile.yaml`
 2. Rename to `dim_{module}.yaml`
 3. Update surrogate key name ({module}_version_sk)
 4. Define versioning attributes (Type 2)

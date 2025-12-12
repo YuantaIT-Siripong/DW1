@@ -187,8 +187,8 @@ This policy applies to all derived metrics including but not limited to:
 |-------|-------------------|-------------|
 | `dim_customer_profile` | [contracts/scd2/dim_customer_profile_columns.yaml](dim_customer_profile_columns.yaml) | DATE |
 | `dim_investment_profile_version` | [contracts/scd2/dim_investment_profile_version_columns.yaml](dim_investment_profile_version_columns.yaml) | TIMESTAMP(6) |
-| `dim_customer_income_source_version` | [contracts/customer/dim_customer_income_source_version.yaml](../customer/dim_customer_income_source_version.yaml) | DATE (inherits from customer profile) |
-| `dim_customer_investment_purpose_version` | [contracts/customer/dim_customer_investment_purpose_version.yaml](../customer/dim_customer_investment_purpose_version.yaml) | DATE (inherits from customer profile) |
+| `bridge_customer_source_of_income` | [contracts/gold/bridge_customer_income_source_version.yaml](../../gold/bridge_customer_income_source_version.yaml) | DATE (inherits from customer profile) |
+| `bridge_customer_purpose_of_investment` | [contracts/gold/bridge_customer_investment_purpose_version.yaml](../../gold/bridge_customer_investment_purpose_version.yaml) | DATE (inherits from customer profile) |
 
 ## Integrity Constraints
 
