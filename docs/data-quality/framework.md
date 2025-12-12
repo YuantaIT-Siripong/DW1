@@ -130,7 +130,7 @@ data_quality_score = COUNT(TRUE validation flags) / 12. 0
 
 ### Exclusion from Gold SCD2 Dimensions
 
-**CRITICAL**: Data quality scores and flags are **NOT** propagated to `curated.dim_customer_profile`:
+**CRITICAL**: Data quality scores and flags are **NOT** propagated to `gold.dim_customer_profile`:
 
 **Excluded Columns**:
 - All `is_valid_*` flags (12 columns)
