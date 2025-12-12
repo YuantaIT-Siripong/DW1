@@ -154,6 +154,7 @@ This section provides quick access to authoritative policies governing data mode
 | **Standard SCD2 Policy** | Temporal precision, closure rules, surrogate key patterns, change detection | [contracts/scd2/STANDARD_SCD2_POLICY.md](contracts/scd2/STANDARD_SCD2_POLICY.md) |
 | **Hashing Standards** | SHA256 algorithm, profile change hash, multi-valued set hash, normalization rules | [docs/data-modeling/hashing_standards.md](docs/data-modeling/hashing_standards.md) |
 | **Naming Conventions** | snake_case physical, camelCase API, surrogate key suffixes, boolean patterns, enumeration casing | [docs/data-modeling/naming_conventions.md](docs/data-modeling/naming_conventions.md) |
+| **Foundation: File & Folder Naming** | Comprehensive file and folder naming conventions for entire repository | [docs/FOUNDATION_NAMING_CONVENTIONS.md](docs/FOUNDATION_NAMING_CONVENTIONS.md) |
 | **Data Quality Framework** | Unified quality metrics taxonomy, component definitions, gold layer implementation plan | [docs/data-quality/framework.md](docs/data-quality/framework.md) |
 
 **Note on Derived Metrics**: Derived scoring and quality metrics (e.g., data_quality_score, profile_reliability_score) are NOT stored in SCD2 dimensions. They are excluded from version storage and hash logic to prevent spurious versioning. These metrics will be computed in the gold layer as part of the unified Data Quality Framework.

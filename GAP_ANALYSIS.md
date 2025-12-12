@@ -85,9 +85,10 @@ db/
 **After** ✅:
 ```
 db/
-├── curated/           📦 Preserved as deprecated reference
-│   ├── DEPRECATED.md  (explains migration)
-│   └── ... (unchanged)
+├── deprecated/        📦 Moved curated to deprecated
+│   └── curated/       (with DEPRECATED.md explaining migration)
+│       ├── DEPRECATED.md
+│       └── ... (preserved for historical reference)
 └── gold/              ✅ Complete with all DDL files
     ├── dim_customer_profile.sql
     ├── bridge_customer_source_of_income.sql
@@ -102,7 +103,7 @@ db/
 - Updated all schema references from `curated.` to `gold.`
 - Updated CREATE SCHEMA statements
 - Updated all comments and metadata
-- Preserved `db/curated/` as deprecated reference for historical context
+- Moved `db/curated/` to `db/deprecated/curated/` for historical reference (completed 2025-12-12)
 
 ---
 
@@ -126,7 +127,7 @@ CREATE TABLE gold.dim_customer_profile (...);
 - ✅ All active DDL files now use `gold` schema
 - ✅ All contract references updated
 - ✅ All documentation updated
-- 📦 Legacy references preserved in `db/curated/` folder
+- 📦 Legacy references moved to `db/deprecated/curated/` folder
 
 **Resolution**:
 - Replaced all `curated.` references with `gold.` in active files
@@ -359,10 +360,14 @@ Updated references in:
 
 ### 7.2 Future Improvements
 
-#### 1. Consider Removing db/curated
-**Rationale**: Now that db/gold is complete and all references are updated, db/curated could be removed.
+#### 1. db/curated Migration Completed ✅
+**Status**: COMPLETED (2025-12-12)  
+**Action**: Moved `db/curated/` to `db/deprecated/curated/`
 
-**Recommendation**: Keep for now as historical reference, remove in future major version.
+**Result**: 
+- ✅ Clean separation of active vs deprecated code
+- ✅ Historical reference preserved
+- ✅ Clear indication that curated schema is no longer in use
 
 ---
 
