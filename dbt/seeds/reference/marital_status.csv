@@ -1,0 +1,7 @@
+code,description,sort_order,is_active
+SINGLE,Never married,1,TRUE
+MARRIED,Currently married,2,TRUE
+DIVORCED,Legally divorced,3,TRUE
+WIDOWED,Spouse deceased,4,TRUE
+SEPARATED,Legally separated but not divorced,5,TRUE
+UNKNOWN,Marital status not provided or unknown,99,TRUE

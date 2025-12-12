@@ -1,0 +1,17 @@
+code,description,sort_order,is_active
+TH,Thai nationality,1,TRUE
+US,United States nationality,2,TRUE
+GB,British nationality,3,TRUE
+CN,Chinese nationality,4,TRUE
+JP,Japanese nationality,5,TRUE
+KR,South Korean nationality,6,TRUE
+SG,Singaporean nationality,7,TRUE
+MY,Malaysian nationality,8,TRUE
+PH,Filipino nationality,9,TRUE
+VN,Vietnamese nationality,10,TRUE
+ID,Indonesian nationality,11,TRUE
+IN,Indian nationality,12,TRUE
+AU,Australian nationality,13,TRUE
+DE,German nationality,14,TRUE
+FR,French nationality,15,TRUE
+OTHER,Other nationality (use nationality_other field),99,TRUE

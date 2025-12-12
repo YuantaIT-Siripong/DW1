@@ -1,0 +1,12 @@
+code,description,sort_order,is_active
+EMPLOYEE,Salaried employee working for organization,1,TRUE
+SELF_EMPLOYED,Self-employed individual/freelancer,2,TRUE
+BUSINESS_OWNER,Owner/proprietor of business,3,TRUE
+GOVERNMENT_OFFICER,Government employee/civil servant,4,TRUE
+PROFESSIONAL,"Licensed professional (lawyer, doctor, accountant, etc.)",5,TRUE
+RETIRED,Retired from workforce,6,TRUE
+STUDENT,Full-time student,7,TRUE
+HOMEMAKER,Homemaker/stay-at-home parent,8,TRUE
+UNEMPLOYED,Currently unemployed,9,TRUE
+OTHER,Other occupation (use occupation_other field),98,TRUE
+UNKNOWN,Occupation not provided,99,TRUE

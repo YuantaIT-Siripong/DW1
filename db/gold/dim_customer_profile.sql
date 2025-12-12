@@ -1,7 +1,7 @@
+
 -- ====================================================================
 -- Gold Layer:  SCD Type 2 Customer Profile Dimension
 -- ====================================================================
-
 CREATE SCHEMA IF NOT EXISTS gold;
 
 CREATE TABLE IF NOT EXISTS gold.dim_customer_profile (
@@ -32,21 +32,21 @@ CREATE TABLE IF NOT EXISTS gold.dim_customer_profile (
     firstname_local VARCHAR(200),
     lastname_local VARCHAR(200),
     person_title VARCHAR(50),
-    person_title_other VARCHAR(200),
+    person_title_other VARCHAR(500),
     marital_status VARCHAR(50),
-    nationality VARCHAR(2),
-    nationality_other VARCHAR(200),
+    nationality VARCHAR(50),
+    nationality_other VARCHAR(500),
     occupation VARCHAR(100),
-    occupation_other VARCHAR(200),
+    occupation_other VARCHAR(500),
     education_level VARCHAR(100),
-    education_level_other VARCHAR(200),
+    education_level_other VARCHAR(500),
     business_type VARCHAR(100),
-    business_type_other VARCHAR(200),
+    business_type_other VARCHAR(500),
     birthdate DATE,
     total_asset VARCHAR(50),
     monthly_income VARCHAR(50),
-    income_country VARCHAR(2),
-    income_country_other VARCHAR(200),
+    income_country VARCHAR(50),
+    income_country_other VARCHAR(500),
     source_of_income_list TEXT,
     purpose_of_investment_list TEXT,
     
@@ -90,7 +90,7 @@ CREATE TABLE IF NOT EXISTS gold.dim_customer_profile (
     -- CONSTRAINTS
     -- ================================================================
     CONSTRAINT chk_effective_dates 
-        CHECK (effective_start_date <= effective_end_date),
+        CHECK (effective_start_ts <= effective_end_ts),
     CONSTRAINT uq_one_current_per_customer 
         UNIQUE (customer_id, is_current) 
         DEFERRABLE INITIALLY DEFERRED
@@ -106,7 +106,7 @@ CREATE INDEX idx_dim_customer_natural_key
 
 -- Temporal queries
 CREATE INDEX idx_dim_customer_effective_dates 
-    ON gold.dim_customer_profile(effective_start_date, effective_end_date);
+    ON gold.dim_customer_profile(effective_start_ts, effective_end_ts);
 
 -- Current record lookup (most common query)
 CREATE INDEX idx_dim_customer_current 
@@ -133,16 +133,16 @@ COMMENT ON TABLE gold.dim_customer_profile IS
      Each customer can have multiple rows representing different time periods.
      Use is_current=TRUE for latest version or filter by effective dates for point-in-time queries.';
 
-COMMENT ON COLUMN gold. dim_customer_profile.customer_profile_sk IS 
+COMMENT ON COLUMN gold. dim_customer_profile.customer_profile_version_sk IS 
     'Surrogate key - auto-incrementing primary key for dimension.  Use this in fact table foreign keys.';
 
 COMMENT ON COLUMN gold.dim_customer_profile. customer_id IS 
     'Natural business key from source system. Multiple rows can have same customer_id (history).';
 
-COMMENT ON COLUMN gold.dim_customer_profile. effective_start_date IS 
+COMMENT ON COLUMN gold.dim_customer_profile. effective_start_ts IS 
     'Start timestamp when this version became active (inclusive). Based on source last_modified_ts.';
 
-COMMENT ON COLUMN gold.dim_customer_profile.effective_end_date IS 
+COMMENT ON COLUMN gold.dim_customer_profile.effective_end_ts IS 
     'End timestamp when this version was superseded (inclusive). 9999-12-31 = current/active version.';
 
 COMMENT ON COLUMN gold.dim_customer_profile. is_current IS 

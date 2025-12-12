@@ -1,0 +1,10 @@
+code,description,sort_order,is_active
+PRIMARY,Elementary/primary school,1,TRUE
+SECONDARY,High school/secondary school,2,TRUE
+VOCATIONAL,Vocational certificate or diploma,3,TRUE
+DIPLOMA,Post-secondary diploma,4,TRUE
+BACHELOR,Undergraduate degree,5,TRUE
+MASTER,Graduate degree,6,TRUE
+DOCTORATE,PhD or doctoral degree,7,TRUE
+OTHER,Other education level (use education_level_other field),98,TRUE
+UNKNOWN,Education level not provided,99,TRUE

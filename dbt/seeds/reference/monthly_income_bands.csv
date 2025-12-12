@@ -1,0 +1,7 @@
+code,description,sort_order,is_active
+INCOME_BAND_1,"Monthly income less than 30,000 THB",1,TRUE
+INCOME_BAND_2,"Monthly income 30,000-50,000 THB",2,TRUE
+INCOME_BAND_3,"Monthly income 50,000-100,000 THB",3,TRUE
+INCOME_BAND_4,"Monthly income 100,000-200,000 THB",4,TRUE
+INCOME_BAND_5,"Monthly income 200,000 THB or more",5,TRUE
+UNKNOWN,Income level not provided,99,TRUE

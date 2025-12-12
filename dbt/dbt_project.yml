@@ -41,3 +41,17 @@ models:
     quarantine:
       +materialized: incremental
       +schema: quarantine
+
+# Seeds configuration (ADD THIS SECTION)
+seeds:
+  dw1:
+    reference: 
+      +schema: reference
+      +quote_columns: false
+      +enabled: true
+      +full_refresh: false
+      +column_types:
+        code: varchar(50)
+        description: varchar(200)
+        sort_order:  integer
+        is_active: boolean

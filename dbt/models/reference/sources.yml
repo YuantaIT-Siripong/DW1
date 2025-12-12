@@ -1,0 +1,103 @@
+version: 2
+
+sources:
+  - name: reference
+    description: "Reference data (enumerations) loaded via dbt seeds"
+    schema: reference
+    tables:
+      - name: person_title
+        description: "Valid person title codes"
+        columns:
+          - name: code
+            description: "Enumeration code (primary key)"
+            tests:
+              - unique
+              - not_null
+          - name: description
+            description:  "Human-readable description"
+          - name: sort_order
+            description: "Display order"
+          - name: is_active
+            description: "FALSE = deprecated code"
+            tests:
+              - not_null
+      
+      - name: marital_status
+        description: "Valid marital status codes"
+        columns:
+          - name: code
+            tests:
+              - unique
+              - not_null
+      
+      - name: nationality
+        description: "Valid nationality codes (ISO 3166-1 alpha-2)"
+        columns:
+          - name: code
+            tests: 
+              - unique
+              - not_null
+      
+      - name:  occupation
+        description: "Valid occupation codes"
+        columns:
+          - name: code
+            tests: 
+              - unique
+              - not_null
+      
+      - name: education_level
+        description:  "Valid education level codes"
+        columns:
+          - name: code
+            tests:
+              - unique
+              - not_null
+      
+      - name: business_type
+        description: "Valid business type codes"
+        columns: 
+          - name: code
+            tests:
+              - unique
+              - not_null
+      
+      - name: total_asset_bands
+        description:  "Valid total asset band codes"
+        columns:
+          - name:  code
+            tests:
+              - unique
+              - not_null
+      
+      - name: monthly_income_bands
+        description: "Valid monthly income band codes"
+        columns:
+          - name: code
+            tests:
+              - unique
+              - not_null
+      
+      - name: income_country
+        description: "Valid income country codes"
+        columns:
+          - name: code
+            tests:
+              - unique
+              - not_null
+      
+      - name: source_of_income
+        description:  "Valid source of income codes"
+        columns:
+          - name:  code
+            tests:
+              - unique
+              - not_null
+      
+      - name: purpose_of_investment
+        description: "Valid purpose of investment codes"
+        columns:
+          - name: code
+            tests:
+              - unique
+              - not_null

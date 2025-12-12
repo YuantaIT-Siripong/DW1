@@ -1,0 +1,8 @@
+code,description,sort_order,is_active
+TH,Income from Thailand,1,TRUE
+US,Income from United States,2,TRUE
+GB,Income from United Kingdom,3,TRUE
+CN,Income from China,4,TRUE
+JP,Income from Japan,5,TRUE
+SG,Income from Singapore,6,TRUE
+OTHER,Income from other country (use income_country_other field),99,TRUE

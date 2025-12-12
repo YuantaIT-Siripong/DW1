@@ -1,0 +1,9 @@
+code,description,sort_order,is_active
+MR,Mister,1,TRUE
+MRS,Married woman,2,TRUE
+MS,Unmarried or unspecified marital status woman,3,TRUE
+MISS,Unmarried woman,4,TRUE
+DR,Doctor,5,TRUE
+PROF,Professor,6,TRUE
+REV,Reverend,7,TRUE
+OTHER,Other title not listed (use person_title_other field),99,TRUE

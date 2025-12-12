@@ -1,0 +1,11 @@
+code,description,sort_order,is_active
+RETIREMENT,Long-term retirement savings and planning,1,TRUE
+EDUCATION,Education expenses for self or family,2,TRUE
+SPECULATION,Short-term trading and speculation,3,TRUE
+INCOME,Generate regular income stream,4,TRUE
+WEALTH_PRESERVATION,Capital preservation and wealth protection,5,TRUE
+GROWTH,Long-term capital appreciation,6,TRUE
+TAX_PLANNING,Tax efficiency and planning,7,TRUE
+ESTATE_PLANNING,Wealth transfer and estate planning,8,TRUE
+OTHER,Other investment purpose,98,TRUE
+UNKNOWN,Investment purpose not specified,99,TRUE

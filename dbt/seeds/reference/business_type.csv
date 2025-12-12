@@ -1,0 +1,17 @@
+code,description,sort_order,is_active
+FINANCE,"Financial services, banking, insurance (การเงินและธนาคาร)",1,TRUE
+MANUFACTURING,Manufacturing and production (การผลิต),2,TRUE
+RETAIL,Retail sales and trading (ค้าปลีก),3,TRUE
+SERVICES,Professional and business services (บริการ),4,TRUE
+AGRICULTURE,"Farming, agriculture, fisheries (เกษตรกรรม)",5,TRUE
+TECHNOLOGY,Information technology and software (เทคโนโลยี),6,TRUE
+HEALTHCARE,Healthcare and medical services (สาธารณสุข),7,TRUE
+EDUCATION,Educational services (การศึกษา),8,TRUE
+CONSTRUCTION,Construction and real estate (ก่อสร้าง),9,TRUE
+HOSPITALITY,"Hotels, restaurants, tourism (การโรงแรมและท่องเที่ยว)",10,TRUE
+TRANSPORTATION,Transport and logistics services (ขนส่งและโลจิสติกส์),11,TRUE
+ENERGY,"Energy, utilities, oil & gas (พลังงานและสาธารณูปโภค)",12,TRUE
+MEDIA,"Media, publishing, entertainment (สื่อและบันเทิง)",13,TRUE
+GOVERNMENT,Government and public sector (ภาครัฐ),14,TRUE
+OTHER,Other business type (use business_type_other field),98,TRUE
+UNKNOWN,Business type not provided,99,TRUE

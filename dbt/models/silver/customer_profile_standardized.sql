@@ -68,11 +68,7 @@ validated AS (
         -- ====================================================================
         
         -- Flag 1: person_title validation
-        CASE 
-            WHEN person_title IS NULL THEN TRUE
-            WHEN person_title IN (SELECT code FROM {{ ref('_customer_person_title') }}) THEN TRUE
-            ELSE FALSE
-        END AS dq_person_title_valid,
+        {{ validate_enumeration('person_title', 'person_title') }} AS dq_person_title_valid,
         
         -- Flag 2: person_title_other required when person_title = 'OTHER'
         CASE 
@@ -82,18 +78,10 @@ validated AS (
         END AS dq_person_title_other_complete,
         
         -- Flag 3: marital_status validation
-        CASE 
-            WHEN marital_status IS NULL THEN TRUE
-            WHEN marital_status IN (SELECT code FROM {{ ref('_customer_marital_status') }}) THEN TRUE
-            ELSE FALSE
-        END AS dq_marital_status_valid,
+        {{ validate_enumeration('marital_status', 'marital_status') }} AS dq_marital_status_valid,
         
         -- Flag 4: nationality validation
-        CASE 
-            WHEN nationality IS NULL THEN TRUE
-            WHEN nationality IN (SELECT code FROM {{ ref('_customer_nationality') }}) THEN TRUE
-            ELSE FALSE
-        END AS dq_nationality_valid,
+        {{ validate_enumeration('nationality', 'nationality') }} AS dq_nationality_valid,
         
         -- Flag 5: nationality_other required when nationality = 'OTHER'
         CASE 
@@ -103,11 +91,7 @@ validated AS (
         END AS dq_nationality_other_complete,
         
         -- Flag 6: occupation validation
-        CASE 
-            WHEN occupation IS NULL THEN TRUE
-            WHEN occupation IN (SELECT code FROM {{ ref('_customer_occupation') }}) THEN TRUE
-            ELSE FALSE
-        END AS dq_occupation_valid,
+        {{ validate_enumeration('occupation', 'occupation') }} AS dq_occupation_valid,
         
         -- Flag 7: occupation_other required when occupation = 'OTHER'
         CASE 
@@ -117,39 +101,19 @@ validated AS (
         END AS dq_occupation_other_complete,
         
         -- Flag 8: education_level validation
-        CASE 
-            WHEN education_level IS NULL THEN TRUE
-            WHEN education_level IN (SELECT code FROM {{ ref('_customer_education_level') }}) THEN TRUE
-            ELSE FALSE
-        END AS dq_education_level_valid,
+        {{ validate_enumeration('education_level', 'education_level') }} AS dq_education_level_valid,
         
         -- Flag 9: business_type validation
-        CASE 
-            WHEN business_type IS NULL THEN TRUE
-            WHEN business_type IN (SELECT code FROM {{ ref('_customer_business_type') }}) THEN TRUE
-            ELSE FALSE
-        END AS dq_business_type_valid,
+        {{ validate_enumeration('business_type', 'business_type') }} AS dq_business_type_valid,
         
         -- Flag 10: total_asset validation
-        CASE 
-            WHEN total_asset IS NULL THEN TRUE
-            WHEN total_asset IN (SELECT code FROM {{ ref('_customer_total_asset_bands') }}) THEN TRUE
-            ELSE FALSE
-        END AS dq_total_asset_valid,
+        {{ validate_enumeration('total_asset', 'total_asset_bands') }} AS dq_total_asset_valid,
         
         -- Flag 11: monthly_income validation
-        CASE 
-            WHEN monthly_income IS NULL THEN TRUE
-            WHEN monthly_income IN (SELECT code FROM {{ ref('_customer_monthly_income_bands') }}) THEN TRUE
-            ELSE FALSE
-        END AS dq_monthly_income_valid,
+        {{ validate_enumeration('monthly_income', 'monthly_income_bands') }} AS dq_monthly_income_valid,
         
         -- Flag 12: income_country validation
-        CASE 
-            WHEN income_country IS NULL THEN TRUE
-            WHEN income_country IN (SELECT code FROM {{ ref('_customer_income_country') }}) THEN TRUE
-            ELSE FALSE
-        END AS dq_income_country_valid
+        {{ validate_enumeration('income_country', 'income_country') }} AS dq_income_country_valid
         
     FROM source
 ),

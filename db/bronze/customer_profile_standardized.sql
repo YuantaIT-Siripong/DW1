@@ -30,16 +30,16 @@ CREATE TABLE bronze.customer_profile_standardized (
     
     -- Enumeration Fields
     person_title VARCHAR(50),
-    person_title_other VARCHAR(200),
+    person_title_other VARCHAR(500),          -- ✅ Increased to match source
     marital_status VARCHAR(50),
-    nationality VARCHAR(2),
-    nationality_other VARCHAR(200),
+    nationality VARCHAR(50),                  -- ✅ Changed from VARCHAR(2) to VARCHAR(50)
+    nationality_other VARCHAR(500),           -- ✅ Increased to match source
     occupation VARCHAR(100),
-    occupation_other VARCHAR(200),
+    occupation_other VARCHAR(500),            -- ✅ Increased to match source
     education_level VARCHAR(100),
-    education_level_other VARCHAR(200),
+    education_level_other VARCHAR(500),       -- ✅ Increased to match source
     business_type VARCHAR(100),
-    business_type_other VARCHAR(200),
+    business_type_other VARCHAR(500),         -- ✅ Increased to match source
     
     -- Demographics
     birthdate DATE,
@@ -47,8 +47,8 @@ CREATE TABLE bronze.customer_profile_standardized (
     -- Economic Bands
     total_asset VARCHAR(50),
     monthly_income VARCHAR(50),
-    income_country VARCHAR(2),
-    income_country_other VARCHAR(200),
+    income_country VARCHAR(50),               -- ✅ Changed from VARCHAR(2) to VARCHAR(50)
+    income_country_other VARCHAR(500),        -- ✅ Increased to match source
     
     -- Multi-Valued Sets (Pipe-Delimited)
     source_of_income_list TEXT,
@@ -164,12 +164,3 @@ COMMENT ON COLUMN bronze.customer_profile_standardized._bronze_batch_id IS
 
 -- Row-level security (optional - enable if needed)
 -- ALTER TABLE bronze.customer_profile_standardized ENABLE ROW LEVEL SECURITY;
-
--- Grant permissions (adjust roles as needed)
-GRANT SELECT ON bronze.customer_profile_standardized TO dw_etl_service;
-GRANT INSERT ON bronze.customer_profile_standardized TO dw_etl_service;
-GRANT SELECT ON bronze.customer_profile_standardized TO dw_privileged;
-
--- Immutability policy note
--- Bronze records are append-only.  Never UPDATE or DELETE.
--- Use _bronze_batch_id for batch tracking and reprocessing.

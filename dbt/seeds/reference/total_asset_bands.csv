@@ -1,0 +1,7 @@
+code,description,sort_order,is_active
+ASSET_BAND_1,Assets less than 1 million THB,1,TRUE
+ASSET_BAND_2,Assets between 1-5 million THB,2,TRUE
+ASSET_BAND_3,Assets between 5-10 million THB,3,TRUE
+ASSET_BAND_4,Assets between 10-50 million THB,4,TRUE
+ASSET_BAND_5,Assets 50 million THB or more,5,TRUE
+UNKNOWN,Asset level not provided,99,TRUE

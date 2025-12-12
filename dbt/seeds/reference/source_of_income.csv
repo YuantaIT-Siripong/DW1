@@ -1,0 +1,11 @@
+code,description,sort_order,is_active
+SALARY,Employment salary or wages,1,TRUE
+DIVIDEND,Stock dividends and distributions,2,TRUE
+RENTAL,Property or asset rental income,3,TRUE
+BUSINESS,Income from own business,4,TRUE
+PENSION,Retirement pension or annuity,5,TRUE
+INVESTMENT,"Capital gains, interest, investment returns",6,TRUE
+INHERITANCE,Inherited wealth or assets,7,TRUE
+GIFT,Gifted funds from family/others,8,TRUE
+OTHER,Other income source,98,TRUE
+UNKNOWN,Income source not specified,99,TRUE
