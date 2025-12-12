@@ -29,25 +29,42 @@ This repository serves as a conceptual and experimental space for designing and 
 ## Repository Structure
 ```
 DW1/
-├── contracts/
-│   └── scd2/                # SCD2 modeling contracts
-├── db/
-│   ├── dim/                 # Dimension tables
-│   ├── fact/                # Fact tables
-│   ├── audit/               # Audit tables
-│   └── views/               # View definitions
-├── docs/
-│   ├── architecture/        # Data warehouse architecture documentation
-│   ├── business/            # Business domain specifications
-│   │   └── modules/         # Business module specs (customer, investment)
-│   ├── data-modeling/       # Data modeling standards and guidelines
-│   ├── etl-elt/             # ETL/ELT process documentation
-│   ├── governance/          # Data governance and quality framework
-│   ├── layers/              # DW layer specifications (staging, integration, presentation)
-│   ├── metadata/            # Metadata management documentation
-│   └── ai-methodology/      # AI-first approach and tools
-├── templates/               # Reusable templates for DW components
-├── examples/                # Example implementations and use cases
+├── contracts/              # YAML schema specifications (single source of truth)
+│   ├── bronze/            # Bronze layer contracts
+│   ├── silver/            # Silver layer contracts
+│   └── customer/          # Gold/curated layer contracts
+├── db/                    # Database DDL files
+│   ├── bronze/           # Raw landing zone tables
+│   ├── silver/           # Cleaned data tables
+│   ├── gold/             # Dimensional model tables (deprecated - use dbt)
+│   ├── curated/          # Production dimensional model
+│   │   ├── dimensions/  # SCD2 dimensions
+│   │   ├── bridges/     # Bridge tables for multi-valued sets
+│   │   └── audit/       # Audit fact tables
+│   └── quarantine/       # Data quality quarantine tables
+├── dbt/                   # dbt transformations (Silver & Gold layers)
+│   ├── models/
+│   │   ├── bronze/      # Source definitions
+│   │   ├── silver/      # Cleaned and validated models
+│   │   └── gold/        # Dimensional models with SCD2
+│   └── macros/          # Reusable macros (hashing, validation)
+├── docs/                  # Comprehensive documentation
+│   ├── architecture/     # Data warehouse architecture
+│   ├── business/         # Business domain specifications
+│   │   └── modules/     # Module specs (customer, investment, company)
+│   ├── data-modeling/   # Standards (naming, hashing, enumerations)
+│   ├── data-quality/    # Data quality framework
+│   ├── layers/          # Bronze/Silver/Gold layer specifications
+│   ├── adr/             # Architectural decision records
+│   ├── HOW_TO_REPLICATE_MODULE.md        # 10-step replication guide
+│   ├── MODULE_DEVELOPMENT_CHECKLIST.md   # Complete checklist
+│   └── REPOSITORY_INVENTORY_AND_ASSESSMENT.md  # Full assessment
+├── enumerations/         # Enumeration YAML files (valid codes)
+├── templates/            # Annotated templates for common patterns
+├── seeds/                # Static reference data (dbt seeds)
+│   └── company/         # Company reference tables
+├── etl/                  # ETL scripts (Bronze extraction)
+└── deprecated/           # Old patterns and outdated examples
 ```
 
 ## Key Principles
@@ -115,9 +132,11 @@ This section provides quick access to authoritative policies governing data mode
 
 ## Key References
 
-### 🚀 Quick Start Guides (New!)
+### 🚀 Quick Start Guides
 - [**How to Replicate a Module**](docs/HOW_TO_REPLICATE_MODULE.md) - 10-step guide for building new modules
 - [**Module Development Checklist**](docs/MODULE_DEVELOPMENT_CHECKLIST.md) - Complete checklist for module development
+- [**Repository Assessment**](docs/REPOSITORY_INVENTORY_AND_ASSESSMENT.md) - Comprehensive inventory and replication readiness (99%)
+- [**Assessment Summary**](docs/ASSESSMENT_EXECUTIVE_SUMMARY.md) - Quick reference: seeds (KEEP), examples (DEPRECATED)
 - [**Documentation Assessment**](docs/DOCUMENTATION_ASSESSMENT.md) - Repository documentation maturity and readiness
 - [**dbt Macros Guide**](dbt/macros/README.md) - Complete guide to all dbt macros with examples
 
