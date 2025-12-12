@@ -37,7 +37,7 @@ The repository demonstrates **strong foundational documentation** with comprehen
 | **Naming Conventions** | `/docs/data-modeling/naming_conventions.md` | snake_case, camelCase, surrogate key patterns | ⭐⭐⭐⭐⭐ |
 | **Hashing Standards** | `/docs/data-modeling/hashing_standards.md` | SHA256 rules, normalization, set hashing | ⭐⭐⭐⭐⭐ |
 | **Bronze Contract** | `/contracts/bronze/customer_profile_standardized.yaml` | Complete attribute definitions, validation rules | ⭐⭐⭐⭐⭐ |
-| **Gold Contract** | `/contracts/customer/dim_customer_profile.yaml` | SCD2 specification with hash logic | ⭐⭐⭐⭐⭐ |
+| **Gold Contract** | `/contracts/gold/dim_customer_profile.yaml` | SCD2 specification with hash logic | ⭐⭐⭐⭐⭐ |
 | **Layer Architecture** | `/docs/layers/README.md` | Staging/Integration/Presentation patterns | ⭐⭐⭐⭐ |
 | **AI Context** | `/AI_CONTEXT.md` | AI assistant quick reference | ⭐⭐⭐⭐⭐ |
 | **ADR Documents** | `/docs/adr/*.md` | Architectural decision records | ⭐⭐⭐⭐ |
@@ -119,7 +119,7 @@ The repository demonstrates **strong foundational documentation** with comprehen
 **Example Files:**
 - `db/gold/dim_customer_profile.sql` - Complete SCD2 dimension DDL
 - `dbt/models/gold/dim_customer_profile.sql` - dbt implementation
-- `contracts/customer/dim_customer_profile.yaml` - Comprehensive contract
+- `contracts/gold/dim_customer_profile.yaml` - Comprehensive contract
 
 **Pattern Clarity**: Excellent - complete SCD2 implementation
 
@@ -137,7 +137,7 @@ The repository demonstrates **strong foundational documentation** with comprehen
 **Example Files:**
 - `db/gold/bridges/bridge_customer_source_of_income.sql`
 - `db/gold/bridges/bridge_customer_purpose_of_investment.sql`
-- `contracts/customer/bridge_customer_income_source_version.yaml`
+- `contracts/gold/bridge_customer_income_source_version.yaml`
 
 **Missing:**
 - ❌ Annotated template explaining the pattern
@@ -305,7 +305,7 @@ The repository demonstrates **strong foundational documentation** with comprehen
 - Define validation rules
 
 ### Step 5: Create Gold Contract
-- Copy contracts/customer/dim_customer_profile.yaml
+- Copy contracts/gold/dim_customer_profile.yaml
 - Define SCD2 temporal columns
 - Specify hash logic and change detection
 

@@ -82,10 +82,10 @@ modules:
 # ADD THIS SECTION
 contracts:
   customer_profile:
-    dimension: "contracts/customer/dim_customer_profile.yaml"
-    bridge_income: "contracts/customer/bridge_customer_income_source_version.yaml"
-    bridge_investment: "contracts/customer/bridge_customer_investment_purpose_version.yaml"
-    audit_fact: "contracts/customer/fact_customer_profile_audit.yaml"
+    dimension: "contracts/gold/dim_customer_profile.yaml"
+    bridge_income: "contracts/gold/bridge_customer_income_source_version.yaml"
+    bridge_investment: "contracts/gold/bridge_customer_investment_purpose_version.yaml"
+    audit_fact: "contracts/gold/fact_customer_profile_audit.yaml"
     bronze: "contracts/bronze/customer_profile_standardized.yaml"
     silver: "contracts/silver/customer_profile_standardized.yaml"
 

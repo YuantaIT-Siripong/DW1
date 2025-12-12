@@ -2,7 +2,7 @@
 -- Curated Layer: fact_customer_profile_audit
 -- Audit fact tracking all profile change events (SCD2 versions)
 -- =====================================================================
--- Source Contract: contracts/customer/fact_customer_profile_audit.yaml
+-- Source Contract: contracts/gold/fact_customer_profile_audit.yaml
 -- Database: PostgreSQL
 -- Layer: Curated (Gold)
 -- Created: 2025-12-01

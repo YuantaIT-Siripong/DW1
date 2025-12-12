@@ -2,7 +2,7 @@
 -- Curated Layer: bridge_customer_purpose_of_investment
 -- Multi-valued relationship between profile versions and investment purposes
 -- =====================================================================
--- Source Contract: contracts/customer/bridge_customer_investment_purpose_version.yaml
+-- Source Contract: contracts/gold/bridge_customer_investment_purpose_version.yaml
 -- Database: PostgreSQL
 -- Layer: Curated (Gold)
 -- Created: 2025-12-01

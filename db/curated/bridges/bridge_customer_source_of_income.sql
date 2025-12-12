@@ -2,7 +2,7 @@
 -- Curated Layer: bridge_customer_source_of_income
 -- Multi-valued relationship between profile versions and income sources
 -- =====================================================================
--- Source Contract: contracts/customer/bridge_customer_income_source_version.yaml
+-- Source Contract: contracts/gold/bridge_customer_income_source_version.yaml
 -- Database: PostgreSQL
 -- Layer: Curated (Gold)
 -- Created: 2025-12-01
