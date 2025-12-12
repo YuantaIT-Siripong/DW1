@@ -62,17 +62,17 @@ with_effective_dates AS (
     SELECT 
         *,
         
-        -- effective_start_date = this version's timestamp
+        -- effective_end_ts = this version's timestamp
         source_last_modified_ts AS effective_start_ts,
         
-        -- effective_end_date = next version's timestamp - 1 second (or 9999-12-31 if current)
+        -- effective_end_ts = next version's timestamp - 1 microsecond (or NULL if current)
         COALESCE(
             LEAD(source_last_modified_ts) OVER (
                 PARTITION BY customer_id 
                 ORDER BY source_last_modified_ts
             ) - INTERVAL '1 microsecond',
             NULL:: timestamp
-        ) AS effective_end_date,
+        ) AS effective_end_ts,
         
         -- is_current = TRUE if this is the latest version
         CASE WHEN version_rank = 1 THEN TRUE ELSE FALSE END AS is_current,
@@ -87,7 +87,7 @@ with_effective_dates AS (
 final AS (
     SELECT 
         -- Surrogate key (use ROW_NUMBER as temp key, will be replaced by SERIAL on insert)
-        ROW_NUMBER() OVER (ORDER BY customer_id, effective_start_date) AS customer_profile_version_sk,
+        ROW_NUMBER() OVER (ORDER BY customer_id, effective_start_ts) AS customer_profile_version_sk,
         
         -- Natural key
         customer_id,

@@ -19,7 +19,7 @@ CREATE TABLE IF NOT EXISTS gold.dim_customer_profile (
     -- SCD TYPE 2 TEMPORAL COLUMNS
     -- ================================================================
     effective_start_ts TIMESTAMP NOT NULL,
-    effective_end_ts TIMESTAMP NOT NULL,
+    effective_end_ts TIMESTAMP NULL,
     is_current BOOLEAN NOT NULL DEFAULT FALSE,
     version_num INT NOT NULL,
 	
