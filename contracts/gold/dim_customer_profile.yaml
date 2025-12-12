@@ -127,7 +127,7 @@ attributes:
     primary_key: true
 
   - name: customer_id
-    datatype: BIGINT
+    datatype: VARCHAR(50)
     business_definition: Stable internal customer identifier (Type 1 anchor)
     scd_role: natural_key
     hash_participation: false

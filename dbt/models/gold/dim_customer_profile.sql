@@ -63,19 +63,23 @@ with_effective_dates AS (
         *,
         
         -- effective_start_date = this version's timestamp
-        source_last_modified_ts AS effective_start_date,
+        source_last_modified_ts AS effective_start_ts,
         
         -- effective_end_date = next version's timestamp - 1 second (or 9999-12-31 if current)
         COALESCE(
             LEAD(source_last_modified_ts) OVER (
                 PARTITION BY customer_id 
                 ORDER BY source_last_modified_ts
-            ) - INTERVAL '1 second',
-            '9999-12-31 23:59:59'::timestamp
+            ) - INTERVAL '1 microsecond',
+            NULL:: timestamp
         ) AS effective_end_date,
         
         -- is_current = TRUE if this is the latest version
-        CASE WHEN version_rank = 1 THEN TRUE ELSE FALSE END AS is_current
+        CASE WHEN version_rank = 1 THEN TRUE ELSE FALSE END AS is_current,
+		ROW_NUMBER() OVER (
+			PARTITION BY customer_id 
+			ORDER BY effective_start_ts
+		) AS version_num
         
     FROM silver_all_versions
 ),
@@ -83,14 +87,14 @@ with_effective_dates AS (
 final AS (
     SELECT 
         -- Surrogate key (use ROW_NUMBER as temp key, will be replaced by SERIAL on insert)
-        ROW_NUMBER() OVER (ORDER BY customer_id, effective_start_date) AS customer_profile_sk,
+        ROW_NUMBER() OVER (ORDER BY customer_id, effective_start_date) AS customer_profile_version_sk,
         
         -- Natural key
         customer_id,
         
         -- SCD Type 2 columns
-        effective_start_date,
-        effective_end_date,
+        effective_start_ts,
+        effective_end_ts,
         is_current,
         
         -- Profile attributes
@@ -117,10 +121,6 @@ final AS (
         income_country_other,
         source_of_income_list,
         purpose_of_investment_list,
-        
-        -- Data quality
-        dq_score,
-        dq_status,
         
         -- Hashes
         profile_hash,

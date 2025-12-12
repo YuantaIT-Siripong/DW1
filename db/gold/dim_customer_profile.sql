@@ -8,7 +8,7 @@ CREATE TABLE IF NOT EXISTS gold.dim_customer_profile (
     -- ================================================================
     -- SURROGATE KEY (Primary Key for Dimension)
     -- ================================================================
-    customer_profile_sk BIGSERIAL PRIMARY KEY,
+    customer_profile_version_sk BIGSERIAL PRIMARY KEY,
     
     -- ================================================================
     -- NATURAL KEY (Business Key)
@@ -18,10 +18,11 @@ CREATE TABLE IF NOT EXISTS gold.dim_customer_profile (
     -- ================================================================
     -- SCD TYPE 2 TEMPORAL COLUMNS
     -- ================================================================
-    effective_start_date TIMESTAMP NOT NULL,
-    effective_end_date TIMESTAMP NOT NULL DEFAULT '9999-12-31 23:59:59',
-    is_current BOOLEAN NOT NULL DEFAULT TRUE,
-    
+    effective_start_ts TIMESTAMP NOT NULL,
+    effective_end_ts TIMESTAMP NOT NULL,
+    is_current BOOLEAN NOT NULL DEFAULT FALSE,
+    version_num INT NOT NULL,
+	
     -- ================================================================
     -- PROFILE ATTRIBUTES (from Silver)
     -- ================================================================
