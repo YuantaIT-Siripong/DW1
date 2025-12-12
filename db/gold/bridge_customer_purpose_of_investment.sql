@@ -46,7 +46,7 @@ CREATE INDEX idx_bridge_purpose_customer_id
     ON gold.bridge_customer_purpose_of_investment (customer_id);
 
 CREATE INDEX idx_bridge_purpose_code 
-    ON gold. bridge_customer_purpose_of_investment (purpose_of_investment_code);
+    ON gold.bridge_customer_purpose_of_investment (purpose_of_investment_code);
 
 -- Comments
 COMMENT ON TABLE gold.bridge_customer_purpose_of_investment IS 

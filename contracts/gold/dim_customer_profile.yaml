@@ -190,31 +190,28 @@ attributes:
     business_definition: Honorific title enumeration code
     hash_participation: true
     nullable: true
-    enumeration_ref: enumerations/customer_person_title.yaml
-    valid_values: [MR, MRS, MS, MISS, DR, PROF, REV, OTHER]
+    enumeration_ref: enumerations/customer_person_title.yamlvalid_values: [MR, MRS, MS, MISS, DR, PROF, REV, OTHER]
 
   - name: marital_status
     datatype: VARCHAR(50)
     business_definition: Marital status enumeration code
     hash_participation: true
     nullable: true
-    enumeration_ref: enumerations/customer_marital_status.yaml
-    valid_values: [SINGLE, MARRIED, DIVORCED, WIDOWED, SEPARATED, UNKNOWN]
+    enumeration_ref: enumerations/customer_marital_status.yamlvalid_values: [SINGLE, MARRIED, DIVORCED, WIDOWED, SEPARATED, UNKNOWN]
 
   - name: nationality
     datatype: VARCHAR(2)
     business_definition: Nationality enumeration code (ISO 3166-1 alpha-2)
     hash_participation: true
     nullable: true
-    enumeration_ref: enumerations/customer_nationality.yaml
-    standard_reference: ISO 3166-1 alpha-2
+    enumeration_ref: enumerations/customer_nationality.yamlstandard_reference: ISO 3166-1 alpha-2
 
   - name: occupation
     datatype: VARCHAR(100)
     business_definition: Occupational classification enumeration code
     hash_participation: true
     nullable: true
-    enumeration_ref: enumerations/customer_occupation. yaml
+    enumeration_ref: enumerations/customer_occupation.yaml
     valid_values: [EMPLOYEE, SELF_EMPLOYED, BUSINESS_OWNER, GOVERNMENT_OFFICER, PROFESSIONAL, RETIRED, STUDENT, HOMEMAKER, UNEMPLOYED, OTHER, UNKNOWN]
 
   - name: education_level
@@ -222,15 +219,14 @@ attributes:
     business_definition: Education attainment enumeration code
     hash_participation: true
     nullable: true
-    enumeration_ref: enumerations/customer_education_level.yaml
-    valid_values: [PRIMARY, SECONDARY, VOCATIONAL, DIPLOMA, BACHELOR, MASTER, DOCTORATE, OTHER, UNKNOWN]
+    enumeration_ref: enumerations/customer_education_level.yamlvalid_values: [PRIMARY, SECONDARY, VOCATIONAL, DIPLOMA, BACHELOR, MASTER, DOCTORATE, OTHER, UNKNOWN]
 
   - name: business_type
     datatype: VARCHAR(100)
     business_definition: Business/industry sector enumeration code
     hash_participation: true
     nullable: true
-    enumeration_ref: enumerations/customer_business_type. yaml
+    enumeration_ref: enumerations/customer_business_type.yaml
     valid_values: [FINANCE, MANUFACTURING, RETAIL, SERVICES, AGRICULTURE, TECHNOLOGY, HEALTHCARE, EDUCATION, CONSTRUCTION, HOSPITALITY, TRANSPORTATION, ENERGY, MEDIA, GOVERNMENT, OTHER, UNKNOWN]
 
   - name: birthdate
@@ -249,23 +245,21 @@ attributes:
     business_definition: Total asset value band enumeration code
     hash_participation: true
     nullable: true
-    enumeration_ref: enumerations/customer_total_asset_bands.yaml
-    valid_values: [ASSET_BAND_1, ASSET_BAND_2, ASSET_BAND_3, ASSET_BAND_4, ASSET_BAND_5, UNKNOWN]
+    enumeration_ref: enumerations/customer_total_asset_bands.yamlvalid_values: [ASSET_BAND_1, ASSET_BAND_2, ASSET_BAND_3, ASSET_BAND_4, ASSET_BAND_5, UNKNOWN]
 
   - name: monthly_income
     datatype: VARCHAR(50)
     business_definition: Monthly income band enumeration code
     hash_participation: true
     nullable: true
-    enumeration_ref: enumerations/customer_monthly_income_bands.yaml
-    valid_values: [INCOME_BAND_1, INCOME_BAND_2, INCOME_BAND_3, INCOME_BAND_4, INCOME_BAND_5, UNKNOWN]
+    enumeration_ref: enumerations/customer_monthly_income_bands.yamlvalid_values: [INCOME_BAND_1, INCOME_BAND_2, INCOME_BAND_3, INCOME_BAND_4, INCOME_BAND_5, UNKNOWN]
 
   - name: income_country
     datatype: VARCHAR(2)
     business_definition: Country of income origin enumeration code (ISO 3166-1 alpha-2)
     hash_participation: true
     nullable: true
-    enumeration_ref: enumerations/customer_income_country. yaml
+    enumeration_ref: enumerations/customer_income_country.yaml
     standard_reference: ISO 3166-1 alpha-2
 
   # Freetext Fields (Type 1 - NOT versioned, NOT in hash)

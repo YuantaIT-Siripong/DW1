@@ -107,7 +107,7 @@ CREATE INDEX idx_audit_customer_id
     ON gold.fact_customer_profile_audit (customer_id);
 
 CREATE INDEX idx_audit_event_source_ts 
-    ON gold. fact_customer_profile_audit (event_source_ts);
+    ON gold.fact_customer_profile_audit (event_source_ts);
 
 CREATE INDEX idx_audit_change_reason 
     ON gold.fact_customer_profile_audit (change_reason);
@@ -122,7 +122,7 @@ CREATE INDEX idx_audit_load_ts
     ON gold.fact_customer_profile_audit (load_ts);
 
 -- Comments on table
-COMMENT ON TABLE gold. fact_customer_profile_audit IS 
+COMMENT ON TABLE gold.fact_customer_profile_audit IS 
 'Audit fact table tracking all profile change events that created new SCD2 versions.   One row per version creation event with JSON change details.';
 
 -- Comments on columns
@@ -147,7 +147,7 @@ COMMENT ON COLUMN gold.fact_customer_profile_audit.version_num_old IS
 COMMENT ON COLUMN gold.fact_customer_profile_audit.change_reason IS 
 'Categorized reason for profile version creation: INITIAL_LOAD, SOURCE_UPDATE, CORRECTION, DATA_QUALITY_FIX, BACKDATED_CORRECTION, RECOMPUTE_HASH.   See enumerations/customer_profile_audit_change_reason.yaml';
 
-COMMENT ON COLUMN gold. fact_customer_profile_audit. changed_scalar_attributes IS 
+COMMENT ON COLUMN gold.fact_customer_profile_audit. changed_scalar_attributes IS 
 'JSON array of scalar attribute names that changed (e.g., ["firstname","occupation","birthdate"]).  Valid values defined in enumerations/customer_profile_attribute_names.yaml';
 
 COMMENT ON COLUMN gold.fact_customer_profile_audit.changed_set_names IS 
@@ -228,7 +228,7 @@ FROM gold.fact_customer_profile_audit a
 JOIN gold.dim_customer_profile p_new 
     ON a.customer_profile_version_sk_new = p_new.customer_profile_version_sk
 LEFT JOIN gold.dim_customer_profile p_old 
-    ON a.customer_profile_version_sk_old = p_old. customer_profile_version_sk
+    ON a.customer_profile_version_sk_old = p_old.customer_profile_version_sk
 WHERE a.customer_id = 12345
     AND a.version_num_new = 3;
 */
