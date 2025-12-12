@@ -143,7 +143,7 @@ Analytics & Reporting
 4. **Implement Governance**: Follow [/docs/governance/](docs/governance/)
 5. **See Working Example**: Review the complete customer profile module implementation
 6. **Bronze Layer Setup**: Configure and run Python ETL [/etl/README.md](etl/README.md)
-7. **dbt Setup**: Install dbt and run transformations [/dbt/README.md](dbt/README.md)
+7. **dbt Setup**: Install dbt and run transformations (see [/dbt/macros/README.md](dbt/macros/README.md) for macros)
 
 ## Core Policies and Standards
 

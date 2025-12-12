@@ -195,7 +195,7 @@ This document outlines the architectural foundation for a modern, scalable data 
                      │
                      ▼
 ┌─────────────────────────────────────────────────────────────┐
-│                  Staging Layer                              │
+│                  Bronze Layer                               │
 │  (Raw Data Lake / Object Storage)                           │
 │  - CDC Data                                                 │
 │  - Batch Ingestion                                          │
@@ -204,7 +204,7 @@ This document outlines the architectural foundation for a modern, scalable data 
                      │
                      ▼
 ┌─────────────────────────────────────────────────────────────┐
-│                Integration Layer                            │
+│                Silver Layer                                 │
 │  - Data Quality & Cleansing                                 │
 │  - Transformation & Business Rules                          │
 │  - Master Data Management                                   │
@@ -213,7 +213,7 @@ This document outlines the architectural foundation for a modern, scalable data 
                      │
                      ▼
 ┌─────────────────────────────────────────────────────────────┐
-│               Presentation Layer                            │
+│               Gold Layer                                    │
 │  - Data Marts (Star/Snowflake Schemas)                      │
 │  - OLAP Cubes                                               │
 │  - Aggregates & Summaries                                   │

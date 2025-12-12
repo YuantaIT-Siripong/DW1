@@ -10,7 +10,12 @@ This data warehouse implements **Medallion Architecture** (Bronze/Silver/Gold).
 - **Gold** = Dimensional models (replaces "Presentation")
 
 ### Why Medallion?
-Modern cloud-native standard adopted by Databricks, Snowflake, AWS, Azure. Simple 3-layer model with clear responsibilities at each stage.
+Modern cloud-native standard adopted by Databricks, Snowflake, AWS, Azure. This architecture provides:
+- **Separation of Concerns**: Each layer has a clear, single responsibility
+- **Easier Troubleshooting**: Issues can be isolated to specific transformation stages
+- **Better Data Quality Control**: Progressive refinement ensures quality improves at each layer
+- **Flexibility**: Raw data is always available for reprocessing if business rules change
+- **Performance**: Optimized data structures at each layer for their specific use cases
 
 ## Overview
 This document details the specific layers of the data warehouse architecture, their purposes, design patterns, and implementation guidelines.

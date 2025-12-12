@@ -372,7 +372,8 @@ LIMIT 10;
 
 ## Related Documentation
 
-- **dbt Setup**: See `/dbt/README.md` for Silver/Gold transformations
+- **dbt Macros**: See `/dbt/macros/README.md` for dbt macro documentation
+- **dbt Setup**: See dbt project files in `/dbt/` for Silver/Gold transformations
 - **Data Quality**: See `/docs/data-quality/framework.md` for validation rules
 - **Architecture**: See `/docs/architecture/README.md` for overall design
 - **Layers**: See `/docs/layers/README.md` for Bronze/Silver/Gold layer specifications
