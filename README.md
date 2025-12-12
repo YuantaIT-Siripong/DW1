@@ -8,12 +8,19 @@ This phase establishes foundational SCD2 dimensions and supporting structures:
 - **Multi-Valued Sets**: Income sources, investment purposes, contact channels (linked to profile versions via bridge tables)
 - **Profile Change Audit**: Customer profile change tracking (investment profile audit in future phase)
 
-## Layers
-- dim: Conformed dimensions (including SCD2)
-- fact: Events and requests
-- audit: Change tracking (customer profile)
-- contracts: Modeling contracts driving SCD2 logic
-- docs: Modeling decisions & hierarchy descriptions
+## Data Layers
+
+### PostgreSQL Schemas:
+- **bronze**: Raw landing zone (Python ETL → exact copy from source + ETL metadata)
+- **silver**: Cleaned & validated (dbt → data quality checks, hash computation)
+- **gold**: Dimensional models (dbt → SCD2 dimensions, bridge tables, audit facts)
+- **quarantine**: Data quality failures
+
+### Technology Stack:
+- **Python ETL** (`etl/`): Bronze ingestion (MSSQL to PostgreSQL)
+- **dbt** (`dbt/models/`): Silver & Gold transformations
+- **Contracts** (`contracts/`): YAML specifications
+- **DDL** (`db/`): Database table definitions
 
 See docs/modeling_decisions.md and docs/service_hierarchy_and_subscription.md for details.
 
@@ -29,25 +36,63 @@ This repository serves as a conceptual and experimental space for designing and 
 ## Repository Structure
 ```
 DW1/
-├── contracts/
-│   └── scd2/                # SCD2 modeling contracts
-├── db/
-│   ├── dim/                 # Dimension tables
-│   ├── fact/                # Fact tables
-│   ├── audit/               # Audit tables
-│   └── views/               # View definitions
-├── docs/
-│   ├── architecture/        # Data warehouse architecture documentation
-│   ├── business/            # Business domain specifications
-│   │   └── modules/         # Business module specs (customer, investment)
-│   ├── data-modeling/       # Data modeling standards and guidelines
-│   ├── etl-elt/             # ETL/ELT process documentation
-│   ├── governance/          # Data governance and quality framework
-│   ├── layers/              # DW layer specifications (staging, integration, presentation)
-│   ├── metadata/            # Metadata management documentation
-│   └── ai-methodology/      # AI-first approach and tools
-├── templates/               # Reusable templates for DW components
-├── examples/                # Example implementations and use cases
+├── etl/                         # Bronze extraction (Python ETL)
+│   ├── bronze_extract_*.py      # MSSQL to PostgreSQL extraction scripts
+│   ├── .env.example             # Configuration template
+│   └── requirements.txt         # Python dependencies
+├── dbt/                         # Silver/Gold transformations (dbt)
+│   ├── models/
+│   │   ├── bronze/              # Source definitions
+│   │   ├── silver/              # Cleaned & validated data
+│   │   └── gold/                # SCD2 dimensions & bridge tables
+│   ├── macros/                  # Reusable dbt macros
+│   └── dbt_project.yml
+├── db/                          # DDL scripts
+│   ├── bronze/                  # Bronze layer DDL
+│   ├── silver/                  # Silver layer DDL
+│   ├── gold/                    # Gold layer DDL
+│   ├── quarantine/              # Data quality quarantine
+│   └── deprecated/              # Legacy files
+├── contracts/                   # YAML data contracts
+├── docs/                        # Documentation
+│   ├── architecture/
+│   ├── business/
+│   ├── data-modeling/
+│   ├── layers/                  # Layer specs (Bronze/Silver/Gold)
+│   └── adr/
+├── templates/                   # Reusable templates
+└── examples/                    # Example implementations
+```
+
+## Data Flow Architecture
+
+```
+┌─────────────────────────────────────────────────────────┐
+│          MEDALLION ARCHITECTURE (Bronze→Silver→Gold)    │
+└─────────────────────────────────────────────────────────┘
+
+MSSQL (Operational Database)
+    │
+    │ Python ETL Scripts (etl/ folder)
+    │ • Incremental extraction (watermark-based)
+    │ • Batch processing (1000 rows)
+    ▼
+PostgreSQL BRONZE Layer (bronze.*)
+    │ • Raw data landing
+    │ • Minimal transformation
+    │ • Immutable, append-only
+    ▼
+dbt → PostgreSQL SILVER Layer (silver.*)
+    │ • Data quality validation
+    │ • Hash computation
+    │ • Cleansing & normalization
+    ▼
+dbt → PostgreSQL GOLD Layer (gold.*)
+    │ • SCD Type 2 dimensions
+    │ • Bridge tables
+    │ • Audit fact tables
+    ▼
+Analytics & Reporting
 ```
 
 ## Key Principles
@@ -97,6 +142,8 @@ DW1/
 3. **Understand Data Flow**: Review [/docs/etl-elt/](docs/etl-elt/) and [/docs/layers/](docs/layers/)
 4. **Implement Governance**: Follow [/docs/governance/](docs/governance/)
 5. **See Working Example**: Review the complete customer profile module implementation
+6. **Bronze Layer Setup**: Configure and run Python ETL [/etl/README.md](etl/README.md)
+7. **dbt Setup**: Install dbt and run transformations [/dbt/README.md](dbt/README.md)
 
 ## Core Policies and Standards
 

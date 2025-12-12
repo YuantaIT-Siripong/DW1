@@ -1,7 +1,7 @@
 entity_name: fact_customer_profile_audit
 domain: customer
 table_type: fact_audit
-layer: curated
+layer: gold
 grain_description: One row per profile change event that created a new SCD2 version in dim_customer_profile. Tracks what changed, when, why, and who initiated it.
 
 primary_keys:

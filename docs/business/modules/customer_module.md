@@ -205,7 +205,7 @@ Optional:
 ### Upstream Standardization Flow
 
 ```
-IT Operational DB → IT Standardized View → Bronze → Silver → SCD2 Curated
+IT Operational DB → IT Standardized View → Bronze → Silver → SCD2 Gold
 (IT owns)           (IT creates)          (DW lands) (DW)    (DW)
 ```
 
@@ -228,7 +228,7 @@ IT Operational DB → IT Standardized View → Bronze → Silver → SCD2 Curate
   
 - **DW Team**:
   - Land view to Bronze (exact copy)
-  - Apply SCD2 logic in Curated layer
+  - Apply SCD2 logic in Gold layer
   - Calculate profile_hash
   - Version management
 
@@ -251,8 +251,9 @@ IT Operational DB → IT Standardized View → Bronze → Silver → SCD2 Curate
    - Artifact: `silver.vw_customer_profile_standardized` (view)
    - Add: Set hashes, validation flags
    
-5. **Curated (DW SCD2)**
-   - Artifact: `dim. dim_customer_profile` (table)
+5. **Gold (DW SCD2)**
+   - Artifact: `gold.dim_customer_profile` (table)
+   - Schema: gold
    - SCD2 version management
    - Profile hash change detection
 

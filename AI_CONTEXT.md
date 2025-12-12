@@ -7,9 +7,62 @@ Single reference for AI assistants.   Points to authoritative sources and establ
 **All standards referenced from**: [STANDARDS_INDEX.md](STANDARDS_INDEX.md)
 
 ## Project Status
-- **Phase**: Customer Profile Module - Gold/Curated Layer Complete
-- **Completed**: Enumeration files, Bronze/Silver/Gold/Curated contracts (dimension, bridges, audit fact)
+- **Phase**: Customer Profile Module - Gold Layer Complete
+- **Completed**: Enumeration files, Bronze/Silver/Gold contracts (dimension, bridges, audit fact)
 - **Repository**: YuantaIT-Siripong/DW1
+
+---
+
+## Data Layers & Technology
+
+### Bronze Layer (Python ETL)
+- **Location**: /etl/
+- **Purpose**: Extract from MSSQL to Load to PostgreSQL Bronze
+- **Schema**: bronze.*
+- **Technology**: Python (pyodbc + psycopg2)
+- **Pattern**: Incremental, watermark-based
+- **Key Script**: etl/bronze_extract_customer_profile.py
+
+### Silver Layer (dbt)
+- **Location**: /dbt/models/silver/
+- **Purpose**: Data quality, cleansing, hash computation
+- **Schema**: silver.*
+- **Technology**: dbt models
+- **Pattern**: Incremental materialization
+
+### Gold Layer (dbt)
+- **Location**: /dbt/models/gold/
+- **Purpose**: SCD2 dimensions, bridge tables, audit facts
+- **Schema**: gold.* (NOT curated)
+- **Technology**: dbt models
+- **Pattern**: Full rebuild or incremental merge
+
+### Technology Separation
+- **Python (etl/)**: Bronze ingestion only
+- **dbt (dbt/models/)**: Silver & Gold transformations only
+
+---
+
+## SCHEMA NAMING - CRITICAL
+
+**USE gold SCHEMA ONLY**
+
+The Gold layer uses schema name: **gold**
+
+**DO NOT USE**:
+- `curated` schema (deprecated, legacy naming)
+- `dim` schema (old structure, no longer used)
+
+**Historical Context**:
+- Early versions used `curated` schema
+- This was renamed to `gold` to align with Medallion Architecture
+- `db/curated/` folder is deprecated (legacy DDL scripts)
+- All active Gold tables are in `gold` schema
+
+**When Referencing Tables**:
+- ✅ Correct: `gold.dim_customer_profile`
+- ❌ Wrong: `curated.dim_customer_profile`
+- ❌ Wrong: `dim.dim_customer_profile`
 
 ---
 
@@ -18,10 +71,10 @@ Single reference for AI assistants.   Points to authoritative sources and establ
 ### Architecture Layers
 - **Bronze**: Raw landing from IT operational view (exact mirror + ETL metadata)
 - **Silver**: Cleaned data with computed columns (hashes, validation flags, still flat tables)
-- **Gold/Curated**: Star schema (dimensions, facts, bridges) - SCD2 version management
+- **Gold**: Star schema (dimensions, facts, bridges) - SCD2 version management
 - **Mart**: Business-specific aggregates (future)
 
-**CRITICAL**: Star schema exists ONLY in Gold/Curated layer, NOT in Silver
+**CRITICAL**: Star schema exists ONLY in Gold layer, NOT in Silver
 
 ### Enumeration + Freetext Pattern
 **Decision**: Use direct enumeration codes (VARCHAR) in dimensions with `_other` freetext fields for flexibility
@@ -126,7 +179,7 @@ For source_of_income and purpose_of_investment:
 
 ### Schema
 **Table**: dim_customer_profile  
-**Layer**: Gold/Curated
+**Layer**: Gold
 
 ### Key Structure
 - **Surrogate Key**: customer_profile_version_sk (BIGINT) - globally unique across all versions
@@ -358,10 +411,10 @@ GROUP BY p.customer_profile_version_sk;
 - [Hashing Standards](docs/data-modeling/hashing_standards.md)
 - [SCD2 Policy](contracts/scd2/STANDARD_SCD2_POLICY.md)
 
-### Contracts (Gold/Curated)
+### Contracts (Gold)
 - [Dimension: Customer Profile](contracts/customer/dim_customer_profile.yaml) - 31 attributes, complete
 - [Bridge: Source of Income](contracts/customer/bridge_customer_income_source_version.yaml) - complete
-- [Bridge: Investment Purpose](contracts/customer/bridge_customer_investment_purpose_version. yaml) - complete
+- [Bridge: Investment Purpose](contracts/customer/bridge_customer_investment_purpose_version.yaml) - complete
 - [Fact: Profile Audit](contracts/customer/fact_customer_profile_audit.yaml) - complete
 
 ### Contracts (Pending)
@@ -388,6 +441,6 @@ All in `enumerations/` folder:
 ## Artifact Index
 See [CONTEXT_MANIFEST.yaml](CONTEXT_MANIFEST.yaml) for machine-readable index.  
 
-**Last Updated**: 2025-12-01  
-**Current Phase**: Bronze/Silver/Gold/Curated contracts complete;
+**Last Updated**: 2025-12-12  
+**Current Phase**: Bronze/Silver/Gold contracts complete;
 **Maintained By**: Data Architecture
