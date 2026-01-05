@@ -313,77 +313,93 @@ attributes:
 
   # Data Quality Flags
   - name: is_valid_person_title
-    datatype: BOOLEAN
-    business_definition: TRUE if person_title is in enumeration valid_values
+    datatype:  BOOLEAN
+    business_definition: TRUE if person_title is valid AND if OTHER, person_title_other is populated
     nullable: false
-    computed: true
+    computed:  true
     default: false
-    computation_logic: Check person_title against enumerations/customer_person_title.yaml
-
+    computation_logic: |
+      Check person_title against enumerations/customer_person_title. yaml
+      AND if person_title='OTHER', verify person_title_other IS NOT NULL AND TRIM(person_title_other) != ''
+  
   - name: is_valid_marital_status
-    datatype: BOOLEAN
-    business_definition: TRUE if marital_status is in enumeration valid_values
+    datatype:  BOOLEAN
+    business_definition:  TRUE if marital_status is in enumeration valid_values
     nullable: false
-    computed: true
+    computed:  true
     default: false
-    computation_logic: Check marital_status against enumerations/customer_marital_status.yaml
-
+    computation_logic: Check marital_status against enumerations/customer_marital_status. yaml
+  
   - name: is_valid_nationality
-    datatype: BOOLEAN
-    business_definition: TRUE if nationality is in enumeration valid_values
+    datatype:  BOOLEAN
+    business_definition: TRUE if nationality is valid AND if OTHER, nationality_other is populated
     nullable: false
     computed: true
     default: false
-    computation_logic: Check nationality against enumerations/customer_nationality.yaml
-
+    computation_logic: |
+      Check nationality against enumerations/customer_nationality.yaml
+      AND if nationality='OTHER', verify nationality_other IS NOT NULL AND TRIM(nationality_other) != ''
+  
   - name: is_valid_occupation
     datatype: BOOLEAN
-    business_definition: TRUE if occupation is in enumeration valid_values
+    business_definition: TRUE if occupation is valid AND if OTHER, occupation_other is populated
     nullable: false
     computed: true
-    default: false
-    computation_logic: Check occupation against enumerations/customer_occupation. yaml
-
+    default:  false
+    computation_logic: |
+      Check occupation against enumerations/customer_occupation.yaml
+      AND if occupation='OTHER', verify occupation_other IS NOT NULL AND TRIM(occupation_other) != ''
+  
   - name: is_valid_education_level
-    datatype: BOOLEAN
-    business_definition: TRUE if education_level is in enumeration valid_values
+    datatype:  BOOLEAN
+    business_definition: TRUE if education_level is valid AND if OTHER, education_level_other is populated
     nullable: false
     computed: true
     default: false
-    computation_logic: Check education_level against enumerations/customer_education_level.yaml
-
+    computation_logic: |
+      Check education_level against enumerations/customer_education_level. yaml
+      AND if education_level='OTHER', verify education_level_other IS NOT NULL AND TRIM(education_level_other) != ''
+  
   - name: is_valid_business_type
-    datatype: BOOLEAN
-    business_definition: TRUE if business_type is in enumeration valid_values
+    datatype:  BOOLEAN
+    business_definition:  TRUE if business_type is valid AND if OTHER, business_type_other is populated
     nullable: false
     computed: true
-    default: false
-    computation_logic: Check business_type against enumerations/customer_business_type.yaml
-
+    default:  false
+    computation_logic: |
+      Check business_type against enumerations/customer_business_type.yaml
+      AND if business_type='OTHER', verify business_type_other IS NOT NULL AND TRIM(business_type_other) != ''
+  
   - name: is_valid_total_asset
     datatype: BOOLEAN
     business_definition: TRUE if total_asset is in enumeration valid_values
     nullable: false
     computed: true
     default: false
-    computation_logic: Check total_asset against enumerations/customer_total_asset_bands.yaml
-
+    computation_logic: |
+      Check total_asset against enumerations/customer_total_asset_bands.yaml
+      NOTE: No OTHER option - must select from bands
+  
   - name: is_valid_monthly_income
-    datatype: BOOLEAN
+    datatype:  BOOLEAN
     business_definition: TRUE if monthly_income is in enumeration valid_values
     nullable: false
     computed: true
     default: false
-    computation_logic: Check monthly_income against enumerations/customer_monthly_income_bands.yaml
-
+    computation_logic:  |
+      Check monthly_income against enumerations/customer_monthly_income_bands.yaml
+      NOTE: No OTHER option - must select from bands
+  
   - name: is_valid_income_country
     datatype: BOOLEAN
-    business_definition: TRUE if income_country is in enumeration valid_values
+    business_definition: TRUE if income_country is valid AND if OTHER, income_country_other is populated
     nullable: false
     computed: true
     default: false
-    computation_logic: Check income_country against enumerations/customer_income_country.yaml
-
+    computation_logic:  |
+      Check income_country against enumerations/customer_income_country. yaml
+      AND if income_country='OTHER', verify income_country_other IS NOT NULL AND TRIM(income_country_other) != ''
+  
   - name: is_valid_birthdate
     datatype: BOOLEAN
     business_definition: TRUE if birthdate <= CURRENT_DATE and age between 18-120
@@ -391,35 +407,68 @@ attributes:
     computed: true
     default: false
     computation_logic: birthdate IS NOT NULL AND birthdate <= CURRENT_DATE AND age >= 18 AND age <= 120
-
+  
   - name: is_valid_source_of_income_list
     datatype: BOOLEAN
     business_definition: TRUE if all codes in pipe-delimited list are valid enumeration values
     nullable: false
     computed: true
-    default: false
+    default:  false
     computation_logic: Parse list, check each code against enumerations/customer_source_of_income.yaml
-
+  
   - name: is_valid_purpose_of_investment_list
     datatype: BOOLEAN
     business_definition: TRUE if all codes in pipe-delimited list are valid enumeration values
     nullable: false
     computed: true
-    default: false
+    default:  false
     computation_logic: Parse list, check each code against enumerations/customer_purpose_of_investment.yaml
 
   # Overall Data Quality Score
-  - name: data_quality_score
-    datatype: NUMERIC(5,2)  # ✅ Changed from DECIMAL(5,4)
-    business_definition: Overall data quality score (0-100) based on validation flags
-    nullable: false
-    computed:  true
-    default: 0.00
-    computation_logic: |
-      (Count of TRUE validation flags / Total validation flags) * 100
-      Range: 0.00 to 100.00
-      Example: 11 TRUE flags out of 12 = 91.67
-
+- name: data_quality_score
+  datatype: NUMERIC(5,2)
+  business_definition: Overall data quality score (0-100) based on validation flags
+  nullable: false
+  computed: true
+  default: 0.00
+  computation_logic: |
+    (Count of TRUE validation flags / Total validation flags) * 100
+    Range: 0.00 to 100.00
+    
+    Total flags: 12
+    1.  is_valid_person_title (includes OTHER validation)
+    2. is_valid_marital_status
+    3. is_valid_nationality (includes OTHER validation)
+    4. is_valid_occupation (includes OTHER validation)
+    5. is_valid_education_level (includes OTHER validation)
+    6. is_valid_business_type (includes OTHER validation)
+    7. is_valid_total_asset
+    8. is_valid_monthly_income
+    9. is_valid_income_country (includes OTHER validation)
+    10. is_valid_birthdate
+    11. is_valid_source_of_income_list
+    12. is_valid_purpose_of_investment_list
+    
+    Example: 11 TRUE flags out of 12 = 91.67
+    
+    Formula: 
+    ROUND(
+      (is_valid_person_title:: INT +
+       is_valid_marital_status::INT +
+       is_valid_nationality::INT +
+       is_valid_occupation::INT +
+       is_valid_education_level::INT +
+       is_valid_business_type::INT +
+       is_valid_total_asset::INT +
+       is_valid_monthly_income::INT +
+       is_valid_income_country::INT +
+       is_valid_birthdate::INT +
+       is_valid_source_of_income_list::INT +
+       is_valid_purpose_of_investment_list::INT
+      ) * 100.0 / 12,
+      2
+    ) AS data_quality_score
+  
   # Silver Metadata
   - name: _silver_load_ts
     datatype: TIMESTAMP
@@ -432,13 +481,18 @@ attributes:
     datatype: VARCHAR(50)
     business_definition: Data quality status classification
     nullable: true
-    valid_values: [VALID, VALID_WITH_OTHER, INVALID_ENUMERATION, INVALID_BIRTHDATE, MULTIPLE_ISSUES]
-    etl_metadata: true
+    valid_values:  [VALID, VALID_WITH_OTHER, INVALID_ENUMERATION, INVALID_BIRTHDATE, MULTIPLE_ISSUES]
+    etl_metadata:  true
     computation_logic: |
-      IF data_quality_score = 1.0 THEN 'VALID'
-      ELSIF data_quality_score >= 0.9 AND (person_title='OTHER' OR nationality='OTHER' OR .. .) THEN 'VALID_WITH_OTHER'
+      Classification based on data_quality_score and specific failure patterns: 
+      
+      IF data_quality_score = 100.00 THEN 'VALID'
+      ELSIF data_quality_score >= 91.67 AND 
+            (person_title='OTHER' OR nationality='OTHER' OR occupation='OTHER' OR 
+             education_level='OTHER' OR business_type='OTHER' OR income_country='OTHER')
+            THEN 'VALID_WITH_OTHER'
       ELSIF NOT is_valid_birthdate THEN 'INVALID_BIRTHDATE'
-      ELSIF data_quality_score < 0.7 THEN 'MULTIPLE_ISSUES'
+      ELSIF data_quality_score < 70.00 THEN 'MULTIPLE_ISSUES'
       ELSE 'INVALID_ENUMERATION'
 
 materialization_strategy:
@@ -448,7 +502,7 @@ materialization_strategy:
   partitioning: optional_by_bronze_load_ts_date
 
 data_quality_rules:
-  - rule: unique_customer_id
+  - rule:  unique_customer_id
     description: customer_id must be unique
     
   - rule: customer_id_not_null
@@ -461,13 +515,22 @@ data_quality_rules:
     description: Set hashes must be exactly 64 characters or empty set constant
     
   - rule: dq_score_range
-    description: data_quality_score must be between 0.0000 and 1.0000
+    description: data_quality_score must be between 0. 00 and 100.00
     
   - rule: other_field_consistency
-    description: When enumeration='OTHER', corresponding _other field should be populated
+    description:  |
+      When enumeration='OTHER', corresponding _other field MUST be populated with non-empty text. 
+      Applies to:  person_title, nationality, occupation, education_level, business_type, income_country
+      Validation: 
+        - If person_title='OTHER' → person_title_other IS NOT NULL AND TRIM(person_title_other) != ''
+        - If nationality='OTHER' → nationality_other IS NOT NULL AND TRIM(nationality_other) != ''
+        - If occupation='OTHER' → occupation_other IS NOT NULL AND TRIM(occupation_other) != ''
+        - If education_level='OTHER' → education_level_other IS NOT NULL AND TRIM(education_level_other) != ''
+        - If business_type='OTHER' → business_type_other IS NOT NULL AND TRIM(business_type_other) != ''
+        - If income_country='OTHER' → income_country_other IS NOT NULL AND TRIM(income_country_other) != ''
     
   - rule: hash_deterministic
-    description: Recomputing profile_hash for same inputs must produce same output
+    description:  Recomputing profile_hash for same inputs must produce same output
 
 transformation_summary:
     
