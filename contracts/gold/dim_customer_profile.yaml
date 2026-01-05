@@ -1,7 +1,7 @@
 entity_name: dim_customer_profile
 domain: customer
 table_type: dimension
-layer: gold
+layer:  gold
 scd_type: 2
 grain_description: One record per historical profile version of a customer; each version identified by customer_profile_version_sk (surrogate key).  One customer_id may have multiple versions over time. 
 
@@ -17,6 +17,11 @@ business_keys:
 
 surrogate_keys:
   - customer_profile_version_sk
+
+upstream_source: 
+  layer: silver
+  table_name: silver.customer_profile_standardized
+  transformation_type: scd2_versioning
 
 # Version-driving attributes (Type 2 - changes create new version)
 versioning_attributes:
@@ -46,6 +51,8 @@ non_versioning_attributes:
   - education_level_other
   - business_type_other
   - income_country_other
+  - data_quality_score
+  - data_quality_status
 
 multi_valued_sets:
   - source_of_income
@@ -53,7 +60,7 @@ multi_valued_sets:
 
 hash_spec:
   algorithm: SHA256
-  ordered_attribute_list:
+  ordered_attribute_list: 
     - evidence_unique_key
     - firstname
     - lastname
@@ -72,7 +79,7 @@ hash_spec:
     - source_of_income_set_hash
     - purpose_of_investment_set_hash
   normalization:
-    evidence_unique_key: UPPER(TRIM)
+    evidence_unique_key:  UPPER(TRIM)
     firstname: UPPER(TRIM)
     lastname: UPPER(TRIM)
     firstname_local: TRIM  # preserve case for local names
@@ -84,122 +91,128 @@ hash_spec:
     education_level: UPPER(TRIM)
     business_type: UPPER(TRIM)
     total_asset: UPPER(TRIM)
-    monthly_income: UPPER(TRIM)
+    monthly_income:  UPPER(TRIM)
     income_country: UPPER(TRIM)
-    birthdate: YYYY-MM-DD
+    birthdate:  YYYY-MM-DD
   delimiter: "|"
   null_token: "__NULL__"
-  empty_set_hash: "e3b0c44298fc1c149afbf4c8996fb92427ae41e4649b934ca495991b7852b855"  # SHA256("")
+  empty_set_hash: "e3b0c44298fc1c149afbf4c8996fb92427ae41e4649b934ca495991b7852b855"
 
-change_detection_logic: |
-  1. For each multi-valued set (source_of_income, purpose_of_investment):
-     - Parse pipe-delimited list from source
-     - Normalize each member: UPPER(TRIM)
-     - Deduplicate
-     - Sort ascending alphabetically
-     - Join with "|" delimiter (empty set -> empty string "")
-     - SHA256(joined_string) -> *_set_hash
-  
-  2. Build canonical profile string:
-     - For each attribute in ordered_attribute_list:
-       - Apply normalization rule
-       - Replace NULL with "__NULL__"
-       - Concatenate with "|" delimiter
-  
-  3. Calculate profile_hash = SHA256(canonical_string) -> lowercase hex (64 chars)
-  
-  4. Compare profile_hash with previous version for this customer_id:
-     - If different: Create new version
-       - Close previous version: effective_end_ts = new_effective_start_ts - 1 microsecond
-       - Set previous is_current = FALSE
-       - Insert new row with is_current = TRUE, effective_end_ts = NULL
-       - Increment version_num
-     - If same: No action (no new version)
+change_detection_logic:  |
+  1. Read latest Silver record for each customer_id
+  2. Compare profile_hash with current Gold version (is_current = TRUE)
+  3. If profile_hash differs: 
+     - Close current version:  SET effective_end_ts = new_effective_start_ts - 1 microsecond, is_current = FALSE
+     - Insert new version: version_num + 1, is_current = TRUE, effective_end_ts = NULL
+  4. If profile_hash same but Type 1 attributes changed:
+     - UPDATE current version with new Type 1 values (person_title_other, data_quality_score, etc.)
+  5. If no changes:  No action
 
 attributes:
-  # Surrogate & Natural Keys
+  # ===================================================================
+  # SURROGATE & NATURAL KEYS
+  # ===================================================================
+  
   - name: customer_profile_version_sk
     datatype: BIGINT
-    business_definition: Surrogate key for profile version (unique across all versions)
+    business_definition:  Surrogate key for profile version (unique across all versions)
     scd_role: surrogate_key
     hash_participation: false
     nullable: false
     primary_key: true
+    generation:  auto_increment
 
   - name: customer_id
     datatype: VARCHAR(50)
-    business_definition: Stable internal customer identifier (Type 1 anchor)
+    business_definition:  Stable internal customer identifier (natural key)
     scd_role: natural_key
     hash_participation: false
     nullable: false
+    source_field: customer_id
 
-  # Identity Evidence (PII)
+  # ===================================================================
+  # IDENTITY EVIDENCE (PII)
+  # ===================================================================
+  
   - name: evidence_unique_key
-    datatype: VARCHAR(100)
-    business_definition: Raw identity evidence (national ID or passport number)
-    pii: true
+    datatype:  VARCHAR(100)
+    business_definition: National ID or passport number
+    pii:  true
     pii_category: identity_document
     hash_participation: true
     nullable: true
-    normalization: UPPER(TRIM)
+    normalization:  UPPER(TRIM)
+    source_field: evidence_unique_key
 
-  # Names (PII)
+  # ===================================================================
+  # NAMES (PII)
+  # ===================================================================
+  
   - name: firstname
     datatype: VARCHAR(200)
-    business_definition: Given name in English/Latin script (preserve case in storage)
+    business_definition: Given name in English/Latin script
     pii: true
     pii_category: name
     hash_participation: true
     nullable: true
-    storage: preserve_case
+    storage:  preserve_case
     normalization: UPPER(TRIM)
+    source_field: firstname
 
   - name: lastname
     datatype: VARCHAR(200)
-    business_definition: Family name in English/Latin script (preserve case in storage)
+    business_definition: Family name in English/Latin script
     pii: true
     pii_category: name
     hash_participation: true
     nullable: true
     storage: preserve_case
     normalization: UPPER(TRIM)
+    source_field: lastname
 
   - name: firstname_local
     datatype: VARCHAR(200)
-    business_definition: Given name in local language script (preserve case in storage)
+    business_definition:  Given name in local language script
     pii: true
     pii_category: name
     hash_participation: true
     nullable: true
     storage: preserve_case
-    normalization: TRIM  # preserve case for hash
+    normalization: TRIM
+    source_field: firstname_local
 
   - name: lastname_local
     datatype: VARCHAR(200)
-    business_definition: Family name in local language script (preserve case in storage)
+    business_definition:  Family name in local language script
     pii: true
     pii_category: name
     hash_participation: true
     nullable: true
     storage: preserve_case
-    normalization: TRIM  # preserve case for hash
+    normalization: TRIM
+    source_field: lastname_local
 
-  # Enumeration Fields (Type 2 - versioned)
+  # ===================================================================
+  # ENUMERATION FIELDS (Type 2 - versioned)
+  # ===================================================================
+  
   - name: person_title
     datatype: VARCHAR(50)
-    business_definition: Honorific title enumeration code
+    business_definition:  Honorific title enumeration code
     hash_participation: true
     nullable: true
     enumeration_ref: enumerations/customer_person_title.yaml
     valid_values: [MR, MRS, MS, MISS, DR, PROF, REV, OTHER]
+    source_field: person_title
 
   - name: marital_status
     datatype: VARCHAR(50)
     business_definition: Marital status enumeration code
     hash_participation: true
-    nullable: true
-    enumeration_ref: enumerations/customer_marital_status.yaml
+    nullable:  true
+    enumeration_ref:  enumerations/customer_marital_status.yaml
     valid_values: [SINGLE, MARRIED, DIVORCED, WIDOWED, SEPARATED, UNKNOWN]
+    source_field:  marital_status
 
   - name: nationality
     datatype: VARCHAR(50)
@@ -208,30 +221,34 @@ attributes:
     nullable: true
     enumeration_ref: enumerations/customer_nationality.yaml
     standard_reference: ISO 3166-1 alpha-2
+    source_field: nationality
 
   - name: occupation
     datatype: VARCHAR(100)
-    business_definition: Occupational classification enumeration code
+    business_definition:  Occupational classification enumeration code
     hash_participation: true
     nullable: true
     enumeration_ref: enumerations/customer_occupation.yaml
     valid_values: [EMPLOYEE, SELF_EMPLOYED, BUSINESS_OWNER, GOVERNMENT_OFFICER, PROFESSIONAL, RETIRED, STUDENT, HOMEMAKER, UNEMPLOYED, OTHER, UNKNOWN]
+    source_field: occupation
 
   - name: education_level
     datatype: VARCHAR(100)
     business_definition: Education attainment enumeration code
     hash_participation: true
-    nullable: true
-    enumeration_ref: enumerations/customer_education_level.yaml
+    nullable:  true
+    enumeration_ref:  enumerations/customer_education_level.yaml
     valid_values: [PRIMARY, SECONDARY, VOCATIONAL, DIPLOMA, BACHELOR, MASTER, DOCTORATE, OTHER, UNKNOWN]
+    source_field: education_level
 
   - name: business_type
     datatype: VARCHAR(100)
     business_definition: Business/industry sector enumeration code
     hash_participation: true
     nullable: true
-    enumeration_ref: enumerations/customer_business_type.yaml
+    enumeration_ref: enumerations/customer_business_type. yaml
     valid_values: [FINANCE, MANUFACTURING, RETAIL, SERVICES, AGRICULTURE, TECHNOLOGY, HEALTHCARE, EDUCATION, CONSTRUCTION, HOSPITALITY, TRANSPORTATION, ENERGY, MEDIA, GOVERNMENT, OTHER, UNKNOWN]
+    source_field: business_type
 
   - name: birthdate
     datatype: DATE
@@ -243,14 +260,16 @@ attributes:
     quality_rules:
       - birthdate <= CURRENT_DATE
       - age between 18 and 120
+    source_field: birthdate
 
   - name: total_asset
     datatype: VARCHAR(50)
     business_definition: Total asset value band enumeration code
-    hash_participation: true
+    hash_participation:  true
     nullable: true
     enumeration_ref: enumerations/customer_total_asset_bands.yaml
     valid_values: [ASSET_BAND_1, ASSET_BAND_2, ASSET_BAND_3, ASSET_BAND_4, ASSET_BAND_5, UNKNOWN]
+    source_field: total_asset
 
   - name: monthly_income
     datatype: VARCHAR(50)
@@ -259,24 +278,30 @@ attributes:
     nullable: true
     enumeration_ref: enumerations/customer_monthly_income_bands.yaml
     valid_values: [INCOME_BAND_1, INCOME_BAND_2, INCOME_BAND_3, INCOME_BAND_4, INCOME_BAND_5, UNKNOWN]
+    source_field: monthly_income
 
   - name: income_country
     datatype: VARCHAR(50)
     business_definition: Country of income origin enumeration code (ISO 3166-1 alpha-2)
     hash_participation: true
     nullable: true
-    enumeration_ref: enumerations/customer_income_country.yaml
+    enumeration_ref: enumerations/customer_income_country. yaml
     standard_reference: ISO 3166-1 alpha-2
+    source_field: income_country
 
-  # Freetext Fields (Type 1 - NOT versioned, NOT in hash)
+  # ===================================================================
+  # FREETEXT FIELDS (Type 1 - NOT versioned, NOT in hash)
+  # ===================================================================
+  
   - name: person_title_other
     datatype: VARCHAR(500)
-    business_definition: Freetext title when person_title = OTHER
+    business_definition:  Freetext title when person_title = OTHER
     pii: false
     hash_participation: false
-    nullable: true
+    nullable:  true
     scd_type: 1
     population_rule: "Populate only when person_title = 'OTHER'"
+    source_field: person_title_other
 
   - name: nationality_other
     datatype: VARCHAR(500)
@@ -286,15 +311,17 @@ attributes:
     nullable: true
     scd_type: 1
     population_rule: "Populate only when nationality = 'OTHER'"
+    source_field:  nationality_other
 
-  - name: occupation_other
-    datatype: VARCHAR(500)
+  - name:  occupation_other
+    datatype:  VARCHAR(500)
     business_definition: Freetext occupation when occupation = OTHER
-    pii: false
+    pii:  false
     hash_participation: false
     nullable: true
     scd_type: 1
     population_rule: "Populate only when occupation = 'OTHER'"
+    source_field: occupation_other
 
   - name: education_level_other
     datatype: VARCHAR(500)
@@ -304,15 +331,17 @@ attributes:
     nullable: true
     scd_type: 1
     population_rule: "Populate only when education_level = 'OTHER'"
+    source_field: education_level_other
 
   - name: business_type_other
     datatype: VARCHAR(500)
-    business_definition: Freetext business type when business_type = OTHER
-    pii: false
+    business_definition:  Freetext business type when business_type = OTHER
+    pii:  false
     hash_participation: false
     nullable: true
     scd_type: 1
     population_rule: "Populate only when business_type = 'OTHER'"
+    source_field: business_type_other
 
   - name: income_country_other
     datatype: VARCHAR(500)
@@ -322,33 +351,69 @@ attributes:
     nullable: true
     scd_type: 1
     population_rule: "Populate only when income_country = 'OTHER'"
+    source_field: income_country_other
 
-  # Set Hashes (computed from bridge tables)
+  # ===================================================================
+  # SET HASHES (computed from bridge tables)
+  # ===================================================================
+  
   - name: source_of_income_set_hash
     datatype: VARCHAR(64)
-    business_definition: SHA256 hash of sorted, normalized source_of_income codes from bridge table
+    business_definition: SHA256 hash of sorted, normalized source_of_income codes
     hash_participation: true
     nullable: true
-    computation: SHA256(sorted_pipe_delimited_codes)
+    computation:  SHA256(sorted_pipe_delimited_codes)
     empty_set_value: "e3b0c44298fc1c149afbf4c8996fb92427ae41e4649b934ca495991b7852b855"
+    source_field: source_of_income_set_hash
 
   - name: purpose_of_investment_set_hash
     datatype: VARCHAR(64)
-    business_definition: SHA256 hash of sorted, normalized purpose_of_investment codes from bridge table
+    business_definition: SHA256 hash of sorted, normalized purpose_of_investment codes
     hash_participation: true
     nullable: true
     computation: SHA256(sorted_pipe_delimited_codes)
     empty_set_value: "e3b0c44298fc1c149afbf4c8996fb92427ae41e4649b934ca495991b7852b855"
+    source_field: purpose_of_investment_set_hash
 
-  # Profile Hash (change detection)
+  # ===================================================================
+  # PROFILE HASH (change detection)
+  # ===================================================================
+  
   - name: profile_hash
     datatype: VARCHAR(64)
-    business_definition: SHA256 hash of all version-driving attributes (for change detection)
+    business_definition: SHA256 hash of all version-driving attributes for change detection
     hash_participation: false
     nullable: false
     computation: SHA256(canonical_profile_string)
+    source_field: profile_hash
 
-  # Version Management
+  # ===================================================================
+  # DATA QUALITY METRICS (Type 1 - from Silver)
+  # ===================================================================
+  
+  - name: data_quality_score
+    datatype: NUMERIC(5,2)
+    business_definition: Data quality score (0-100) from Silver layer validation
+    hash_participation: false
+    nullable: true
+    scd_type: 1
+    source_field: data_quality_score
+    note: Type 1 - updates do not create new version
+
+  - name:  data_quality_status
+    datatype: VARCHAR(50)
+    business_definition: Data quality status classification from Silver layer
+    hash_participation:  false
+    nullable: true
+    valid_values: [VALID, VALID_WITH_OTHER, INVALID_ENUMERATION, INVALID_BIRTHDATE, MULTIPLE_ISSUES]
+    scd_type: 1
+    source_field: _silver_dq_status
+    note: Type 1 - updates do not create new version
+
+  # ===================================================================
+  # VERSION MANAGEMENT
+  # ===================================================================
+  
   - name: version_num
     datatype: INT
     business_definition: Sequential version number per customer_id (1, 2, 3, ...)
@@ -359,7 +424,10 @@ attributes:
       - version_num > 0
       - version_num monotonic increasing per customer_id
 
-  # SCD2 Temporal Columns
+  # ===================================================================
+  # SCD2 TEMPORAL COLUMNS
+  # ===================================================================
+  
   - name: effective_start_ts
     datatype: TIMESTAMP
     business_definition: UTC timestamp when this version became effective
@@ -373,6 +441,7 @@ attributes:
     scd_role: effective_to
     hash_participation: false
     nullable: true
+    note: NULL indicates current/active version
 
   - name: is_current
     datatype: BOOLEAN
@@ -380,26 +449,37 @@ attributes:
     scd_role: current_flag
     hash_participation: false
     nullable: false
+    default:  false
     quality_rules:
       - Exactly one TRUE per customer_id
 
-  # ETL Metadata
-  - name: load_ts
-    datatype: TIMESTAMP
-    business_definition: UTC timestamp when record was loaded into warehouse
+  # ===================================================================
+  # ETL METADATA
+  # ===================================================================
+  
+  - name:  load_ts
+    datatype:  TIMESTAMP
+    business_definition: UTC timestamp when record was loaded into Gold layer
     scd_role: etl_metadata
     hash_participation: false
     nullable: false
+    default:  CURRENT_TIMESTAMP
 
 relationships:
   bridge_tables:
-    - table: bridge_customer_source_of_income
+    - table:  bridge_customer_source_of_income
       join_key: customer_profile_version_sk
       description: Multi-valued relationship to source of income codes
       
     - table: bridge_customer_purpose_of_investment
       join_key: customer_profile_version_sk
       description: Multi-valued relationship to investment purpose codes
+
+materialization_strategy: 
+  approach: table
+  reason: SCD2 requires complex merge logic not suitable for views
+  refresh_pattern: incremental_scd2_merge
+  partitioning:  optional_by_effective_start_ts
 
 pii_policy:
   columns_raw_pii:
@@ -409,22 +489,24 @@ pii_policy:
     - firstname_local
     - lastname_local
     - birthdate
-  access_control:
+  access_control: 
     - role: dw_privileged
-      columns: [evidence_unique_key, firstname, lastname, firstname_local, lastname_local, birthdate]
+      columns: all
+      access:  read_only
     - role: dw_analyst
-      columns: [firstname, lastname]  # masked versions
-      masking:
+      columns: all_except_pii
+      access:  read_only
+      masking: 
         birthdate: year_only
-        evidence_unique_key: null
-  retention_policy: 7_years_after_relationship_end
+        evidence_unique_key: masked
+  retention_policy:  7_years_after_relationship_end
 
 data_quality_rules:
   - rule: no_overlapping_intervals
     description: No overlapping (effective_start_ts, effective_end_ts) intervals per customer_id
     
   - rule: unique_current_version
-    description: Exactly one is_current = TRUE per customer_id
+    description:  Exactly one is_current = TRUE per customer_id
     
   - rule: birthdate_range
     description: birthdate <= CURRENT_DATE AND age between 18 and 120
@@ -432,7 +514,7 @@ data_quality_rules:
   - rule: profile_hash_length
     description: profile_hash is exactly 64 hex characters
     
-  - rule: enumeration_validity
+  - rule:  enumeration_validity
     description: All enumeration fields must have valid values from referenced enumeration files
     
   - rule: other_field_population
@@ -443,16 +525,25 @@ data_quality_rules:
     
   - rule: version_num_sequence
     description: version_num must be sequential (1, 2, 3.. .) per customer_id
+    
+  - rule: effective_dates_valid
+    description: effective_end_ts must be NULL OR > effective_start_ts
 
 indexes:
   - name: pk_customer_profile_version
     type: primary_key
     columns: [customer_profile_version_sk]
     
+  - name: uq_customer_version_num
+    type: unique
+    columns: [customer_id, version_num]
+    description: Business key uniqueness
+    
   - name: idx_customer_current
     type: non_unique
     columns: [customer_id, is_current]
-    description: Fast lookup of current version
+    description:  Fast lookup of current version
+    filter:  WHERE is_current = TRUE
     
   - name: idx_effective_dates
     type: non_unique
@@ -464,15 +555,9 @@ indexes:
     columns: [profile_hash]
     description: Change detection lookups
 
-adr_refs:
-  - ADR-001-scd2-customer-profile.md
-  - ADR-002-multi-valued-sets-via-bridge. md
-  - ADR-003-enumeration-with-other-pattern.md
-  - ADR-004-local-name-case-preservation.md
-
 sample_rows:
   - customer_profile_version_sk: 102938
-    customer_id: 556677
+    customer_id: "556677"
     evidence_unique_key: "AB1234567890"
     firstname: "John"
     lastname: "Doe"
@@ -483,26 +568,36 @@ sample_rows:
     marital_status: "MARRIED"
     nationality: "TH"
     nationality_other: null
-    occupation: "OTHER"
+    occupation:  "OTHER"
     occupation_other: "Astronaut"
-    education_level: "BACHELOR"
+    education_level:  "BACHELOR"
     education_level_other: null
-    business_type: "FINANCE"
+    business_type:  "FINANCE"
     business_type_other: null
     birthdate: "1985-03-10"
     total_asset: "ASSET_BAND_3"
     monthly_income: "INCOME_BAND_2"
     income_country: "TH"
     income_country_other: null
-    source_of_income_set_hash: "a3c5f2b8d9e1a4c7f6b2e9d8c5a3f1b7..."
-    purpose_of_investment_set_hash: "7b2d9e4a1c8f5b3d6a9c2e8f1b4d7a5c..."
-    profile_hash: "5e884898da28047151d0e56f8dc62927..."
+    source_of_income_set_hash: "a3c5f2b8d9e1a4c7f6b2e9d8c5a3f1b7e9d8a5c2f1b4e7d9a6c3f8b1e5d2a9c7"
+    purpose_of_investment_set_hash: "7b2d9e4a1c8f5b3d6a9c2e8f1b4d7a5c3e9f2b8d1a7c4f6e3b9d5a2c8f1e4b7"
+    profile_hash: "5e884898da28047151d0e56f8dc62927973b1dd51ba4a0a3dbf9c3cd58db57fa"
+    data_quality_score:  100. 00
+    data_quality_status:  "VALID_WITH_OTHER"
     version_num: 3
-    effective_start_ts: "2025-12-01T08:00:00Z"
+    effective_start_ts:  "2025-12-01T08:00:00Z"
     effective_end_ts: null
     is_current: true
     load_ts: "2025-12-01T08:05:10Z"
 
-version: 2. 0
-last_updated: 2025-12-01
+version:  2. 0
+last_updated: 2026-01-05
 owner: Data Architecture Team
+
+notes:  |
+  - Gold layer implements SCD Type 2 for profile versioning
+  - Type 1 attributes (*_other, data_quality_*) update in-place without creating new versions
+  - profile_hash drives change detection (computed in Silver, compared in Gold)
+  - Use is_current = TRUE for latest snapshot queries
+  - Use effective_start_ts/effective_end_ts for point-in-time queries
+  - Bridge tables hold multi-valued relationships (source_of_income, purpose_of_investment)

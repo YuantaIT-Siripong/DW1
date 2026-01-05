@@ -1,10 +1,16 @@
 entity_name: bridge_customer_purpose_of_investment
 domain: customer
 table_type: bridge
-layer: gold
-grain_description: One row per investment purpose membership for each customer profile version.  Multi-valued relationship between profile versions and investment purposes.
+layer:  gold
+grain_description: One row per investment purpose membership for each customer profile version. Multi-valued relationship between profile versions and investment purposes.
 
-primary_keys:
+upstream_source:
+  layer: silver
+  table_name: silver. customer_profile_standardized
+  source_field: purpose_of_investment_list
+  transformation_type: parse_pipe_delimited_to_rows
+
+primary_keys: 
   - customer_profile_version_sk
   - purpose_of_investment_code
 
@@ -12,35 +18,51 @@ foreign_keys:
   - column: customer_profile_version_sk
     references: dim_customer_profile.customer_profile_version_sk
     description: Link to specific profile version
+    relationship: many_to_one
 
 attributes:
-  - name: customer_profile_version_sk
+  - name:  customer_profile_version_sk
     datatype: BIGINT
     business_definition: Surrogate key of the profile version this investment purpose belongs to
     nullable: false
     primary_key: true
+    source: dim_customer_profile. customer_profile_version_sk
 
   - name: customer_id
-    datatype: BIGINT
+    datatype: VARCHAR(50)
     business_definition: Denormalized stable customer identifier (for convenience queries)
     nullable: false
+    source: dim_customer_profile.customer_id
+    denormalized: true
+    note:  Denormalized from dim for query performance
 
   - name: purpose_of_investment_code
     datatype: VARCHAR(100)
     business_definition: Investment purpose enumeration code
     nullable: false
     primary_key: true
-    enumeration_ref: enumerations/customer_purpose_of_investment.yamlvalid_values: [RETIREMENT, EDUCATION, SPECULATION, INCOME, WEALTH_PRESERVATION, GROWTH, TAX_PLANNING, ESTATE_PLANNING, OTHER, UNKNOWN]
+    enumeration_ref: enumerations/customer_purpose_of_investment.yaml
+    valid_values: [RETIREMENT, EDUCATION, SPECULATION, INCOME, WEALTH_PRESERVATION, GROWTH, TAX_PLANNING, ESTATE_PLANNING, OTHER, UNKNOWN]
+    source: Parsed from silver.customer_profile_standardized.purpose_of_investment_list
 
   - name: load_ts
     datatype: TIMESTAMP
-    business_definition: ETL ingestion timestamp
+    business_definition: UTC timestamp when record was loaded into Gold layer
     nullable: false
+    default: CURRENT_TIMESTAMP
+    etl_metadata: true
 
 set_membership_behavior: |
   Full set is re-materialized for each new profile version only when membership changes.
   Bridge rows are immutable once created (tied to specific profile version).
   
+  ETL Process:
+  1. Parse purpose_of_investment_list from Silver (pipe-delimited string)
+  2. Split by "|" delimiter
+  3. Normalize each code: UPPER(TRIM)
+  4. Create one bridge row per code for the given customer_profile_version_sk
+  5. Compute set hash for validation
+
 hash_dependency:
   parent_set_hash_column: purpose_of_investment_set_hash
   computation_logic: |
@@ -50,14 +72,20 @@ hash_dependency:
     4. Sort codes ascending alphabetically
     5. Join with "|" delimiter (empty set -> "")
     6. SHA256(joined_string) -> purpose_of_investment_set_hash
-    7. Store hash in dim_customer_profile for this version
+    7. Verify hash matches dim_customer_profile.purpose_of_investment_set_hash
   
   example_sql: |
-    SELECT SHA256(STRING_AGG(purpose_of_investment_code, '|' ORDER BY purpose_of_investment_code))
+    SELECT LOWER(ENCODE(SHA256(STRING_AGG(purpose_of_investment_code, '|' ORDER BY purpose_of_investment_code)::bytea), 'hex'))
     FROM bridge_customer_purpose_of_investment
     WHERE customer_profile_version_sk = :version_sk;
 
-data_quality_rules:
+materialization_strategy:
+  approach: table
+  reason: Bridge table for multi-valued relationship
+  refresh_pattern: insert_only_on_new_version
+  note:  Rows inserted only when dim_customer_profile gets new version with changed purpose_of_investment_set_hash
+
+data_quality_rules: 
   - rule: no_duplicates
     description: No duplicate (customer_profile_version_sk, purpose_of_investment_code) combinations
     
@@ -69,6 +97,9 @@ data_quality_rules:
     
   - rule: at_least_one_member
     description: Each customer_profile_version_sk should have at least 1 purpose (recommended, not enforced)
+    
+  - rule: hash_consistency
+    description: Computed hash from bridge rows must match dim_customer_profile.purpose_of_investment_set_hash
 
 indexes:
   - name: pk_bridge_investment_purpose
@@ -78,22 +109,28 @@ indexes:
   - name: idx_customer_id
     type: non_unique
     columns: [customer_id]
-    description: Fast lookup by customer
+    description: Fast lookup by customer (all versions)
+    
+  - name: idx_purpose_code
+    type: non_unique
+    columns: [purpose_of_investment_code]
+    description: Lookup by investment purpose type
 
 adr_refs:
-  - ADR-002-multi-valued-sets-via-bridge.md
+  - ADR-002-multi-valued-sets-via-bridge. md
   - ADR-003-enumeration-with-other-pattern.md
 
 sample_rows:
   - customer_profile_version_sk: 102938
-    customer_id: 556677
+    customer_id: "556677"
     purpose_of_investment_code: "RETIREMENT"
     load_ts: "2025-12-01T08:05:10Z"
     
-  - customer_profile_version_sk: 102938
-    customer_id: 556677
+  - customer_profile_version_sk:  102938
+    customer_id: "556677"
     purpose_of_investment_code: "EDUCATION"
     load_ts: "2025-12-01T08:05:10Z"
 
-version: 2.0last_updated: 2025-12-01
+version: 1.0
+last_updated: 2026-01-05
 owner: Data Architecture Team
