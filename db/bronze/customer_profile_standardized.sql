@@ -30,16 +30,16 @@ CREATE TABLE bronze.customer_profile_standardized (
     
     -- Enumeration Fields
     person_title VARCHAR(50),
-    person_title_other VARCHAR(500),          -- ✅ Increased to match source
+    person_title_other VARCHAR(500),
     marital_status VARCHAR(50),
-    nationality VARCHAR(50),                  -- ✅ Changed from VARCHAR(2) to VARCHAR(50)
-    nationality_other VARCHAR(500),           -- ✅ Increased to match source
+    nationality VARCHAR(50),
+    nationality_other VARCHAR(500),
     occupation VARCHAR(100),
-    occupation_other VARCHAR(500),            -- ✅ Increased to match source
+    occupation_other VARCHAR(500), 
     education_level VARCHAR(100),
-    education_level_other VARCHAR(500),       -- ✅ Increased to match source
+    education_level_other VARCHAR(500),
     business_type VARCHAR(100),
-    business_type_other VARCHAR(500),         -- ✅ Increased to match source
+    business_type_other VARCHAR(500),
     
     -- Demographics
     birthdate DATE,
@@ -47,8 +47,8 @@ CREATE TABLE bronze.customer_profile_standardized (
     -- Economic Bands
     total_asset VARCHAR(50),
     monthly_income VARCHAR(50),
-    income_country VARCHAR(50),               -- ✅ Changed from VARCHAR(2) to VARCHAR(50)
-    income_country_other VARCHAR(500),        -- ✅ Increased to match source
+    income_country VARCHAR(50),
+    income_country_other VARCHAR(500),
     
     -- Multi-Valued Sets (Pipe-Delimited)
     source_of_income_list TEXT,
@@ -71,8 +71,11 @@ CREATE INDEX idx_bronze_customer_load_ts
     ON bronze.customer_profile_standardized (_bronze_load_ts);
 
 CREATE INDEX idx_bronze_customer_batch_id 
-    ON bronze. customer_profile_standardized (_bronze_batch_id);
+    ON bronze.customer_profile_standardized (_bronze_batch_id);
 
+CREATE INDEX idx_bronze_customer_lookup 
+    ON bronze.customer_profile_standardized (customer_id);
+	
 -- Comments on table
 COMMENT ON TABLE bronze. customer_profile_standardized IS 
 'Raw landing zone for customer profile data from IT operational view.  Immutable append-only pattern. No transformations applied.';
