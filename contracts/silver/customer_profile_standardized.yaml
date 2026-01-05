@@ -454,9 +454,6 @@ data_quality_rules:
   - rule: customer_id_not_null
     description: customer_id is required
     
-  - rule: customer_id_numeric
-    description: customer_id must successfully convert to BIGINT
-    
   - rule: profile_hash_length
     description: profile_hash must be exactly 64 characters
     
@@ -473,8 +470,6 @@ data_quality_rules:
     description: Recomputing profile_hash for same inputs must produce same output
 
 transformation_summary:
-  type_conversions:
-    - customer_id VARCHAR(50) → BIGINT
     
   normalization:
     - All enumeration fields: UPPER(TRIM)
@@ -531,7 +526,7 @@ pii_policy:
   retention_policy: 7_years_after_relationship_end
 
 sample_rows:
-  - customer_id: 12345  # BIGINT (converted)
+  - customer_id: "12345"
     evidence_unique_key: "AB1234567890"
     firstname: "John"
     lastname: "Doe"
