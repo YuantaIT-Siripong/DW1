@@ -13,7 +13,8 @@ upstream_source:
 
 primary_keys:
   - customer_id
-
+  - last_modified_ts
+  
 natural_keys:
   - customer_id
 
@@ -25,7 +26,10 @@ attributes:
     nullable: false
     primary_key: true
     source_field: customer_id
-
+    transformation_note: |
+      Silver layer will CAST to BIGINT for downstream processing. 
+      Bronze preserves VARCHAR(50) as received from IT operational view. 
+      
   # Identity Evidence (PII)
   - name: evidence_unique_key
     datatype: VARCHAR(100)
@@ -288,8 +292,9 @@ retention_policy: 7_years_minimum
 indexes:
   - name: pk_bronze_customer_profile
     type: primary_key
-    columns: [customer_id]
-    
+    columns: [customer_id, last_modified_ts]
+    description: Composite key for append-only temporal history
+        
   - name: idx_bronze_load_ts
     type: non_unique
     columns: [_bronze_load_ts]
