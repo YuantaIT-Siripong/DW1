@@ -508,9 +508,9 @@ indexes:
     columns: [_silver_dq_status]
     description: Query by data quality status
     
-  - name: idx_silver_processed_ts
+  - name: idx_silver_load_ts
     type: non_unique
-    columns: [_silver_processed_ts]
+    columns: [_silver_load_ts]
     description: Query by processing timestamp
 
 pii_policy:
@@ -576,7 +576,7 @@ sample_rows:
     is_valid_source_of_income_list: true
     is_valid_purpose_of_investment_list: true
     data_quality_score: 1.0000
-    _silver_processed_ts: "2025-12-01T08:05:00Z"
+    _silver_load_ts: "2025-12-01T08:05:00Z"
     _silver_dq_status: "VALID_WITH_OTHER"
 
 version: 1.0
