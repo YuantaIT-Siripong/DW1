@@ -1,0 +1,445 @@
+entity_name: investment_profile_standardized
+domain: investment
+table_type: landing
+layer: bronze
+grain_description: One record per investment profile (customer or customer_code scope) as provided by IT operational view. Raw landing zone - exact mirror of IT view plus ETL metadata. No transformations applied.
+
+upstream_source:
+  system: IT Operational Database
+  view_name: opdb.vw_investment_profile_standardized
+  owner: IT Department
+  status: pending_creation
+  specification_reference: docs/business/modules/investment_profile_module.md
+
+primary_keys:
+  - investment_profile_id
+  - last_modified_ts
+  
+natural_keys:
+  - investment_profile_id
+
+attributes:
+  # Natural Key & Scope
+  - name: investment_profile_id
+    datatype: VARCHAR(100)
+    business_definition: Unique investment profile identifier (format - IP-CUST-{customer_id} or IP-CODE-{customer_code})
+    nullable: false
+    primary_key: true
+    source_field: investment_profile_id
+    
+  - name: scope_type
+    datatype: VARCHAR(20)
+    business_definition: Profile scope type - CUSTOMER (baseline) or CUSTOMER_CODE (override)
+    nullable: false
+    valid_values: [CUSTOMER, CUSTOMER_CODE]
+    source_field: scope_type
+    
+  - name: customer_id
+    datatype: VARCHAR(50)
+    business_definition: Customer identifier (always populated)
+    nullable: false
+    source_field: customer_id
+    
+  - name: customer_code
+    datatype: VARCHAR(50)
+    business_definition: Customer code identifier (populated when scope_type=CUSTOMER_CODE)
+    nullable: true
+    source_field: customer_code
+
+  # Risk & Suitability Assessment
+  - name: risk_level_code
+    datatype: VARCHAR(50)
+    business_definition: Risk appetite/tolerance level enumeration code
+    nullable: true
+    enumeration_ref: enumerations/investment_risk_level.yaml
+    valid_values: [CONSERVATIVE, MODERATE_CONSERVATIVE, BALANCED, MODERATE_AGGRESSIVE, AGGRESSIVE, UNKNOWN]
+    source_field: risk_level_code
+
+  - name: suitability_score
+    datatype: NUMERIC(5,2)
+    business_definition: Numerical suitability assessment score (0-100 scale)
+    nullable: true
+    quality_rules:
+      - suitability_score between 0 and 100
+    source_field: suitability_score
+
+  - name: ability_to_bear_loss_tier
+    datatype: VARCHAR(50)
+    business_definition: Financial capacity to absorb losses enumeration code
+    nullable: true
+    enumeration_ref: enumerations/investment_ability_to_bear_loss.yaml
+    valid_values: [VERY_LOW, LOW, MODERATE, HIGH, VERY_HIGH, UNKNOWN]
+    source_field: ability_to_bear_loss_tier
+
+  - name: investment_objective_category
+    datatype: VARCHAR(50)
+    business_definition: Primary investment objective enumeration code
+    nullable: true
+    enumeration_ref: enumerations/investment_objective.yaml
+    valid_values: [CAPITAL_PRESERVATION, INCOME, GROWTH, BALANCED, SPECULATION, RETIREMENT, EDUCATION, TAX_PLANNING, WEALTH_PRESERVATION, OTHER, UNKNOWN]
+    source_field: investment_objective_category
+
+  - name: investment_time_horizon
+    datatype: VARCHAR(50)
+    business_definition: Expected investment holding period enumeration code
+    nullable: true
+    enumeration_ref: enumerations/investment_time_horizon.yaml
+    valid_values: [SHORT_TERM, MEDIUM_TERM, LONG_TERM, VERY_LONG_TERM, UNKNOWN]
+    source_field: investment_time_horizon
+
+  - name: liquidity_need_level
+    datatype: VARCHAR(50)
+    business_definition: Liquidity requirement level enumeration code
+    nullable: true
+    enumeration_ref: enumerations/investment_liquidity_need.yaml
+    valid_values: [IMMEDIATE, HIGH, MEDIUM, LOW, VERY_LOW, UNKNOWN]
+    source_field: liquidity_need_level
+
+  - name: investment_experience_years
+    datatype: INTEGER
+    business_definition: Years of investment experience
+    nullable: true
+    quality_rules:
+      - investment_experience_years >= 0 and <= 80
+    source_field: investment_experience_years
+
+  # Regulatory & Compliance Status
+  - name: high_net_worth_status_code
+    datatype: VARCHAR(50)
+    business_definition: High net worth classification enumeration code
+    nullable: true
+    enumeration_ref: enumerations/investment_high_net_worth_status.yaml
+    valid_values: [NONE, EMERGING, HIGH_NET_WORTH, VERY_HIGH_NET_WORTH, ULTRA_HIGH_NET_WORTH, INSTITUTIONAL, UNKNOWN]
+    source_field: high_net_worth_status_code
+
+  - name: kyc_status
+    datatype: VARCHAR(50)
+    business_definition: KYC verification status enumeration code
+    nullable: true
+    enumeration_ref: enumerations/investment_kyc_status.yaml
+    valid_values: [NOT_STARTED, IN_PROGRESS, PENDING_REVIEW, VERIFIED, REJECTED, EXPIRED, SUSPENDED, INCOMPLETE, UNKNOWN]
+    source_field: kyc_status
+
+  - name: kyc_risk_rating
+    datatype: VARCHAR(50)
+    business_definition: KYC risk rating enumeration code
+    nullable: true
+    enumeration_ref: enumerations/investment_kyc_risk_rating.yaml
+    valid_values: [LOW, MEDIUM, HIGH, UNKNOWN]
+    source_field: kyc_risk_rating
+
+  - name: aml_risk_rating
+    datatype: VARCHAR(50)
+    business_definition: AML risk rating enumeration code
+    nullable: true
+    enumeration_ref: enumerations/investment_aml_risk_rating.yaml
+    valid_values: [LOW, MEDIUM, HIGH, UNKNOWN]
+    source_field: aml_risk_rating
+
+  - name: pep_flag
+    datatype: BOOLEAN
+    business_definition: Politically Exposed Person flag
+    nullable: true
+    source_field: pep_flag
+
+  - name: sanction_screening_status
+    datatype: VARCHAR(50)
+    business_definition: Sanction screening status enumeration code
+    nullable: true
+    enumeration_ref: enumerations/investment_sanction_screening_status.yaml
+    valid_values: [NOT_SCREENED, CLEAR, POTENTIAL_MATCH, FALSE_POSITIVE, CONFIRMED_MATCH, RESTRICTED, REVIEW_REQUIRED, UNKNOWN]
+    source_field: sanction_screening_status
+
+  - name: fatca_status
+    datatype: VARCHAR(50)
+    business_definition: FATCA compliance status enumeration code
+    nullable: true
+    enumeration_ref: enumerations/investment_fatca_status.yaml
+    valid_values: [NOT_APPLICABLE, PENDING_DETERMINATION, US_PERSON_COMPLIANT, US_PERSON_NON_COMPLIANT, RECALCITRANT, CLOSED_ACCOUNT, UNKNOWN]
+    source_field: fatca_status
+
+  - name: investor_category
+    datatype: VARCHAR(50)
+    business_definition: Regulatory investor classification enumeration code
+    nullable: true
+    enumeration_ref: enumerations/investment_investor_category.yaml
+    valid_values: [RETAIL, GENERAL, HIGH_NET_WORTH, INSTITUTIONAL, PROFESSIONAL, ULTRA_HIGH_NET_WORTH, ACCREDITED, UNKNOWN]
+    source_field: investor_category
+
+  - name: source_of_wealth_code
+    datatype: VARCHAR(50)
+    business_definition: Primary source of wealth enumeration code
+    nullable: true
+    enumeration_ref: enumerations/investment_source_of_wealth.yaml
+    valid_values: [EMPLOYMENT_SALARY, BUSINESS_INCOME, INVESTMENT_INCOME, INHERITANCE, PROPERTY_SALE, SAVINGS, RETIREMENT_BENEFITS, GIFT_DONATION, BUSINESS_SALE, WINDFALL, FAMILY_WEALTH, OTHER, UNKNOWN]
+    source_field: source_of_wealth_code
+
+  # Acknowledgement Flags (Risk Disclosure)
+  - name: complex_product_acknowledged_flag
+    datatype: BOOLEAN
+    business_definition: Complex product risk disclosure acknowledged
+    nullable: true
+    source_field: complex_product_acknowledged_flag
+
+  - name: derivative_risk_acknowledged_flag
+    datatype: BOOLEAN
+    business_definition: Derivative product risk disclosure acknowledged
+    nullable: true
+    source_field: derivative_risk_acknowledged_flag
+
+  - name: fx_risk_acknowledged_flag
+    datatype: BOOLEAN
+    business_definition: Foreign exchange risk disclosure acknowledged
+    nullable: true
+    source_field: fx_risk_acknowledged_flag
+
+  # Product Eligibility Flags
+  - name: complex_product_allowed
+    datatype: BOOLEAN
+    business_definition: Complex product access permitted
+    nullable: true
+    source_field: complex_product_allowed
+
+  - name: ipo_participation_allowed
+    datatype: BOOLEAN
+    business_definition: IPO participation permitted
+    nullable: true
+    source_field: ipo_participation_allowed
+
+  # Margin & Leverage
+  - name: margin_agreement_status
+    datatype: VARCHAR(50)
+    business_definition: Margin trading agreement status enumeration code
+    nullable: true
+    enumeration_ref: enumerations/investment_margin_agreement_status.yaml
+    valid_values: [NOT_ELIGIBLE, NOT_SIGNED, PENDING_APPROVAL, ACTIVE, SUSPENDED, INACTIVE, TERMINATED, EXPIRED, UNKNOWN]
+    source_field: margin_agreement_status
+
+  - name: leverage_tolerance
+    datatype: VARCHAR(50)
+    business_definition: Leverage tolerance level enumeration code
+    nullable: true
+    enumeration_ref: enumerations/investment_leverage_tolerance.yaml
+    valid_values: [NONE, LIMITED, MODERATE, HIGH, VERY_HIGH, UNKNOWN]
+    source_field: leverage_tolerance
+
+  # Advisory & Discretion
+  - name: advisory_discretion_flag
+    datatype: BOOLEAN
+    business_definition: Discretionary mandate indicator
+    nullable: true
+    source_field: advisory_discretion_flag
+
+  # Vulnerability Classification
+  - name: vulnerable_investor_flag
+    datatype: BOOLEAN
+    business_definition: Vulnerable investor classification flag
+    nullable: true
+    source_field: vulnerable_investor_flag
+
+  - name: vulnerability_reason_code
+    datatype: VARCHAR(50)
+    business_definition: Vulnerability reason enumeration code
+    nullable: true
+    enumeration_ref: enumerations/investment_vulnerability_reason.yaml
+    valid_values: [LOW_FINANCIAL_LITERACY, ELDERLY_INVESTOR, COGNITIVE_IMPAIRMENT, LANGUAGE_BARRIER, FIRST_TIME_INVESTOR, FINANCIAL_DISTRESS, MENTAL_HEALTH, RECENT_BEREAVEMENT, DISABILITY, EXTREME_RISK_AVERSION, REGULATORY_RESTRICTION, OTHER, NONE, UNKNOWN]
+    source_field: vulnerability_reason_code
+
+  - name: vulnerability_assessment_ts
+    datatype: TIMESTAMP
+    business_definition: Timestamp of vulnerability assessment
+    nullable: true
+    source_field: vulnerability_assessment_ts
+
+  # Review Scheduling
+  - name: review_cycle
+    datatype: VARCHAR(50)
+    business_definition: Periodic review cycle frequency enumeration code
+    nullable: true
+    enumeration_ref: enumerations/investment_review_cycle.yaml
+    valid_values: [MONTHLY, QUARTERLY, SEMI_ANNUAL, ANNUAL, BIENNIAL, TRIENNIAL, ON_DEMAND, UNKNOWN]
+    source_field: review_cycle
+
+  - name: next_review_due_ts
+    datatype: TIMESTAMP
+    business_definition: Next scheduled review due timestamp
+    nullable: true
+    source_field: next_review_due_ts
+
+  - name: last_risk_review_ts
+    datatype: TIMESTAMP
+    business_definition: Last suitability/risk review timestamp
+    nullable: true
+    source_field: last_risk_review_ts
+
+  # IT Source Metadata
+  - name: last_modified_ts
+    datatype: TIMESTAMP
+    business_definition: Last modified timestamp from operational system (for change tracking)
+    nullable: true
+    source_field: last_modified_ts
+
+  # Bronze ETL Metadata (Added by DW)
+  - name: _bronze_load_ts
+    datatype: TIMESTAMP
+    business_definition: UTC timestamp when record was landed into Bronze
+    nullable: false
+    default: CURRENT_TIMESTAMP
+    etl_metadata: true
+
+  - name: _bronze_source_file
+    datatype: VARCHAR(500)
+    business_definition: Source view name or file identifier
+    nullable: true
+    default: "'opdb.vw_investment_profile_standardized'"
+    etl_metadata: true
+
+  - name: _bronze_batch_id
+    datatype: BIGINT
+    business_definition: ETL batch identifier for lineage tracking
+    nullable: true
+    etl_metadata: true
+
+data_quality_rules:
+  - rule: unique_profile_per_timestamp
+    description: (investment_profile_id, last_modified_ts) must be unique within batch
+    
+  - rule: investment_profile_id_not_null
+    description: investment_profile_id is required
+    
+  - rule: scope_type_consistency
+    description: If scope_type=CUSTOMER_CODE then customer_code must be populated
+    
+  - rule: valid_enumerations
+    description: All enumeration fields should contain valid values (UNKNOWN if unmapped)
+    
+  - rule: suitability_score_range
+    description: suitability_score should be between 0 and 100 if not null
+    
+  - rule: vulnerability_flag_reason_consistency
+    description: If vulnerable_investor_flag=TRUE then vulnerability_reason_code should not be NONE
+    
+  - rule: complex_product_acknowledgement_consistency
+    description: If complex_product_allowed=TRUE then complex_product_acknowledged_flag should be TRUE
+    
+  - rule: margin_agreement_prerequisites
+    description: If margin_agreement_status=ACTIVE then leverage_tolerance should not be NONE
+
+transformation_rules:
+  - Applied by IT (upstream):
+    - TRIM all text fields
+    - Map operational codes to standard enumeration values
+    - Convert dates/timestamps to ISO 8601 format
+    - Calculate suitability scores from questionnaire responses
+    - Determine product eligibility based on risk profile and acknowledgements
+    
+  - Applied by DW (Bronze load):
+    - Add _bronze_load_ts (current timestamp)
+    - Add _bronze_source_file (view identifier)
+    - Add _bronze_batch_id (batch tracking)
+    - NO other transformations (exact mirror)
+
+immutability_policy: |
+  Bronze records are immutable once landed.
+  Never UPDATE or DELETE Bronze records.
+  Append-only pattern for historical audit trail.
+  Composite PK (investment_profile_id, last_modified_ts) ensures temporal history.
+
+retention_policy: 7_years_minimum
+
+indexes:
+  - name: pk_bronze_investment_profile
+    type: primary_key
+    columns: [investment_profile_id, last_modified_ts]
+    description: Composite key for append-only temporal history
+      
+  - name: idx_bronze_investment_lookup
+    type: non_unique
+    columns: [investment_profile_id]
+    description: Fast lookup by investment profile (all versions)
+    
+  - name: idx_bronze_investment_customer
+    type: non_unique
+    columns: [customer_id]
+    description: Fast lookup by customer
+    
+  - name: idx_bronze_investment_load_ts
+    type: non_unique
+    columns: [_bronze_load_ts]
+    description: Query by load timestamp
+    
+  - name: idx_bronze_investment_batch_id
+    type: non_unique
+    columns: [_bronze_batch_id]
+    description: Query by batch
+
+pii_policy:
+  columns_raw_pii: []
+  columns_pseudonymous:
+    - investment_profile_id (indirectly identifies customer)
+    - customer_id
+    - customer_code
+  access_control:
+    - role: dw_etl_service
+      access: read_write
+    - role: dw_privileged
+      access: read_only
+    - role: dw_analyst
+      access: read_only
+  retention_policy: 7_years_after_relationship_end
+  notes: |
+    Investment profile data contains sensitive financial suitability information.
+    Vulnerability classification and compliance flags require appropriate access controls.
+
+sample_rows:
+  - investment_profile_id: "IP-CODE-111111"
+    scope_type: "CUSTOMER_CODE"
+    customer_id: "12345"
+    customer_code: "111111"
+    risk_level_code: "BALANCED"
+    suitability_score: 76
+    ability_to_bear_loss_tier: "MODERATE"
+    investment_objective_category: "INCOME"
+    investment_time_horizon: "MEDIUM_TERM"
+    liquidity_need_level: "MEDIUM"
+    investment_experience_years: 4
+    high_net_worth_status_code: "NONE"
+    kyc_status: "VERIFIED"
+    kyc_risk_rating: "LOW"
+    aml_risk_rating: "LOW"
+    pep_flag: false
+    sanction_screening_status: "CLEAR"
+    fatca_status: "NOT_APPLICABLE"
+    investor_category: "RETAIL"
+    source_of_wealth_code: "EMPLOYMENT_SALARY"
+    complex_product_acknowledged_flag: false
+    derivative_risk_acknowledged_flag: true
+    fx_risk_acknowledged_flag: true
+    complex_product_allowed: false
+    ipo_participation_allowed: true
+    margin_agreement_status: "NOT_SIGNED"
+    leverage_tolerance: "LIMITED"
+    advisory_discretion_flag: false
+    vulnerable_investor_flag: true
+    vulnerability_reason_code: "LOW_FINANCIAL_LITERACY"
+    vulnerability_assessment_ts: "2025-11-18T09:30:00Z"
+    review_cycle: "SEMI_ANNUAL"
+    next_review_due_ts: "2026-05-18T00:00:00Z"
+    last_risk_review_ts: "2025-11-19T07:30:00Z"
+    last_modified_ts: "2025-11-19T07:30:00Z"
+    _bronze_load_ts: "2025-11-19T08:00:00Z"
+    _bronze_source_file: "opdb.vw_investment_profile_standardized"
+    _bronze_batch_id: 20251119001
+
+version: 1.0
+last_updated: 2025-01-05
+owner: Data Warehouse Team
+upstream_owner: IT Department
+thailand_regulatory_alignment: |
+  This schema aligns with Thailand regulatory requirements including:
+  - SEC suitability assessment standards
+  - SET member firm KYC/AML requirements
+  - Bank of Thailand customer due diligence guidelines
+  - AMLO anti-money laundering regulations
+  - FATCA compliance for Thai financial institutions
+  - Vulnerable investor protection provisions
