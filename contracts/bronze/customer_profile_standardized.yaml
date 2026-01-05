@@ -82,7 +82,7 @@ attributes:
     source_field: person_title
 
   - name: person_title_other
-    datatype: VARCHAR(200)
+    datatype: VARCHAR(500)
     business_definition: Freetext title when person_title=OTHER
     nullable: true
     population_rule: Populated by IT only when person_title='OTHER'
@@ -97,7 +97,7 @@ attributes:
     source_field: marital_status
 
   - name: nationality
-    datatype: VARCHAR(2)
+    datatype: VARCHAR(50)
     business_definition: Nationality enumeration code - ISO 3166-1 alpha-2 (mapped by IT)
     nullable: true
     enumeration_ref: enumerations/customer_nationality. yaml
@@ -105,7 +105,7 @@ attributes:
     source_field: nationality
 
   - name: nationality_other
-    datatype: VARCHAR(200)
+    datatype: VARCHAR(500)
     business_definition: Freetext nationality when nationality=OTHER
     nullable: true
     population_rule: Populated by IT only when nationality='OTHER'
@@ -120,7 +120,7 @@ attributes:
     source_field: occupation
 
   - name: occupation_other
-    datatype: VARCHAR(200)
+    datatype: VARCHAR(500)
     business_definition: Freetext occupation when occupation=OTHER
     nullable: true
     population_rule: Populated by IT only when occupation='OTHER'
@@ -135,7 +135,7 @@ attributes:
     source_field: education_level
 
   - name: education_level_other
-    datatype: VARCHAR(200)
+    datatype: VARCHAR(500)
     business_definition: Freetext education when education_level=OTHER
     nullable: true
     population_rule: Populated by IT only when education_level='OTHER'
@@ -150,7 +150,7 @@ attributes:
     source_field: business_type
 
   - name: business_type_other
-    datatype: VARCHAR(200)
+    datatype: VARCHAR(500)
     business_definition: Freetext business type when business_type=OTHER
     nullable: true
     population_rule: Populated by IT only when business_type='OTHER'
@@ -187,7 +187,7 @@ attributes:
     source_field: monthly_income
 
   - name: income_country
-    datatype: VARCHAR(2)
+    datatype: VARCHAR(50)
     business_definition: Country of income origin - ISO 3166-1 alpha-2 (mapped by IT)
     nullable: true
     enumeration_ref: enumerations/customer_income_country.yaml
@@ -195,7 +195,7 @@ attributes:
     source_field: income_country
 
   - name: income_country_other
-    datatype: VARCHAR(200)
+    datatype: VARCHAR(500)
     business_definition: Freetext income country when income_country=OTHER
     nullable: true
     population_rule: Populated by IT only when income_country='OTHER'

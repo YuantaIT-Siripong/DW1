@@ -202,7 +202,7 @@ attributes:
     valid_values: [SINGLE, MARRIED, DIVORCED, WIDOWED, SEPARATED, UNKNOWN]
 
   - name: nationality
-    datatype: VARCHAR(2)
+    datatype: VARCHAR(50)
     business_definition: Nationality enumeration code (ISO 3166-1 alpha-2)
     hash_participation: true
     nullable: true
@@ -261,7 +261,7 @@ attributes:
     valid_values: [INCOME_BAND_1, INCOME_BAND_2, INCOME_BAND_3, INCOME_BAND_4, INCOME_BAND_5, UNKNOWN]
 
   - name: income_country
-    datatype: VARCHAR(2)
+    datatype: VARCHAR(50)
     business_definition: Country of income origin enumeration code (ISO 3166-1 alpha-2)
     hash_participation: true
     nullable: true
@@ -270,7 +270,7 @@ attributes:
 
   # Freetext Fields (Type 1 - NOT versioned, NOT in hash)
   - name: person_title_other
-    datatype: VARCHAR(200)
+    datatype: VARCHAR(500)
     business_definition: Freetext title when person_title = OTHER
     pii: false
     hash_participation: false
@@ -279,7 +279,7 @@ attributes:
     population_rule: "Populate only when person_title = 'OTHER'"
 
   - name: nationality_other
-    datatype: VARCHAR(200)
+    datatype: VARCHAR(500)
     business_definition: Freetext nationality when nationality = OTHER
     pii: false
     hash_participation: false
@@ -288,7 +288,7 @@ attributes:
     population_rule: "Populate only when nationality = 'OTHER'"
 
   - name: occupation_other
-    datatype: VARCHAR(200)
+    datatype: VARCHAR(500)
     business_definition: Freetext occupation when occupation = OTHER
     pii: false
     hash_participation: false
@@ -297,7 +297,7 @@ attributes:
     population_rule: "Populate only when occupation = 'OTHER'"
 
   - name: education_level_other
-    datatype: VARCHAR(200)
+    datatype: VARCHAR(500)
     business_definition: Freetext education level when education_level = OTHER
     pii: false
     hash_participation: false
@@ -306,7 +306,7 @@ attributes:
     population_rule: "Populate only when education_level = 'OTHER'"
 
   - name: business_type_other
-    datatype: VARCHAR(200)
+    datatype: VARCHAR(500)
     business_definition: Freetext business type when business_type = OTHER
     pii: false
     hash_participation: false
@@ -315,7 +315,7 @@ attributes:
     population_rule: "Populate only when business_type = 'OTHER'"
 
   - name: income_country_other
-    datatype: VARCHAR(200)
+    datatype: VARCHAR(500)
     business_definition: Freetext income country when income_country = OTHER
     pii: false
     hash_participation: false
