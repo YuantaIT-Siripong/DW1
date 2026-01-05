@@ -410,17 +410,18 @@ attributes:
 
   # Overall Data Quality Score
   - name: data_quality_score
-    datatype: DECIMAL(5,4)
-    business_definition: Overall data quality score (0. 0000 to 1.0000) based on validation flags
+    datatype: NUMERIC(5,2)  # ✅ Changed from DECIMAL(5,4)
+    business_definition: Overall data quality score (0-100) based on validation flags
     nullable: false
-    computed: true
-    default: 0.0000
+    computed:  true
+    default: 0.00
     computation_logic: |
-      Count of TRUE validation flags / Total validation flags (12)
-      Example: 11 TRUE flags out of 12 = 0.9167
+      (Count of TRUE validation flags / Total validation flags) * 100
+      Range: 0.00 to 100.00
+      Example: 11 TRUE flags out of 12 = 91.67
 
   # Silver Metadata
-  - name: _silver_processed_ts
+  - name: _silver_load_ts
     datatype: TIMESTAMP
     business_definition: UTC timestamp when record was processed into Silver
     nullable: false
