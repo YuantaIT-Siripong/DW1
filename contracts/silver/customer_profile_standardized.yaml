@@ -2,7 +2,7 @@ entity_name: customer_profile_standardized
 domain: customer
 table_type: cleansed
 layer: silver
-grain_description: One record per customer with cleaned, validated, and enriched data.  Adds computed hashes for change detection and data quality flags.  Still flat table (not dimensional model yet). 
+grain_description: One record per customer per last_modified_ts with cleaned, validated, and enriched data.  Append-only pattern preserves history with computed hashes.  Still flat table (not dimensional model yet).
 
 upstream_source:
   layer: bronze
@@ -11,7 +11,8 @@ upstream_source:
 
 primary_keys:
   - customer_id
-
+  - last_modified_ts
+  
 natural_keys:
   - customer_id
 
@@ -227,9 +228,10 @@ attributes:
 
   # IT Source Metadata (passthrough)
   - name: last_modified_ts
-    datatype: TIMESTAMP
-    business_definition: Last modified timestamp from operational system
-    nullable: true
+    datatype:  TIMESTAMP
+    business_definition: Last modified timestamp from operational system (part of composite PK)
+    nullable: false
+    primary_key: true
     source_field: last_modified_ts
 
   # Bronze Metadata (passthrough)
@@ -495,11 +497,16 @@ attributes:
       ELSIF data_quality_score < 70.00 THEN 'MULTIPLE_ISSUES'
       ELSE 'INVALID_ENUMERATION'
 
-materialization_strategy:
+materialization_strategy: 
   approach: table
   reason: Computed hashes and DQ flags are expensive to calculate on-the-fly
-  refresh_pattern: incremental_based_on_bronze_load_ts
+  refresh_pattern:  incremental_based_on_bronze_load_ts
   partitioning: optional_by_bronze_load_ts_date
+  append_only: true
+  note: |
+    Append-only pattern preserves cleaned historical data with computed profile_hash. 
+    Enables Gold layer to rebuild SCD2 versions without reprocessing from Bronze.
+    Use (customer_id, last_modified_ts) as unique_key in dbt incremental config.
 
 data_quality_rules:
   - rule:  unique_customer_id
@@ -554,7 +561,13 @@ transformation_summary:
 indexes:
   - name: pk_silver_customer_profile
     type: primary_key
+    columns: [customer_id, last_modified_ts]
+    description:  Composite key for append-only pattern with temporal tracking
+    
+  - name: idx_silver_customer_lookup
+    type: non_unique
     columns: [customer_id]
+    description: Fast lookup by customer (all versions)
     
   - name: idx_silver_profile_hash
     type: non_unique
@@ -640,3 +653,9 @@ sample_rows:
 version: 1.0
 last_updated: 2025-12-01
 owner: Data Warehouse Team
+notes:  |
+  - Silver layer uses append-only pattern (same as Bronze) to preserve cleaned historical data
+  - Composite PK (customer_id, last_modified_ts) allows multiple versions per customer
+  - Latest version per customer can be queried using:  MAX(last_modified_ts) GROUP BY customer_id
+  - This pattern enables Gold layer rebuild without recomputing expensive hashes from Bronze
+  - SCD2 logic (version management, effective dates) happens in Gold layer only
