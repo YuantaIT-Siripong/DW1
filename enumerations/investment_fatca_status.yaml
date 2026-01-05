@@ -50,7 +50,7 @@ values:
 notes: |
   - Thailand financial institutions must comply with FATCA reporting
   - Thai government has FATCA IGA (Intergovernmental Agreement) with U.S.
-  - Banks (SCB, etc.) and brokerages must identify U.S. persons
+  - Banks and brokerages must identify U.S. persons
   - U.S. indicia: U.S. birth place, U.S. address, U.S. phone, U.S. power of attorney
   - W-9 form required from U.S. persons for FATCA compliance
   - W-8BEN form required from non-U.S. persons with U.S. investments

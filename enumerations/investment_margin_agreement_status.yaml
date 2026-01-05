@@ -77,7 +77,7 @@ notes: |
   - Brokerage firms (SET members) must maintain margin monitoring systems
   - ACTIVE status requires ongoing compliance with margin requirements
   - Vulnerable investors cannot have ACTIVE margin status
-  - SCB Securities and other brokers enforce consistent margin policies
+  - Brokerage firms enforce consistent margin policies
   - Status changes trigger client notifications and system updates
   
 validation_rules:

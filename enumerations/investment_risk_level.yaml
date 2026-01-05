@@ -46,7 +46,7 @@ notes: |
   - Used in suitability calculations and investment recommendations
   - Risk level determines product eligibility and trading limits
   - Thailand SEC requires documented risk assessment for complex products
-  - Brokerage firms (SCB Securities, etc.) use this for client segmentation
+  - Brokerage firms Brokerage firms use this for client segmentation
 
 validation_rules:
   - Risk level must be assessed before complex product access

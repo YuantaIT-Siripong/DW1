@@ -73,7 +73,7 @@ notes: |
   - Brokerage firms schedule reviews based on risk-based approach
   - Next review due date calculated from last review date + cycle frequency
   - Overdue reviews trigger notifications and potential restrictions
-  - SCB and other institutions maintain review calendars and workflows
+  - Major financial institutions and other institutions maintain review calendars and workflows
   
 validation_rules:
   - Vulnerable investor flag=TRUE requires SEMI_ANNUAL or more frequent

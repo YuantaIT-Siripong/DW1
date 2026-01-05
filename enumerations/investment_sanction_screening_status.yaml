@@ -61,7 +61,7 @@ notes: |
   - Sanctions lists include: SDN (Specially Designated Nationals), PEP lists
   - Screening covers individual names, entities, addresses, identification numbers
   - Name matching algorithms consider phonetic similarity and transliteration
-  - SCB and major banks use automated sanctions screening systems
+  - Major banks use automated sanctions screening systems
   - Positive match requires immediate transaction block and regulatory reporting
   - False positive resolution documented and retained
   
