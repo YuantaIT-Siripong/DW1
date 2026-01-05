@@ -1,0 +1,85 @@
+# Leverage Tolerance Enumeration
+# Domain: Investment Profile
+# Description: Customer tolerance and preference for leveraged positions
+
+enumeration_name: investment_leverage_tolerance
+domain: investment
+description: Customer's tolerance, preference, and limit for leveraged trading positions
+version: 1.0
+last_updated: 2025-01-05
+
+values:
+  - code: NONE
+    description: No leverage desired, cash positions only
+    sort_order: 1
+    thailand_context: Conservative investors, cash trading only
+    max_leverage_ratio: 1.0
+    implications: No margin trading, no derivatives with leverage
+    
+  - code: LIMITED
+    description: Limited leverage for specific opportunities only
+    sort_order: 2
+    thailand_context: Occasional margin use, controlled leverage
+    max_leverage_ratio: 1.5
+    typical_use_cases: Short-term opportunities, hedging, limited margin
+    
+  - code: MODERATE
+    description: Moderate leverage comfort within risk parameters
+    sort_order: 3
+    thailand_context: Regular margin trading, balanced approach
+    max_leverage_ratio: 2.0
+    typical_use_cases: Margin trading, basic derivatives, portfolio optimization
+    
+  - code: HIGH
+    description: High leverage tolerance for aggressive strategies
+    sort_order: 4
+    thailand_context: Active traders, sophisticated investors
+    max_leverage_ratio: 3.0
+    typical_use_cases: Active trading, derivatives, complex strategies
+    prerequisites: Strong ability to bear loss, investment experience
+    
+  - code: VERY_HIGH
+    description: Very high leverage tolerance for professional strategies
+    sort_order: 5
+    thailand_context: Professional traders, institutional strategies
+    max_leverage_ratio: 4.0+
+    typical_use_cases: Professional trading, hedge strategies, alternative investments
+    prerequisites: |
+      - Investor category: PROFESSIONAL, INSTITUTIONAL, or ULTRA_HIGH_NET_WORTH
+      - Ability to bear loss: HIGH or VERY_HIGH
+      - Extensive investment experience
+      - Enhanced risk disclosure acknowledged
+    
+  - code: UNKNOWN
+    description: Leverage tolerance not yet assessed
+    sort_order: 99
+    thailand_context: Pending risk assessment
+
+notes: |
+  - Leverage ratio represents maximum debt-to-equity ratio permitted
+  - Thailand SEC and SET enforce leverage limits by investor category
+  - RETAIL investors subject to lower maximum leverage than HNW/PROFESSIONAL
+  - Leverage tolerance must align with ability to bear loss
+  - Margin maintenance requirements vary by leverage level
+  - Brokerage firms may apply more conservative limits than regulatory maximum
+  - Leverage tolerance reassessed periodically or on risk profile changes
+  - SCB and other brokers enforce leverage limits in trading systems
+  - Derivative positions have separate leverage considerations
+  - Market volatility may trigger temporary leverage restriction
+  
+validation_rules:
+  - Leverage tolerance must align with ability to bear loss tier
+  - HIGH/VERY_HIGH requires ability to bear loss ≥ HIGH
+  - VERY_HIGH typically requires PROFESSIONAL or INSTITUTIONAL category
+  - NONE tolerance required if vulnerable investor flag = TRUE (most cases)
+  - Margin agreement status must be ACTIVE if leverage tolerance > NONE
+  - Leverage limits enforced at transaction level by trading systems
+  - Changes require updated risk acknowledgment
+  - Maximum leverage ratio subject to regulatory limits
+  
+regulatory_references:
+  - Thailand SEC leverage and margin regulations
+  - SET margin requirements and leverage limits
+  - Securities and Exchange Act B.E. 2535
+  - SET member firm risk management standards
+  - Margin call and forced liquidation procedures

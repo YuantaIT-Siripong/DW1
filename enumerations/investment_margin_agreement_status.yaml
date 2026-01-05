@@ -1,0 +1,99 @@
+# Margin Agreement Status Enumeration
+# Domain: Investment Profile
+# Description: Margin trading agreement lifecycle status
+
+enumeration_name: investment_margin_agreement_status
+domain: investment
+description: Status of margin trading agreement governing leveraged trading capability
+version: 1.0
+last_updated: 2025-01-05
+
+values:
+  - code: NOT_ELIGIBLE
+    description: Customer not eligible for margin trading
+    sort_order: 1
+    thailand_context: Risk profile or regulatory restrictions prevent margin access
+    implications: No leverage permitted, cash trading only
+    
+  - code: NOT_SIGNED
+    description: Eligible but margin agreement not yet signed
+    sort_order: 2
+    thailand_context: Eligible but customer has not executed margin agreement
+    implications: Cash trading only until agreement signed
+    
+  - code: PENDING_APPROVAL
+    description: Margin agreement submitted, awaiting compliance approval
+    sort_order: 3
+    thailand_context: Under review by risk and compliance teams
+    implications: Cash trading only during review
+    
+  - code: ACTIVE
+    description: Margin agreement approved and active
+    sort_order: 4
+    thailand_context: Margin trading permitted within approved limits
+    implications: Leverage available per margin limits
+    prerequisites: |
+      - KYC status = VERIFIED
+      - Ability to bear loss ≥ MODERATE
+      - Vulnerable investor flag = FALSE
+      - Leverage tolerance ≠ NONE
+      - Margin limit established
+    
+  - code: SUSPENDED
+    description: Margin agreement temporarily suspended
+    sort_order: 5
+    thailand_context: Temporary suspension due to risk or compliance concerns
+    implications: Reduce positions only, no new margin trades
+    common_reasons: Margin call unmet, AML concerns, policy violations
+    
+  - code: INACTIVE
+    description: Margin agreement signed but currently inactive
+    sort_order: 6
+    thailand_context: Customer choice or risk reassessment made account inactive
+    implications: Can be reactivated upon request and approval
+    
+  - code: TERMINATED
+    description: Margin agreement permanently terminated
+    sort_order: 7
+    thailand_context: Customer request or firm termination for policy violations
+    implications: Cannot be reactivated without new application
+    
+  - code: EXPIRED
+    description: Margin agreement expired, renewal required
+    sort_order: 8
+    thailand_context: Periodic renewal required per regulatory requirements
+    implications: Cash trading only until renewal completed
+    
+  - code: UNKNOWN
+    description: Margin agreement status not determined
+    sort_order: 99
+    thailand_context: Legacy data or status not yet established
+
+notes: |
+  - Thailand SET and SEC regulations govern margin trading requirements
+  - Margin requirements vary by security type and market conditions
+  - Maintenance margin ratio enforced (typically 25-30% for equities)
+  - Margin call procedures mandated by regulations
+  - Brokerage firms (SET members) must maintain margin monitoring systems
+  - ACTIVE status requires ongoing compliance with margin requirements
+  - Vulnerable investors cannot have ACTIVE margin status
+  - SCB Securities and other brokers enforce consistent margin policies
+  - Status changes trigger client notifications and system updates
+  
+validation_rules:
+  - ACTIVE status requires KYC_STATUS = VERIFIED
+  - ACTIVE status requires ABILITY_TO_BEAR_LOSS ≥ MODERATE
+  - ACTIVE status requires VULNERABLE_INVESTOR_FLAG = FALSE
+  - ACTIVE status requires LEVERAGE_TOLERANCE ≠ NONE
+  - SUSPENDED status requires documented suspension reason
+  - TERMINATED status requires documented termination reason
+  - EXPIRED status triggers automatic restriction to cash trading
+  - Margin call issuance tracked separately in transaction history
+  - Transition to ACTIVE requires risk and compliance approval
+  
+regulatory_references:
+  - Thailand SEC margin trading regulations
+  - SET Regulations on Margin Lending
+  - Securities and Exchange Act B.E. 2535 (margin provisions)
+  - SET member firm margin requirements
+  - Risk management standards for margin accounts

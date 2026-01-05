@@ -1,0 +1,55 @@
+# KYC Risk Rating Enumeration
+# Domain: Investment Profile
+# Description: KYC risk rating for customer due diligence
+
+enumeration_name: investment_kyc_risk_rating
+domain: investment
+description: Risk rating assigned based on KYC assessment for customer due diligence and monitoring intensity
+version: 1.0
+last_updated: 2025-01-05
+
+values:
+  - code: LOW
+    description: Low KYC risk, standard monitoring, typical retail investor
+    sort_order: 1
+    thailand_context: Local resident, verified income, no adverse findings
+    monitoring: Standard periodic review
+    
+  - code: MEDIUM
+    description: Medium KYC risk, enhanced monitoring, some risk factors present
+    sort_order: 2
+    thailand_context: Foreign nationals, complex business structures, higher transactions
+    monitoring: Enhanced due diligence, quarterly review
+    
+  - code: HIGH
+    description: High KYC risk, intensive monitoring, multiple risk factors
+    sort_order: 3
+    thailand_context: PEP, cross-border complexity, high-value transactions
+    monitoring: Continuous monitoring, senior management approval required
+    
+  - code: UNKNOWN
+    description: KYC risk not yet assessed or determined
+    sort_order: 99
+    thailand_context: Pending KYC completion or risk assessment
+
+notes: |
+  - Risk rating determines monitoring intensity and approval levels
+  - Thailand AML regulations require risk-based approach to CDD
+  - HIGH risk requires senior management approval for onboarding
+  - Rating considers: geography, PEP status, business complexity, transaction patterns
+  - Banks (SCB, etc.) and brokerages apply consistent risk rating methodology
+  - Re-assessment required on material changes or periodic review
+  - Influences transaction monitoring thresholds and STR triggers
+  
+validation_rules:
+  - HIGH risk requires documented senior management approval
+  - Risk rating must be current (reassessed periodically)
+  - MEDIUM/HIGH risk requires enhanced due diligence documentation
+  - Rating influences AML transaction monitoring parameters
+  - PEP flag typically drives MEDIUM or HIGH rating
+  
+regulatory_references:
+  - Thailand Anti-Money Laundering Office (AMLO) guidelines
+  - SEC risk-based approach to KYC/CDD
+  - Bank of Thailand CDD and risk assessment standards
+  - FATF recommendations on risk-based approach

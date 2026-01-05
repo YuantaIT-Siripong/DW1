@@ -1,0 +1,63 @@
+# Investment Ability to Bear Loss Enumeration
+# Domain: Investment Profile
+# Description: Financial capacity to absorb investment losses
+
+enumeration_name: investment_ability_to_bear_loss
+domain: investment
+description: Client's financial capacity and ability to absorb potential investment losses without significant impact
+version: 1.0
+last_updated: 2025-01-05
+
+values:
+  - code: VERY_LOW
+    description: Cannot afford any losses, extremely limited financial buffer
+    sort_order: 1
+    thailand_context: Restrict to capital-protected products, government securities
+    
+  - code: LOW
+    description: Limited ability to absorb losses, minimal financial cushion
+    sort_order: 2
+    thailand_context: Conservative funds, minimal equity exposure, no margin
+    implications: Margin agreement prohibited, complex products restricted
+    
+  - code: MODERATE
+    description: Can absorb moderate losses without significant financial impact
+    sort_order: 3
+    thailand_context: Balanced portfolios, limited derivatives, controlled leverage
+    
+  - code: HIGH
+    description: Strong ability to absorb losses, substantial financial resources
+    sort_order: 4
+    thailand_context: Growth portfolios, derivatives, margin trading permitted
+    
+  - code: VERY_HIGH
+    description: Exceptional capacity to absorb losses, extensive financial resources
+    sort_order: 5
+    thailand_context: High-risk products, significant leverage, alternative investments
+    thailand_hni_status: Typically correlates with High Net Worth or Ultra High Net Worth
+    
+  - code: UNKNOWN
+    description: Ability to bear loss not yet assessed or determined
+    sort_order: 99
+    thailand_context: Requires financial assessment before product access
+
+notes: |
+  - Critical factor for leverage and margin eligibility
+  - LOW or VERY_LOW prevents margin agreement activation
+  - Assessed based on income, assets, liabilities, financial obligations
+  - Thailand regulations require documented ability to bear loss for complex products
+  - SEC and brokerage standards mandate periodic reassessment
+  - Vulnerable investor classification considers this factor
+  
+validation_rules:
+  - Margin agreement status cannot be ACTIVE if ability is LOW or VERY_LOW
+  - Complex product eligibility requires at least MODERATE ability
+  - Derivative trading typically requires MODERATE or better
+  - Vulnerable investor flag may be set if ability is VERY_LOW with high-risk products
+  - Should align with income level, net worth, and investment experience
+  
+regulatory_references:
+  - Thailand SEC suitability and investor protection standards
+  - SET member firm leverage and margin requirements
+  - Banking and securities firm risk assessment guidelines
+  - Investor protection regulations (vulnerable investor provisions)

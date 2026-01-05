@@ -1,0 +1,60 @@
+# AML Risk Rating Enumeration
+# Domain: Investment Profile
+# Description: Anti-Money Laundering risk rating for transaction monitoring
+
+enumeration_name: investment_aml_risk_rating
+domain: investment
+description: AML risk rating for anti-money laundering compliance and transaction monitoring intensity
+version: 1.0
+last_updated: 2025-01-05
+
+values:
+  - code: LOW
+    description: Low AML risk, standard transaction monitoring
+    sort_order: 1
+    thailand_context: Domestic transactions, verified legitimate sources, no red flags
+    monitoring: Standard automated monitoring, routine STR screening
+    
+  - code: MEDIUM
+    description: Medium AML risk, enhanced transaction monitoring required
+    sort_order: 2
+    thailand_context: Cross-border transactions, cash-intensive business, moderate alerts
+    monitoring: Enhanced monitoring, manual review of large transactions
+    
+  - code: HIGH
+    description: High AML risk, intensive monitoring and approval required
+    sort_order: 3
+    thailand_context: High-risk jurisdiction, PEP, sanctions concerns, complex structures
+    monitoring: Real-time monitoring, all transactions reviewed, compliance approval
+    implications: Senior management oversight, potential account restrictions
+    
+  - code: UNKNOWN
+    description: AML risk not yet assessed or determined
+    sort_order: 99
+    thailand_context: Pending AML assessment or data migration
+
+notes: |
+  - Critical for compliance with Thailand AML regulations
+  - Rating drives transaction monitoring rules and alert thresholds
+  - HIGH rating may result in enhanced due diligence and restrictions
+  - Considers: jurisdiction risk, PEP status, transaction patterns, sanctions exposure
+  - Thailand AMLO requires risk-based AML controls
+  - Banks and brokerages integrate AML rating into transaction systems
+  - Suspicious Transaction Report (STR) thresholds vary by rating
+  - Periodic reassessment required, especially on suspicious activity
+  
+validation_rules:
+  - HIGH rating requires documented compliance approval for transactions
+  - Rating must be supported by documented risk assessment
+  - Sanctions screening findings typically drive HIGH rating
+  - PEP status often results in MEDIUM or HIGH rating
+  - Large cash transactions trigger enhanced monitoring for MEDIUM/HIGH
+  - Rating influences customer relationship continuation decisions
+  
+regulatory_references:
+  - Thailand Anti-Money Laundering Act B.E. 2542 and amendments
+  - AMLO transaction monitoring and reporting requirements
+  - SEC AML compliance standards for securities firms
+  - Bank of Thailand AML guidelines
+  - FATF 40 Recommendations
+  - UN Security Council sanctions compliance

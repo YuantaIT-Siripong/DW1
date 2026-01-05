@@ -1,0 +1,87 @@
+# High Net Worth Status Enumeration
+# Domain: Investment Profile
+# Description: High net worth classification for client segmentation
+
+enumeration_name: investment_high_net_worth_status
+domain: investment
+description: High net worth status classification for client segmentation and product eligibility
+version: 1.0
+last_updated: 2025-01-05
+
+values:
+  - code: NONE
+    description: Not classified as high net worth
+    sort_order: 1
+    thailand_context: Standard retail investor
+    
+  - code: EMERGING
+    description: Emerging affluent, approaching HNW thresholds
+    sort_order: 2
+    thailand_context: Assets 10M-30M THB, transitioning to HNW segment
+    typical_assets_thb: 10M - 30M
+    service_level: Enhanced retail services
+    
+  - code: HIGH_NET_WORTH
+    description: High Net Worth individual
+    sort_order: 3
+    thailand_context: Meets SEC HNW criteria
+    typical_assets_thb: 30M - 100M
+    eligibility_criteria: Total assets ≥ 30M THB or annual income ≥ 3M THB
+    service_level: Private banking, relationship manager
+    product_access: Broader product range, private placements
+    
+  - code: VERY_HIGH_NET_WORTH
+    description: Very High Net Worth individual
+    sort_order: 4
+    thailand_context: Substantial wealth, enhanced services
+    typical_assets_thb: 100M - 500M
+    service_level: Dedicated private banking team
+    product_access: Alternative investments, structured products
+    
+  - code: ULTRA_HIGH_NET_WORTH
+    description: Ultra High Net Worth individual
+    sort_order: 5
+    thailand_context: Top tier wealth segment
+    typical_assets_thb: 500M+
+    eligibility_criteria: Total assets ≥ 500M THB (some institutions use 100M threshold)
+    service_level: Premium private banking, family office services
+    product_access: Full product universe, bespoke solutions
+    
+  - code: INSTITUTIONAL
+    description: Institutional level assets
+    sort_order: 6
+    thailand_context: Corporate, foundation, or institutional investor
+    service_level: Institutional services, dedicated coverage
+    
+  - code: UNKNOWN
+    description: Net worth status not yet determined
+    sort_order: 99
+    thailand_context: Pending wealth verification
+
+notes: |
+  - Thailand SEC defines HNW as assets ≥ 30M THB or income ≥ 3M THB
+  - SCB Private Banking typically serves HNW segment (30M+ THB)
+  - UHNW threshold varies by institution (100M-500M THB)
+  - Status determines service level, product access, and pricing
+  - Verification requires documented assets: bank statements, property valuations, investment portfolios
+  - Periodic re-verification required (annual or biennial)
+  - Status influences investor category classification
+  - Private banking services typically start at HNW level
+  - Alternative investments, hedge funds require HNW or UHNW status
+  - Family office services typically for UHNW segment
+  
+validation_rules:
+  - HIGH_NET_WORTH requires verified assets ≥ 30M THB or income ≥ 3M THB
+  - VERY_HIGH_NET_WORTH requires verified assets ≥ 100M THB
+  - ULTRA_HIGH_NET_WORTH requires verified assets ≥ 500M THB (institution-specific)
+  - Documentation must be current (within 12 months)
+  - Status should align with investor_category (HNW typically maps to HNW investor category)
+  - Asset calculation includes: cash, securities, property, business equity
+  - Liabilities may be considered for net worth calculation
+  - Status change requires updated documentation and approval
+  
+regulatory_references:
+  - Thailand SEC Notification on HNW Investor Definition
+  - SEC Private Placement Regulations (HNW investor requirements)
+  - Alternative Investment Fund Regulations
+  - Private banking service standards
