@@ -1,0 +1,559 @@
+entity_name: dim_investment_profile
+domain: investment
+table_type: dimension
+layer: gold
+scd_type: 2
+grain_description: One record per historical profile version of an investment profile. Each version identified by investment_profile_version_sk (surrogate key). One investment_profile_id may have multiple versions over time.
+
+primary_keys:
+  - investment_profile_version_sk
+
+natural_keys:
+  - investment_profile_id
+
+business_keys:
+  - investment_profile_id
+  - version_num
+
+surrogate_keys:
+  - investment_profile_version_sk
+
+upstream_source:
+  layer: silver
+  table_name: silver.investment_profile_standardized
+  transformation_type: scd2_versioning
+
+# Version-driving attributes (Type 2 - changes create new version)
+# All 40 attributes included in profile_hash per ADR-INV-001
+versioning_attributes:
+  - scope_type
+  - customer_id
+  - customer_code
+  - risk_level_code
+  - suitability_score
+  - ability_to_bear_loss_tier
+  - investment_objective_category
+  - investment_time_horizon
+  - liquidity_need_level
+  - investment_experience_years
+  - high_net_worth_status_code
+  - kyc_status
+  - kyc_risk_rating
+  - aml_risk_rating
+  - pep_flag
+  - sanction_screening_status
+  - fatca_status
+  - investor_category
+  - source_of_wealth_code
+  - complex_product_acknowledged_flag
+  - derivative_risk_acknowledged_flag
+  - fx_risk_acknowledged_flag
+  - complex_product_allowed
+  - ipo_participation_allowed
+  - margin_agreement_status
+  - leverage_tolerance
+  - advisory_discretion_flag
+  - vulnerable_investor_flag
+  - vulnerability_reason_code
+  - vulnerability_assessment_ts
+  - review_cycle
+  - next_review_due_ts
+  - last_risk_review_ts
+
+# Type 1 attributes (changes do NOT create new version)
+non_versioning_attributes:
+  - data_quality_score
+  - data_quality_status
+
+# Per ADR-INV-001 and Data Quality Framework
+# data_quality_score and profile_reliability_score are EXCLUDED from SCD2 dimension
+# to prevent spurious versioning when scoring logic is recalibrated.
+# These derived metrics will be computed in future gold layer implementation.
+excluded_derived_metrics:
+  - data_quality_score  # Planned for gold.mart_profile_quality view
+  - profile_reliability_score  # Planned for gold.mart_profile_quality view
+  note: |
+    Per docs/data-quality/framework.md, derived scoring metrics are excluded
+    from SCD2 dimensions. Scores remain reproducible from base attributes.
+
+hash_spec:
+  algorithm: SHA256
+  ordered_attribute_list:
+    - scope_type
+    - customer_id
+    - customer_code
+    - risk_level_code
+    - suitability_score
+    - ability_to_bear_loss_tier
+    - investment_objective_category
+    - investment_time_horizon
+    - liquidity_need_level
+    - investment_experience_years
+    - high_net_worth_status_code
+    - kyc_status
+    - kyc_risk_rating
+    - aml_risk_rating
+    - pep_flag
+    - sanction_screening_status
+    - fatca_status
+    - investor_category
+    - source_of_wealth_code
+    - complex_product_acknowledged_flag
+    - derivative_risk_acknowledged_flag
+    - fx_risk_acknowledged_flag
+    - complex_product_allowed
+    - ipo_participation_allowed
+    - margin_agreement_status
+    - leverage_tolerance
+    - advisory_discretion_flag
+    - vulnerable_investor_flag
+    - vulnerability_reason_code
+    - vulnerability_assessment_ts
+    - review_cycle
+    - next_review_due_ts
+    - last_risk_review_ts
+  normalization:
+    scope_type: UPPER(TRIM)
+    customer_id: TRIM
+    customer_code: TRIM
+    risk_level_code: UPPER(TRIM)
+    suitability_score: numeric
+    ability_to_bear_loss_tier: UPPER(TRIM)
+    investment_objective_category: UPPER(TRIM)
+    investment_time_horizon: UPPER(TRIM)
+    liquidity_need_level: UPPER(TRIM)
+    investment_experience_years: numeric
+    high_net_worth_status_code: UPPER(TRIM)
+    kyc_status: UPPER(TRIM)
+    kyc_risk_rating: UPPER(TRIM)
+    aml_risk_rating: UPPER(TRIM)
+    pep_flag: boolean
+    sanction_screening_status: UPPER(TRIM)
+    fatca_status: UPPER(TRIM)
+    investor_category: UPPER(TRIM)
+    source_of_wealth_code: UPPER(TRIM)
+    complex_product_acknowledged_flag: boolean
+    derivative_risk_acknowledged_flag: boolean
+    fx_risk_acknowledged_flag: boolean
+    complex_product_allowed: boolean
+    ipo_participation_allowed: boolean
+    margin_agreement_status: UPPER(TRIM)
+    leverage_tolerance: UPPER(TRIM)
+    advisory_discretion_flag: boolean
+    vulnerable_investor_flag: boolean
+    vulnerability_reason_code: UPPER(TRIM)
+    vulnerability_assessment_ts: ISO8601
+    review_cycle: UPPER(TRIM)
+    next_review_due_ts: ISO8601
+    last_risk_review_ts: ISO8601
+  delimiter: "|"
+  null_token: "__NULL__"
+
+attributes:
+  # Surrogate Key
+  - name: investment_profile_version_sk
+    datatype: BIGINT
+    business_definition: Surrogate key for investment profile version (globally unique across all versions)
+    nullable: false
+    primary_key: true
+    scd_role: surrogate_key
+
+  # Natural Key & Scope
+  - name: investment_profile_id
+    datatype: VARCHAR(100)
+    business_definition: Stable investment profile identifier
+    nullable: false
+    scd_role: natural_key
+
+  - name: scope_type
+    datatype: VARCHAR(20)
+    business_definition: Profile scope (CUSTOMER baseline or CUSTOMER_CODE override)
+    nullable: false
+    scd_role: versioned_attribute
+    enumeration_ref: N/A (fixed values)
+    valid_values: [CUSTOMER, CUSTOMER_CODE]
+
+  - name: customer_id
+    datatype: VARCHAR(50)
+    business_definition: Customer identifier reference
+    nullable: false
+    scd_role: versioned_attribute
+
+  - name: customer_code
+    datatype: VARCHAR(50)
+    business_definition: Customer code (when scope=CUSTOMER_CODE)
+    nullable: true
+    scd_role: versioned_attribute
+
+  # Risk & Suitability (versioned)
+  - name: risk_level_code
+    datatype: VARCHAR(50)
+    business_definition: Risk appetite level
+    nullable: true
+    scd_role: versioned_attribute
+    enumeration_ref: enumerations/investment_risk_level.yaml
+
+  - name: suitability_score
+    datatype: NUMERIC(5,2)
+    business_definition: Suitability assessment score (0-100)
+    nullable: true
+    scd_role: versioned_attribute
+
+  - name: ability_to_bear_loss_tier
+    datatype: VARCHAR(50)
+    business_definition: Financial capacity to absorb losses
+    nullable: true
+    scd_role: versioned_attribute
+    enumeration_ref: enumerations/investment_ability_to_bear_loss.yaml
+
+  - name: investment_objective_category
+    datatype: VARCHAR(50)
+    business_definition: Primary investment objective
+    nullable: true
+    scd_role: versioned_attribute
+    enumeration_ref: enumerations/investment_objective.yaml
+
+  - name: investment_time_horizon
+    datatype: VARCHAR(50)
+    business_definition: Expected holding period
+    nullable: true
+    scd_role: versioned_attribute
+    enumeration_ref: enumerations/investment_time_horizon.yaml
+
+  - name: liquidity_need_level
+    datatype: VARCHAR(50)
+    business_definition: Liquidity requirement level
+    nullable: true
+    scd_role: versioned_attribute
+    enumeration_ref: enumerations/investment_liquidity_need.yaml
+
+  - name: investment_experience_years
+    datatype: INTEGER
+    business_definition: Years of investment experience
+    nullable: true
+    scd_role: versioned_attribute
+
+  # Regulatory & Compliance (versioned)
+  - name: high_net_worth_status_code
+    datatype: VARCHAR(50)
+    business_definition: HNW classification
+    nullable: true
+    scd_role: versioned_attribute
+    enumeration_ref: enumerations/investment_high_net_worth_status.yaml
+
+  - name: kyc_status
+    datatype: VARCHAR(50)
+    business_definition: KYC verification status
+    nullable: true
+    scd_role: versioned_attribute
+    enumeration_ref: enumerations/investment_kyc_status.yaml
+
+  - name: kyc_risk_rating
+    datatype: VARCHAR(50)
+    business_definition: KYC risk rating
+    nullable: true
+    scd_role: versioned_attribute
+    enumeration_ref: enumerations/investment_kyc_risk_rating.yaml
+
+  - name: aml_risk_rating
+    datatype: VARCHAR(50)
+    business_definition: AML risk rating
+    nullable: true
+    scd_role: versioned_attribute
+    enumeration_ref: enumerations/investment_aml_risk_rating.yaml
+
+  - name: pep_flag
+    datatype: BOOLEAN
+    business_definition: Politically Exposed Person flag
+    nullable: true
+    scd_role: versioned_attribute
+
+  - name: sanction_screening_status
+    datatype: VARCHAR(50)
+    business_definition: Sanction screening result
+    nullable: true
+    scd_role: versioned_attribute
+    enumeration_ref: enumerations/investment_sanction_screening_status.yaml
+
+  - name: fatca_status
+    datatype: VARCHAR(50)
+    business_definition: FATCA compliance status
+    nullable: true
+    scd_role: versioned_attribute
+    enumeration_ref: enumerations/investment_fatca_status.yaml
+
+  - name: investor_category
+    datatype: VARCHAR(50)
+    business_definition: Regulatory investor classification
+    nullable: true
+    scd_role: versioned_attribute
+    enumeration_ref: enumerations/investment_investor_category.yaml
+
+  - name: source_of_wealth_code
+    datatype: VARCHAR(50)
+    business_definition: Primary source of wealth
+    nullable: true
+    scd_role: versioned_attribute
+    enumeration_ref: enumerations/investment_source_of_wealth.yaml
+
+  # Acknowledgement Flags (versioned)
+  - name: complex_product_acknowledged_flag
+    datatype: BOOLEAN
+    business_definition: Complex product risk acknowledged
+    nullable: true
+    scd_role: versioned_attribute
+
+  - name: derivative_risk_acknowledged_flag
+    datatype: BOOLEAN
+    business_definition: Derivative risk acknowledged
+    nullable: true
+    scd_role: versioned_attribute
+
+  - name: fx_risk_acknowledged_flag
+    datatype: BOOLEAN
+    business_definition: FX risk acknowledged
+    nullable: true
+    scd_role: versioned_attribute
+
+  # Product Eligibility (versioned)
+  - name: complex_product_allowed
+    datatype: BOOLEAN
+    business_definition: Complex product access permitted
+    nullable: true
+    scd_role: versioned_attribute
+
+  - name: ipo_participation_allowed
+    datatype: BOOLEAN
+    business_definition: IPO participation permitted
+    nullable: true
+    scd_role: versioned_attribute
+
+  # Margin & Leverage (versioned)
+  - name: margin_agreement_status
+    datatype: VARCHAR(50)
+    business_definition: Margin agreement status
+    nullable: true
+    scd_role: versioned_attribute
+    enumeration_ref: enumerations/investment_margin_agreement_status.yaml
+
+  - name: leverage_tolerance
+    datatype: VARCHAR(50)
+    business_definition: Leverage tolerance level
+    nullable: true
+    scd_role: versioned_attribute
+    enumeration_ref: enumerations/investment_leverage_tolerance.yaml
+
+  # Advisory (versioned)
+  - name: advisory_discretion_flag
+    datatype: BOOLEAN
+    business_definition: Discretionary mandate indicator
+    nullable: true
+    scd_role: versioned_attribute
+
+  # Vulnerability (versioned)
+  - name: vulnerable_investor_flag
+    datatype: BOOLEAN
+    business_definition: Vulnerable investor classification
+    nullable: true
+    scd_role: versioned_attribute
+
+  - name: vulnerability_reason_code
+    datatype: VARCHAR(50)
+    business_definition: Vulnerability reason
+    nullable: true
+    scd_role: versioned_attribute
+    enumeration_ref: enumerations/investment_vulnerability_reason.yaml
+
+  - name: vulnerability_assessment_ts
+    datatype: TIMESTAMP
+    business_definition: Vulnerability assessment timestamp
+    nullable: true
+    scd_role: versioned_attribute
+
+  # Review Scheduling (versioned)
+  - name: review_cycle
+    datatype: VARCHAR(50)
+    business_definition: Periodic review frequency
+    nullable: true
+    scd_role: versioned_attribute
+    enumeration_ref: enumerations/investment_review_cycle.yaml
+
+  - name: next_review_due_ts
+    datatype: TIMESTAMP
+    business_definition: Next scheduled review due
+    nullable: true
+    scd_role: versioned_attribute
+
+  - name: last_risk_review_ts
+    datatype: TIMESTAMP
+    business_definition: Last risk review timestamp
+    nullable: true
+    scd_role: versioned_attribute
+
+  # Change Detection
+  - name: profile_hash
+    datatype: VARCHAR(64)
+    business_definition: SHA256 hash for change detection
+    nullable: false
+    scd_role: change_detection
+    hash_participation: false
+
+  # Data Quality (Type 1 - not versioned)
+  - name: data_quality_score
+    datatype: NUMERIC(5,2)
+    business_definition: Data quality score from Silver (Type 1)
+    nullable: true
+    scd_role: type1_attribute
+    note: Not included in hash, updated in place
+
+  - name: data_quality_status
+    datatype: VARCHAR(20)
+    business_definition: Data quality status from Silver (Type 1)
+    nullable: true
+    scd_role: type1_attribute
+    note: Not included in hash, updated in place
+
+  # SCD2 Version Management
+  - name: version_num
+    datatype: INT
+    business_definition: Sequential version number per investment_profile_id
+    nullable: false
+    scd_role: version_number
+    quality_rules:
+      - version_num > 0
+      - Monotonic increasing per investment_profile_id
+
+  - name: effective_start_ts
+    datatype: TIMESTAMP
+    business_definition: Version start timestamp (UTC, microsecond precision)
+    nullable: false
+    scd_role: effective_from
+
+  - name: effective_end_ts
+    datatype: TIMESTAMP
+    business_definition: Version end timestamp (NULL = current version)
+    nullable: true
+    scd_role: effective_to
+
+  - name: is_current
+    datatype: BOOLEAN
+    business_definition: Current version flag
+    nullable: false
+    scd_role: current_flag
+    quality_rules:
+      - Exactly one TRUE per investment_profile_id
+
+  # ETL Metadata
+  - name: load_ts
+    datatype: TIMESTAMP
+    business_definition: Gold layer load timestamp
+    nullable: false
+    etl_metadata: true
+
+scd2_policy:
+  temporal_precision: microsecond
+  closure_rule: "previous_row.effective_end_ts = new_row.effective_start_ts - 1 microsecond"
+  overlap_policy: disallowed
+  current_flag_policy: exactly_one_per_natural_key
+  reference: contracts/scd2/STANDARD_SCD2_POLICY.md
+
+change_detection_logic: |
+  1. Compute profile_hash for incoming record from Silver
+  2. Compare with latest version's profile_hash for same investment_profile_id
+  3. If different: Create new version
+     - Close previous: effective_end_ts = new_start - 1 microsecond
+     - Set previous is_current = FALSE
+     - Insert new: is_current = TRUE, effective_end_ts = NULL
+     - Increment version_num
+  4. If same: No action (no new version)
+
+data_quality_rules:
+  - rule: no_overlapping_versions
+    description: No overlapping effective intervals per investment_profile_id
+    
+  - rule: exactly_one_current
+    description: Exactly one is_current=TRUE per investment_profile_id
+    
+  - rule: version_sequence
+    description: version_num must be sequential (1, 2, 3...) per investment_profile_id
+    
+  - rule: complex_product_consistency
+    description: If complex_product_allowed=TRUE then complex_product_acknowledged_flag=TRUE
+    
+  - rule: margin_prerequisites
+    description: If margin_agreement_status=ACTIVE then leverage_tolerance!=NONE AND ability_to_bear_loss_tier NOT IN (VERY_LOW, LOW) AND vulnerable_investor_flag!=TRUE
+    
+  - rule: vulnerability_reason_consistency
+    description: If vulnerable_investor_flag=TRUE then vulnerability_reason_code NOT IN (NONE, UNKNOWN)
+    
+  - rule: review_scheduling
+    description: next_review_due_ts > last_risk_review_ts
+
+indexes:
+  - name: pk_dim_investment_profile
+    type: primary_key
+    columns: [investment_profile_version_sk]
+    
+  - name: idx_investment_profile_natural_key
+    type: non_unique
+    columns: [investment_profile_id]
+    description: Fast lookup by natural key (all versions)
+    
+  - name: idx_investment_profile_current
+    type: non_unique
+    columns: [investment_profile_id, is_current]
+    description: Fast lookup of current version
+    
+  - name: idx_investment_profile_customer
+    type: non_unique
+    columns: [customer_id]
+    description: Fast lookup by customer
+    
+  - name: idx_investment_profile_effective
+    type: non_unique
+    columns: [effective_start_ts, effective_end_ts]
+    description: Point-in-time queries
+    
+  - name: idx_investment_profile_hash
+    type: non_unique
+    columns: [profile_hash]
+    description: Support change detection
+
+point_in_time_query_pattern: |
+  -- Current version
+  SELECT * FROM gold.dim_investment_profile
+  WHERE investment_profile_id = :profile_id
+    AND is_current = TRUE;
+  
+  -- Historical (as of timestamp)
+  SELECT * FROM gold.dim_investment_profile
+  WHERE investment_profile_id = :profile_id
+    AND effective_start_ts <= :as_of_ts
+    AND (effective_end_ts IS NULL OR effective_end_ts > :as_of_ts);
+  
+  -- By customer code (with fallback to customer)
+  SELECT * FROM gold.dim_investment_profile
+  WHERE customer_code = :code
+    AND scope_type = 'CUSTOMER_CODE'
+    AND effective_start_ts <= :trade_ts
+    AND (effective_end_ts IS NULL OR effective_end_ts > :trade_ts)
+  ORDER BY effective_start_ts DESC LIMIT 1;
+
+version: 1.0
+last_updated: 2025-01-05
+owner: Data Warehouse Team
+upstream_owner: Data Warehouse ETL
+
+regulatory_alignment: |
+  This dimension aligns with Thailand regulatory requirements including:
+  - SEC suitability assessment and investor protection standards
+  - SET member firm KYC/AML/suitability requirements
+  - Bank of Thailand customer due diligence guidelines
+  - AMLO anti-money laundering regulations
+  - FATCA compliance for Thai financial institutions
+  - Vulnerable investor protection provisions
+  
+  Per ADR-INV-001, this dimension excludes derived scoring metrics
+  (data_quality_score, profile_reliability_score) from version storage
+  to prevent spurious versioning. These metrics will be computed in
+  future gold layer views per docs/data-quality/framework.md
