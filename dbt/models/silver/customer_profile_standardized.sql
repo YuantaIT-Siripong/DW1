@@ -64,56 +64,119 @@ validated AS (
         _bronze_batch_id,
         
         -- ====================================================================
-        -- DATA QUALITY FLAGS (12 flags)
+        -- DATA QUALITY FLAGS (12 flags with OTHER validation)
         -- ====================================================================
         
-        -- Flag 1: person_title validation
-        {{ validate_enumeration('person_title', 'person_title') }} AS dq_person_title_valid,
-        
-        -- Flag 2: person_title_other required when person_title = 'OTHER'
+        -- Flag 1: person_title validation (includes OTHER check)
         CASE 
-            WHEN person_title = 'OTHER' AND person_title_other IS NOT NULL THEN TRUE
-            WHEN person_title != 'OTHER' OR person_title IS NULL THEN TRUE
+            WHEN person_title IS NULL THEN TRUE
+            WHEN person_title = 'OTHER' AND (person_title_other IS NULL OR TRIM(person_title_other) = '') 
+                THEN FALSE
+            WHEN person_title IN ('MR', 'MRS', 'MS', 'MISS', 'DR', 'PROF', 'REV', 'OTHER')
+                THEN TRUE
             ELSE FALSE
-        END AS dq_person_title_other_complete,
+        END AS is_valid_person_title,
         
-        -- Flag 3: marital_status validation
-        {{ validate_enumeration('marital_status', 'marital_status') }} AS dq_marital_status_valid,
-        
-        -- Flag 4: nationality validation
-        {{ validate_enumeration('nationality', 'nationality') }} AS dq_nationality_valid,
-        
-        -- Flag 5: nationality_other required when nationality = 'OTHER'
+        -- Flag 2: marital_status validation (no OTHER option)
         CASE 
-            WHEN nationality = 'OTHER' AND nationality_other IS NOT NULL THEN TRUE
-            WHEN nationality != 'OTHER' OR nationality IS NULL THEN TRUE
+            WHEN marital_status IS NULL THEN TRUE
+            WHEN marital_status IN ('SINGLE', 'MARRIED', 'DIVORCED', 'WIDOWED', 'SEPARATED', 'UNKNOWN')
+                THEN TRUE
             ELSE FALSE
-        END AS dq_nationality_other_complete,
+        END AS is_valid_marital_status,
         
-        -- Flag 6: occupation validation
-        {{ validate_enumeration('occupation', 'occupation') }} AS dq_occupation_valid,
-        
-        -- Flag 7: occupation_other required when occupation = 'OTHER'
+        -- Flag 3: nationality validation (includes OTHER check)
         CASE 
-            WHEN occupation = 'OTHER' AND occupation_other IS NOT NULL THEN TRUE
-            WHEN occupation != 'OTHER' OR occupation IS NULL THEN TRUE
+            WHEN nationality IS NULL THEN TRUE
+            WHEN nationality = 'OTHER' AND (nationality_other IS NULL OR TRIM(nationality_other) = '') 
+                THEN FALSE
+            WHEN LENGTH(nationality) = 2 OR nationality = 'OTHER'
+                THEN TRUE
             ELSE FALSE
-        END AS dq_occupation_other_complete,
+        END AS is_valid_nationality,
         
-        -- Flag 8: education_level validation
-        {{ validate_enumeration('education_level', 'education_level') }} AS dq_education_level_valid,
+        -- Flag 4: occupation validation (includes OTHER check)
+        CASE 
+            WHEN occupation IS NULL THEN TRUE
+            WHEN occupation = 'OTHER' AND (occupation_other IS NULL OR TRIM(occupation_other) = '') 
+                THEN FALSE
+            WHEN occupation IN ('EMPLOYEE', 'SELF_EMPLOYED', 'BUSINESS_OWNER', 'GOVERNMENT_OFFICER', 
+                               'PROFESSIONAL', 'RETIRED', 'STUDENT', 'HOMEMAKER', 'UNEMPLOYED', 'OTHER', 'UNKNOWN')
+                THEN TRUE
+            ELSE FALSE
+        END AS is_valid_occupation,
         
-        -- Flag 9: business_type validation
-        {{ validate_enumeration('business_type', 'business_type') }} AS dq_business_type_valid,
+        -- Flag 5: education_level validation (includes OTHER check)
+        CASE 
+            WHEN education_level IS NULL THEN TRUE
+            WHEN education_level = 'OTHER' AND (education_level_other IS NULL OR TRIM(education_level_other) = '') 
+                THEN FALSE
+            WHEN education_level IN ('PRIMARY', 'SECONDARY', 'VOCATIONAL', 'DIPLOMA', 'BACHELOR', 
+                                    'MASTER', 'DOCTORATE', 'OTHER', 'UNKNOWN')
+                THEN TRUE
+            ELSE FALSE
+        END AS is_valid_education_level,
         
-        -- Flag 10: total_asset validation
-        {{ validate_enumeration('total_asset', 'total_asset_bands') }} AS dq_total_asset_valid,
+        -- Flag 6: business_type validation (includes OTHER check)
+        CASE 
+            WHEN business_type IS NULL THEN TRUE
+            WHEN business_type = 'OTHER' AND (business_type_other IS NULL OR TRIM(business_type_other) = '') 
+                THEN FALSE
+            WHEN business_type IN ('FINANCE', 'MANUFACTURING', 'RETAIL', 'SERVICES', 'AGRICULTURE', 
+                                  'TECHNOLOGY', 'HEALTHCARE', 'EDUCATION', 'CONSTRUCTION', 'HOSPITALITY', 
+                                  'TRANSPORTATION', 'ENERGY', 'MEDIA', 'GOVERNMENT', 'OTHER', 'UNKNOWN')
+                THEN TRUE
+            ELSE FALSE
+        END AS is_valid_business_type,
         
-        -- Flag 11: monthly_income validation
-        {{ validate_enumeration('monthly_income', 'monthly_income_bands') }} AS dq_monthly_income_valid,
+        -- Flag 7: total_asset validation (NO OTHER option)
+        CASE 
+            WHEN total_asset IS NULL THEN TRUE
+            WHEN total_asset IN ('ASSET_BAND_1', 'ASSET_BAND_2', 'ASSET_BAND_3', 'ASSET_BAND_4', 'ASSET_BAND_5', 'UNKNOWN')
+                THEN TRUE
+            ELSE FALSE
+        END AS is_valid_total_asset,
         
-        -- Flag 12: income_country validation
-        {{ validate_enumeration('income_country', 'income_country') }} AS dq_income_country_valid
+        -- Flag 8: monthly_income validation (NO OTHER option)
+        CASE 
+            WHEN monthly_income IS NULL THEN TRUE
+            WHEN monthly_income IN ('INCOME_BAND_1', 'INCOME_BAND_2', 'INCOME_BAND_3', 'INCOME_BAND_4', 'INCOME_BAND_5', 'UNKNOWN')
+                THEN TRUE
+            ELSE FALSE
+        END AS is_valid_monthly_income,
+        
+        -- Flag 9: income_country validation (includes OTHER check)
+        CASE 
+            WHEN income_country IS NULL THEN TRUE
+            WHEN income_country = 'OTHER' AND (income_country_other IS NULL OR TRIM(income_country_other) = '') 
+                THEN FALSE
+            WHEN LENGTH(income_country) = 2 OR income_country = 'OTHER'
+                THEN TRUE
+            ELSE FALSE
+        END AS is_valid_income_country,
+        
+        -- Flag 10: birthdate validation
+        CASE 
+            WHEN birthdate IS NULL THEN FALSE
+            WHEN birthdate > CURRENT_DATE THEN FALSE
+            WHEN DATE_PART('year', AGE(birthdate)) < 18 THEN FALSE
+            WHEN DATE_PART('year', AGE(birthdate)) > 120 THEN FALSE
+            ELSE TRUE
+        END AS is_valid_birthdate,
+        
+        -- Flag 11: source_of_income_list validation (simplified - check not empty)
+        CASE 
+            WHEN source_of_income_list IS NULL OR TRIM(source_of_income_list) = '' THEN TRUE
+            WHEN source_of_income_list ~ '^[A-Z_|]+$' THEN TRUE
+            ELSE FALSE
+        END AS is_valid_source_of_income_list,
+        
+        -- Flag 12: purpose_of_investment_list validation (simplified - check not empty)
+        CASE 
+            WHEN purpose_of_investment_list IS NULL OR TRIM(purpose_of_investment_list) = '' THEN TRUE
+            WHEN purpose_of_investment_list ~ '^[A-Z_|]+$' THEN TRUE
+            ELSE FALSE
+        END AS is_valid_purpose_of_investment_list
         
     FROM source
 ),
@@ -126,7 +189,7 @@ with_hashes AS (
         -- SET HASHES (Normalized for change detection)
         -- ====================================================================
         
-        -- source_of_income_set_hash: Hash of sorted pipe-delimited set
+        -- source_of_income_set_hash:  Hash of sorted pipe-delimited set
         {{ compute_set_hash('source_of_income_list') }} AS source_of_income_set_hash,
         
         -- purpose_of_investment_set_hash: Hash of sorted pipe-delimited set
@@ -177,54 +240,81 @@ final AS (
         -- DQ Score: Percentage of passed validations (0-100)
         ROUND(
             (
-                CASE WHEN dq_person_title_valid THEN 1 ELSE 0 END +
-                CASE WHEN dq_person_title_other_complete THEN 1 ELSE 0 END +
-                CASE WHEN dq_marital_status_valid THEN 1 ELSE 0 END +
-                CASE WHEN dq_nationality_valid THEN 1 ELSE 0 END +
-                CASE WHEN dq_nationality_other_complete THEN 1 ELSE 0 END +
-                CASE WHEN dq_occupation_valid THEN 1 ELSE 0 END +
-                CASE WHEN dq_occupation_other_complete THEN 1 ELSE 0 END +
-                CASE WHEN dq_education_level_valid THEN 1 ELSE 0 END +
-                CASE WHEN dq_business_type_valid THEN 1 ELSE 0 END +
-                CASE WHEN dq_total_asset_valid THEN 1 ELSE 0 END +
-                CASE WHEN dq_monthly_income_valid THEN 1 ELSE 0 END +
-                CASE WHEN dq_income_country_valid THEN 1 ELSE 0 END
+                CASE WHEN is_valid_person_title THEN 1 ELSE 0 END +
+                CASE WHEN is_valid_marital_status THEN 1 ELSE 0 END +
+                CASE WHEN is_valid_nationality THEN 1 ELSE 0 END +
+                CASE WHEN is_valid_occupation THEN 1 ELSE 0 END +
+                CASE WHEN is_valid_education_level THEN 1 ELSE 0 END +
+                CASE WHEN is_valid_business_type THEN 1 ELSE 0 END +
+                CASE WHEN is_valid_total_asset THEN 1 ELSE 0 END +
+                CASE WHEN is_valid_monthly_income THEN 1 ELSE 0 END +
+                CASE WHEN is_valid_income_country THEN 1 ELSE 0 END +
+                CASE WHEN is_valid_birthdate THEN 1 ELSE 0 END +
+                CASE WHEN is_valid_source_of_income_list THEN 1 ELSE 0 END +
+                CASE WHEN is_valid_purpose_of_investment_list THEN 1 ELSE 0 END
             ):: NUMERIC / 12 * 100,
             2
-        ) AS dq_score,
+        ) AS data_quality_score,
         
-        -- DQ Status: Categorical quality classification
+        -- DQ Status:  Categorical quality classification
         CASE 
+            -- Perfect score
             WHEN (
-                CASE WHEN dq_person_title_valid THEN 1 ELSE 0 END +
-                CASE WHEN dq_person_title_other_complete THEN 1 ELSE 0 END +
-                CASE WHEN dq_marital_status_valid THEN 1 ELSE 0 END +
-                CASE WHEN dq_nationality_valid THEN 1 ELSE 0 END +
-                CASE WHEN dq_nationality_other_complete THEN 1 ELSE 0 END +
-                CASE WHEN dq_occupation_valid THEN 1 ELSE 0 END +
-                CASE WHEN dq_occupation_other_complete THEN 1 ELSE 0 END +
-                CASE WHEN dq_education_level_valid THEN 1 ELSE 0 END +
-                CASE WHEN dq_business_type_valid THEN 1 ELSE 0 END +
-                CASE WHEN dq_total_asset_valid THEN 1 ELSE 0 END +
-                CASE WHEN dq_monthly_income_valid THEN 1 ELSE 0 END +
-                CASE WHEN dq_income_country_valid THEN 1 ELSE 0 END
+                CASE WHEN is_valid_person_title THEN 1 ELSE 0 END +
+                CASE WHEN is_valid_marital_status THEN 1 ELSE 0 END +
+                CASE WHEN is_valid_nationality THEN 1 ELSE 0 END +
+                CASE WHEN is_valid_occupation THEN 1 ELSE 0 END +
+                CASE WHEN is_valid_education_level THEN 1 ELSE 0 END +
+                CASE WHEN is_valid_business_type THEN 1 ELSE 0 END +
+                CASE WHEN is_valid_total_asset THEN 1 ELSE 0 END +
+                CASE WHEN is_valid_monthly_income THEN 1 ELSE 0 END +
+                CASE WHEN is_valid_income_country THEN 1 ELSE 0 END +
+                CASE WHEN is_valid_birthdate THEN 1 ELSE 0 END +
+                CASE WHEN is_valid_source_of_income_list THEN 1 ELSE 0 END +
+                CASE WHEN is_valid_purpose_of_investment_list THEN 1 ELSE 0 END
             ) = 12 THEN 'VALID'
+            
+            -- Good score with OTHER usage
             WHEN (
-                CASE WHEN dq_person_title_valid THEN 1 ELSE 0 END +
-                CASE WHEN dq_person_title_other_complete THEN 1 ELSE 0 END +
-                CASE WHEN dq_marital_status_valid THEN 1 ELSE 0 END +
-                CASE WHEN dq_nationality_valid THEN 1 ELSE 0 END +
-                CASE WHEN dq_nationality_other_complete THEN 1 ELSE 0 END +
-                CASE WHEN dq_occupation_valid THEN 1 ELSE 0 END +
-                CASE WHEN dq_occupation_other_complete THEN 1 ELSE 0 END +
-                CASE WHEN dq_education_level_valid THEN 1 ELSE 0 END +
-                CASE WHEN dq_business_type_valid THEN 1 ELSE 0 END +
-                CASE WHEN dq_total_asset_valid THEN 1 ELSE 0 END +
-                CASE WHEN dq_monthly_income_valid THEN 1 ELSE 0 END +
-                CASE WHEN dq_income_country_valid THEN 1 ELSE 0 END
-            ) >= 10 THEN 'WARNING'
-            ELSE 'INVALID'
-        END AS dq_status,
+                CASE WHEN is_valid_person_title THEN 1 ELSE 0 END +
+                CASE WHEN is_valid_marital_status THEN 1 ELSE 0 END +
+                CASE WHEN is_valid_nationality THEN 1 ELSE 0 END +
+                CASE WHEN is_valid_occupation THEN 1 ELSE 0 END +
+                CASE WHEN is_valid_education_level THEN 1 ELSE 0 END +
+                CASE WHEN is_valid_business_type THEN 1 ELSE 0 END +
+                CASE WHEN is_valid_total_asset THEN 1 ELSE 0 END +
+                CASE WHEN is_valid_monthly_income THEN 1 ELSE 0 END +
+                CASE WHEN is_valid_income_country THEN 1 ELSE 0 END +
+                CASE WHEN is_valid_birthdate THEN 1 ELSE 0 END +
+                CASE WHEN is_valid_source_of_income_list THEN 1 ELSE 0 END +
+                CASE WHEN is_valid_purpose_of_investment_list THEN 1 ELSE 0 END
+            ) >= 11
+            AND (person_title = 'OTHER' OR nationality = 'OTHER' OR occupation = 'OTHER' 
+                 OR education_level = 'OTHER' OR business_type = 'OTHER' OR income_country = 'OTHER')
+            THEN 'VALID_WITH_OTHER'
+            
+            -- Birthdate specific failure
+            WHEN NOT is_valid_birthdate THEN 'INVALID_BIRTHDATE'
+            
+            -- Multiple issues
+            WHEN (
+                CASE WHEN is_valid_person_title THEN 1 ELSE 0 END +
+                CASE WHEN is_valid_marital_status THEN 1 ELSE 0 END +
+                CASE WHEN is_valid_nationality THEN 1 ELSE 0 END +
+                CASE WHEN is_valid_occupation THEN 1 ELSE 0 END +
+                CASE WHEN is_valid_education_level THEN 1 ELSE 0 END +
+                CASE WHEN is_valid_business_type THEN 1 ELSE 0 END +
+                CASE WHEN is_valid_total_asset THEN 1 ELSE 0 END +
+                CASE WHEN is_valid_monthly_income THEN 1 ELSE 0 END +
+                CASE WHEN is_valid_income_country THEN 1 ELSE 0 END +
+                CASE WHEN is_valid_birthdate THEN 1 ELSE 0 END +
+                CASE WHEN is_valid_source_of_income_list THEN 1 ELSE 0 END +
+                CASE WHEN is_valid_purpose_of_investment_list THEN 1 ELSE 0 END
+            ) < 9 THEN 'MULTIPLE_ISSUES'
+            
+            -- Default:  enumeration issues
+            ELSE 'INVALID_ENUMERATION'
+        END AS _silver_dq_status,
         
         -- Silver Metadata
         CURRENT_TIMESTAMP AS _silver_load_ts
