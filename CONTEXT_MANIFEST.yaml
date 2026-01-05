@@ -1,21 +1,21 @@
-manifest_version: 2025. 12.01-1
-generated_at_utc: "2025-12-01T12:00:00Z"
-description: "Authoritative machine-consumable manifest of modeling, audit, and enumeration artifacts for DW1.  Used for rapid AI thread rehydration."
+manifest_version: 2026.01.05-1
+generated_at_utc: "2026-01-05T09:30:00Z"
+description: "Authoritative machine-consumable manifest of modeling, audit, and enumeration artifacts for DW1. Used for rapid AI thread rehydration."
 ai_context_file: "AI_CONTEXT.md"
 
-# ADD THIS SECTION
 customer_profile_standards:
   status: "gold_contracts_complete"
-  last_updated: "2025-12-01"
+  last_updated: "2026-01-05"
   enumeration_pattern: "direct_codes_with_other_freetext"
   layer_architecture: "bronze_silver_gold"
+  documentation_foundation: "complete"
+  ai_onboarding_readiness: "ready_with_validation"
   
 enumeration_files:
   - path: "enumerations/audit_event_types.yaml"
     enumeration_version: "2025.11.25-1"
-  - path: "docs/data-modeling/enumerations. md"
+  - path: "docs/data-modeling/enumerations.md"
     enum_version: "2025.11.25-2"
-  # ADD THESE
   - path: "enumerations/customer_person_title.yaml"
     enumeration_version: "1.0"
     domain: "customer"
@@ -46,10 +46,10 @@ enumeration_files:
   - path: "enumerations/customer_source_of_income.yaml"
     enumeration_version: "1.0"
     domain: "customer"
-  - path: "enumerations/customer_purpose_of_investment. yaml"
+  - path: "enumerations/customer_purpose_of_investment.yaml"
     enumeration_version: "1.0"
     domain: "customer"
-  - path: "enumerations/customer_profile_audit_change_reason. yaml"
+  - path: "enumerations/customer_profile_audit_change_reason.yaml"
     enumeration_version: "1.0"
     domain: "customer"
     purpose: "Valid change_reason codes for fact_customer_profile_audit"
@@ -65,21 +65,28 @@ standards:
   audit_standard: "docs/audit/audit_artifacts_standard.md"
   hashing: "docs/data-modeling/hashing_standards.md"
   naming: "docs/data-modeling/naming_conventions.md"
+  naming_foundation: "docs/FOUNDATION_NAMING_CONVENTIONS.md"
   fact_vs_dimension_matrix: "docs/data-modeling/fact_vs_dimension_decisions.md"
+  architectural_constraints: "docs/architecture/ARCHITECTURAL_CONSTRAINTS.md"
+  module_replication_validation: "docs/MODULE_REPLICATION_VALIDATION.md"
+  repository_file_index: "REPOSITORY_FILE_INDEX.md"
   
-# UPDATE THIS SECTION
 modules:
   customer: 
     spec: "docs/business/modules/customer_module.md"
-    status: "section_5_complete"  # Attribute inventory complete
+    status: "complete"
+    implementation_status: "bronze_silver_gold_complete"
     key_sections: 
       - "Section 5: Attribute Inventory (31 attributes)"
       - "Section 8: Hashing Standard"
       - "Section 18: IT View Specification"
-  investment_profile: "docs/business/modules/investment_profile_module.md"
-  company: "docs/business/modules/company_module.md"
+  investment_profile: 
+    spec: "docs/business/modules/investment_profile_module.md"
+    status: "spec_complete"
+  company: 
+    spec: "docs/business/modules/company_module.md"
+    status: "spec_complete"
 
-# ADD THIS SECTION
 contracts:
   customer_profile:
     dimension: "contracts/gold/dim_customer_profile.yaml"
@@ -88,15 +95,76 @@ contracts:
     audit_fact: "contracts/gold/fact_customer_profile_audit.yaml"
     bronze: "contracts/bronze/customer_profile_standardized.yaml"
     silver: "contracts/silver/customer_profile_standardized.yaml"
+    quarantine: "contracts/quarantine/customer_profile_rejected.yaml"
 
+documentation:
+  primary_readme: "README.md"
+  ai_onboarding_guide: "docs/_ai-first-employee-boarding-guide/"
+  module_replication_guide: "docs/HOW_TO_REPLICATE_MODULE.md"
+  module_development_checklist: "docs/MODULE_DEVELOPMENT_CHECKLIST.md"
+  documentation_assessment: "docs/DOCUMENTATION_ASSESSMENT.md"
+  ai_onboarding_gap_analysis: "docs/AI_ONBOARDING_GAP_ANALYSIS.md"
+  policy_alignment_checklist: "docs/POLICY_ALIGNMENT_CHECKLIST.md"
 
-# UPDATE governance section
 governance:
   enumeration_change_requires: "ADR reference + version bump"
   audit_event_requires: "Enumeration entry + rationale code classification"
   hash_algorithm_change_requires: "Update hashing_standards.md + impacted contracts + ADR"
-  enumeration_pattern: "direct_codes_with_other_freetext"  # ADD THIS
-  other_field_rule: "Type 1 only, excluded from hash"  # ADD THIS
-  lookup_dimension_policy: "deprecated_use_enumerations"  # ADD THIS
+  enumeration_pattern: "direct_codes_with_other_freetext"
+  other_field_rule: "Type 1 only, excluded from hash"
+  lookup_dimension_policy: "deprecated_use_enumerations"
+  schema_naming_enforcement: "gold_schema_mandatory"
+  natural_key_type_standard: "BIGINT_only"
+  
+technology_stack:
+  database: "PostgreSQL"
+  etl: "Python (Bronze layer)"
+  transformation: "dbt (Silver and Gold layers)"
+  contract_format: "YAML"
+  documentation_format: "Markdown"
+  
+layer_responsibilities:
+  bronze:
+    purpose: "Raw landing zone - exact mirror of source + ETL metadata"
+    schema: "bronze"
+    technology: "Python ETL"
+    immutable: true
+  silver:
+    purpose: "Cleaned and validated with computed columns (hashes, quality flags)"
+    schema: "silver"
+    technology: "dbt"
+    includes_star_schema: false
+  gold:
+    purpose: "Dimensional model (star schema) with SCD versioning"
+    schema: "gold"
+    technology: "dbt"
+    includes_star_schema: true
+  quarantine:
+    purpose: "Rejected records for data quality investigation"
+    schema: "quarantine"
+    technology: "dbt"
 
-# Keep rest of file as-is... 
+change_control:
+  adding_module_requires:
+    - "Module specification in docs/business/modules/"
+    - "Enumeration YAML files"
+    - "Contracts (Bronze, Silver, Gold)"
+    - "DDL (Bronze, Silver, Gold)"
+    - "dbt models (Silver, Gold)"
+    - "Update this manifest"
+    - "Update REPOSITORY_FILE_INDEX.md"
+  adding_scd2_attribute_requires:
+    - "ADR documenting change"
+    - "Update module specification"
+    - "Update contracts"
+    - "Update hash_spec canonical order"
+    - "Update DDL"
+    - "Update dbt models"
+  changing_standards_requires:
+    - "ADR documenting rationale"
+    - "Update standard documents"
+    - "Update AI_CONTEXT.md"
+    - "Update this manifest"
+    - "Migration plan for existing modules"
+
+maintained_by: "Data Architecture Team" 
