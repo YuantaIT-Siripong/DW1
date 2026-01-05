@@ -1,274 +1,247 @@
 -- =====================================================================
--- Gold Layer: fact_customer_profile_audit
--- Audit fact tracking all profile change events (SCD2 versions)
+-- Gold Layer:   Fact Customer Profile Audit
 -- =====================================================================
 -- Source Contract: contracts/gold/fact_customer_profile_audit.yaml
 -- Database: PostgreSQL
--- Layer: Gold (Gold)
--- Created: 2025-12-01
+-- Layer: Gold
+-- Created: 2026-01-05
 -- =====================================================================
 
--- Drop table if exists (for development only)
+-- Create schema if not exists
+CREATE SCHEMA IF NOT EXISTS gold;
+
+-- Drop table if exists (for development only - comment out in production)
 -- DROP TABLE IF EXISTS gold.fact_customer_profile_audit CASCADE;
 
--- Create schema if not exists (already created in dimension script)
--- CREATE SCHEMA IF NOT EXISTS gold;
-
--- Create sequence for surrogate key
-CREATE SEQUENCE IF NOT EXISTS gold.seq_customer_profile_audit_event_id
-    START WITH 1
-    INCREMENT BY 1
-    NO MINVALUE
-    NO MAXVALUE
-    CACHE 1;
-
--- Create table
+-- =====================================================================
+-- CREATE TABLE
+-- =====================================================================
 CREATE TABLE gold.fact_customer_profile_audit (
-    -- Surrogate Key
-    audit_event_id BIGINT NOT NULL DEFAULT nextval('gold.seq_customer_profile_audit_event_id'),
+    -- ================================================================
+    -- SURROGATE KEY
+    -- ================================================================
+    audit_event_id BIGSERIAL PRIMARY KEY,
     
-    -- Natural Keys
-    customer_id BIGINT NOT NULL,
+    -- ================================================================
+    -- FOREIGN KEYS
+    -- ================================================================
+    customer_id VARCHAR(50) NOT NULL,
     customer_profile_version_sk_new BIGINT NOT NULL,
     customer_profile_version_sk_old BIGINT,
     
-    -- Version Tracking
+    -- ================================================================
+    -- VERSION TRACKING
+    -- ================================================================
     version_num_new INT NOT NULL,
     version_num_old INT,
     
-    -- Change Classification
+    -- ================================================================
+    -- CHANGE METADATA
+    -- ================================================================
     change_reason VARCHAR(50) NOT NULL,
-    
-    -- Change Details (JSON)
     changed_scalar_attributes TEXT NOT NULL,
     changed_set_names TEXT NOT NULL,
     scalar_attribute_old_values TEXT,
     scalar_attribute_new_values TEXT NOT NULL,
     set_membership_diff_summary TEXT,
     
-    -- Hashes
+    -- ================================================================
+    -- HASH TRACKING
+    -- ================================================================
     old_profile_hash VARCHAR(64),
     new_profile_hash VARCHAR(64) NOT NULL,
+    old_source_of_income_set_hash VARCHAR(64),
+    new_source_of_income_set_hash VARCHAR(64),
+    old_purpose_of_investment_set_hash VARCHAR(64),
+    new_purpose_of_investment_set_hash VARCHAR(64),
     
-    -- Timestamps
-    event_source_ts TIMESTAMP NOT NULL,
-    event_detected_ts TIMESTAMP NOT NULL,
+    -- ================================================================
+    -- DATA QUALITY TRACKING
+    -- ================================================================
+    old_data_quality_score NUMERIC(5,2),
+    new_data_quality_score NUMERIC(5,2),
+    old_data_quality_status VARCHAR(50),
+    new_data_quality_status VARCHAR(50),
+    
+    -- ================================================================
+    -- TEMPORAL TRACKING
+    -- ================================================================
+    event_ts TIMESTAMP NOT NULL,
     effective_start_ts_new TIMESTAMP NOT NULL,
-    processing_latency_seconds INT,
-    
-    -- Audit Trail
-    initiated_by_system VARCHAR(100),
-    initiated_by_user_id VARCHAR(100),
-    
-    -- ETL Metadata
+    effective_end_ts_old TIMESTAMP,
     load_ts TIMESTAMP NOT NULL DEFAULT CURRENT_TIMESTAMP,
     
-    -- Primary Key
-    CONSTRAINT pk_customer_profile_audit PRIMARY KEY (audit_event_id),
+    -- ================================================================
+    -- LINEAGE
+    -- ================================================================
+    source_system VARCHAR(100) DEFAULT 'MSSQL_CORE',
+    etl_batch_id BIGINT,
     
-    -- Unique Constraint
-    CONSTRAINT uk_audit_customer_version_new UNIQUE (customer_id, customer_profile_version_sk_new),
+    -- ================================================================
+    -- CONSTRAINTS
+    -- ================================================================
     
-    -- Foreign Keys
-    CONSTRAINT fk_audit_profile_version_new FOREIGN KEY (customer_profile_version_sk_new)
-        REFERENCES gold.dim_customer_profile (customer_profile_version_sk)
-        ON DELETE RESTRICT,
+    -- Foreign keys
+    CONSTRAINT fk_audit_version_new
+        FOREIGN KEY (customer_profile_version_sk_new)
+        REFERENCES gold.dim_customer_profile(customer_profile_version_sk),
     
-    CONSTRAINT fk_audit_profile_version_old FOREIGN KEY (customer_profile_version_sk_old)
-        REFERENCES gold.dim_customer_profile (customer_profile_version_sk)
-        ON DELETE RESTRICT,
+    CONSTRAINT fk_audit_version_old
+        FOREIGN KEY (customer_profile_version_sk_old)
+        REFERENCES gold.dim_customer_profile(customer_profile_version_sk),
     
-    -- Check Constraints
-    CONSTRAINT chk_audit_change_reason CHECK (
-        change_reason IN (
-            'INITIAL_LOAD', 'SOURCE_UPDATE', 'CORRECTION', 
-            'DATA_QUALITY_FIX', 'BACKDATED_CORRECTION', 'RECOMPUTE_HASH'
+    -- Change reason validation
+    CONSTRAINT chk_change_reason_values
+        CHECK (change_reason IN (
+            'INITIAL_LOAD',
+            'SOURCE_UPDATE',
+            'CORRECTION',
+            'DATA_QUALITY_FIX',
+            'BACKDATED_CORRECTION',
+            'RECOMPUTE_HASH'
+        )),
+    
+    -- Version number validation
+    CONSTRAINT chk_version_num_positive
+        CHECK (version_num_new > 0 AND (version_num_old IS NULL OR version_num_old > 0)),
+    
+    -- Version sequence validation (except INITIAL_LOAD)
+    CONSTRAINT chk_version_sequence
+        CHECK (
+            (change_reason = 'INITIAL_LOAD' AND version_num_old IS NULL AND version_num_new = 1)
+            OR (change_reason != 'INITIAL_LOAD' AND version_num_new = version_num_old + 1)
+        ),
+    
+    -- Hash format validation
+    CONSTRAINT chk_hash_format
+        CHECK (
+            old_profile_hash IS NULL OR old_profile_hash ~ '^[a-f0-9]{64}$'
+        ) AND (
+            new_profile_hash ~ '^[a-f0-9]{64}$'
+        ),
+    
+    -- Data quality score range
+    CONSTRAINT chk_dq_score_range
+        CHECK (
+            (old_data_quality_score IS NULL OR old_data_quality_score BETWEEN 0.00 AND 100.00)
+            AND (new_data_quality_score IS NULL OR new_data_quality_score BETWEEN 0.00 AND 100.00)
+        ),
+    
+    -- Data quality status values
+    CONSTRAINT chk_dq_status_values
+        CHECK (
+            (old_data_quality_status IS NULL OR old_data_quality_status IN (
+                'VALID', 'VALID_WITH_OTHER', 'INVALID_ENUMERATION', 'INVALID_BIRTHDATE', 'MULTIPLE_ISSUES'
+            ))
+            AND (new_data_quality_status IS NULL OR new_data_quality_status IN (
+                'VALID', 'VALID_WITH_OTHER', 'INVALID_ENUMERATION', 'INVALID_BIRTHDATE', 'MULTIPLE_ISSUES'
+            ))
         )
-    ),
-    CONSTRAINT chk_audit_initial_load_null_old CHECK (
-        (change_reason = 'INITIAL_LOAD' AND customer_profile_version_sk_old IS NULL) OR
-        (change_reason != 'INITIAL_LOAD' AND customer_profile_version_sk_old IS NOT NULL)
-    ),
-    CONSTRAINT chk_audit_hash_length_new CHECK (LENGTH(new_profile_hash) = 64),
-    CONSTRAINT chk_audit_hash_length_old CHECK (
-        old_profile_hash IS NULL OR LENGTH(old_profile_hash) = 64
-    ),
-    CONSTRAINT chk_audit_version_sequence CHECK (
-        (version_num_old IS NULL AND version_num_new = 1) OR
-        (version_num_old IS NOT NULL AND version_num_new = version_num_old + 1)
-    ),
-    CONSTRAINT chk_audit_change_not_empty CHECK (
-        changed_scalar_attributes != '[]' OR changed_set_names != '[]'
-    )
 );
 
--- Indexes
+-- ================================================================
+-- INDEXES FOR PERFORMANCE
+-- ================================================================
+
+-- Lookup all changes for a customer
 CREATE INDEX idx_audit_customer_id 
-    ON gold.fact_customer_profile_audit (customer_id);
+    ON gold.fact_customer_profile_audit(customer_id);
 
-CREATE INDEX idx_audit_event_source_ts 
-    ON gold.fact_customer_profile_audit (event_source_ts);
+-- Time-based queries
+CREATE INDEX idx_audit_event_ts 
+    ON gold. fact_customer_profile_audit(event_ts);
 
-CREATE INDEX idx_audit_change_reason 
-    ON gold.fact_customer_profile_audit (change_reason);
-
+-- Lookup audit for specific version
 CREATE INDEX idx_audit_version_new 
-    ON gold.fact_customer_profile_audit (customer_profile_version_sk_new);
+    ON gold.fact_customer_profile_audit(customer_profile_version_sk_new);
 
-CREATE INDEX idx_audit_version_old 
-    ON gold.fact_customer_profile_audit (customer_profile_version_sk_old);
+-- Filter by change reason
+CREATE INDEX idx_audit_change_reason 
+    ON gold.fact_customer_profile_audit(change_reason);
 
+-- Data quality tracking
+CREATE INDEX idx_audit_dq_status_new
+    ON gold.fact_customer_profile_audit(new_data_quality_status);
+
+-- Load timestamp for incremental processing
 CREATE INDEX idx_audit_load_ts 
-    ON gold.fact_customer_profile_audit (load_ts);
+    ON gold.fact_customer_profile_audit(load_ts);
 
--- Comments on table
+-- ================================================================
+-- COMMENTS (Documentation)
+-- ================================================================
+
 COMMENT ON TABLE gold.fact_customer_profile_audit IS 
-'Audit fact table tracking all profile change events that created new SCD2 versions.   One row per version creation event with JSON change details.';
+    'Audit fact table tracking all profile change events that created new SCD2 versions. 
+     Source: Generated during SCD2 merge process in dim_customer_profile
+     Grain: One row per profile change event
+     Pattern: Append-only audit trail
+     
+     Usage: 
+     - Track what changed:   changed_scalar_attributes, changed_set_names
+     - Track old vs new values:  scalar_attribute_old_values, scalar_attribute_new_values
+     - Track data quality trends: old/new_data_quality_score, old/new_data_quality_status
+     - Track set changes: set_membership_diff_summary
+     - Join to dim_customer_profile via customer_profile_version_sk_new/old
+     
+     Change Reasons:
+     - INITIAL_LOAD: First version for customer
+     - SOURCE_UPDATE: Normal update from source system
+     - CORRECTION: Manual data correction
+     - DATA_QUALITY_FIX: Fix for data quality issue
+     - BACKDATED_CORRECTION: Historical correction
+     - RECOMPUTE_HASH: Hash algorithm change';
 
--- Comments on columns
-COMMENT ON COLUMN gold.fact_customer_profile_audit.audit_event_id IS 
-'Surrogate identifier for the audit event (auto-increment)';
+COMMENT ON COLUMN gold. fact_customer_profile_audit. audit_event_id IS 
+    'Surrogate key - auto-incrementing primary key for audit event. ';
 
 COMMENT ON COLUMN gold.fact_customer_profile_audit.customer_id IS 
-'Customer identifier affected by this change';
+    'Customer identifier affected by this change.';
 
 COMMENT ON COLUMN gold.fact_customer_profile_audit.customer_profile_version_sk_new IS 
-'Surrogate key of newly created profile version';
+    'Foreign key to newly created profile version in dim_customer_profile.';
 
 COMMENT ON COLUMN gold.fact_customer_profile_audit.customer_profile_version_sk_old IS 
-'Surrogate key of previous profile version (NULL for INITIAL_LOAD)';
+    'Foreign key to previous profile version (NULL for INITIAL_LOAD).';
 
-COMMENT ON COLUMN gold.fact_customer_profile_audit.version_num_new IS 
-'Version number of new profile version';
-
-COMMENT ON COLUMN gold.fact_customer_profile_audit.version_num_old IS 
-'Version number of old profile version (NULL for initial)';
-
-COMMENT ON COLUMN gold.fact_customer_profile_audit.change_reason IS 
-'Categorized reason for profile version creation: INITIAL_LOAD, SOURCE_UPDATE, CORRECTION, DATA_QUALITY_FIX, BACKDATED_CORRECTION, RECOMPUTE_HASH.   See enumerations/customer_profile_audit_change_reason.yaml';
-
-COMMENT ON COLUMN gold.fact_customer_profile_audit. changed_scalar_attributes IS 
-'JSON array of scalar attribute names that changed (e.g., ["firstname","occupation","birthdate"]).  Valid values defined in enumerations/customer_profile_attribute_names.yaml';
+COMMENT ON COLUMN gold.fact_customer_profile_audit.changed_scalar_attributes IS 
+    'JSON array of scalar attribute names that changed.  
+     Example: ["firstname","occupation","birthdate"]
+     Empty array [] if only set membership changed.';
 
 COMMENT ON COLUMN gold.fact_customer_profile_audit.changed_set_names IS 
-'JSON array of multi-valued set names that changed (e.g., ["source_of_income","purpose_of_investment"])';
+    'JSON array of multi-valued set names that changed.
+     Example: ["source_of_income","purpose_of_investment"]
+     Empty array [] if only scalar attributes changed.';
 
 COMMENT ON COLUMN gold.fact_customer_profile_audit.scalar_attribute_old_values IS 
-'JSON object with old values of changed scalar attributes only (e.g., {"occupation":"EMPLOYEE","birthdate":"1985-03-10"})';
+    'JSON object with old values of changed scalar attributes only.
+     Example: {"occupation":"EMPLOYEE","birthdate":"1985-03-10"}
+     NULL for INITIAL_LOAD.';
 
 COMMENT ON COLUMN gold.fact_customer_profile_audit.scalar_attribute_new_values IS 
-'JSON object with new values of changed scalar attributes only';
+    'JSON object with new values of changed scalar attributes only.
+     Example: {"occupation":"SELF_EMPLOYED","birthdate":"1985-03-15"}';
 
 COMMENT ON COLUMN gold.fact_customer_profile_audit.set_membership_diff_summary IS 
-'JSON object with counts of added/removed members per set (e.g., {"source_of_income":{"added":1,"removed":0}})';
+    'JSON object with counts of added/removed members per set.
+     Example: {"source_of_income": {"added":1,"removed":0},"purpose_of_investment": {"added":0,"removed":1}}
+     NULL if no set changes.';
 
-COMMENT ON COLUMN gold.fact_customer_profile_audit.old_profile_hash IS 
-'Profile hash of previous version (NULL for initial load)';
-
-COMMENT ON COLUMN gold.fact_customer_profile_audit.new_profile_hash IS 
-'Profile hash of new version (must match dim_customer_profile)';
-
-COMMENT ON COLUMN gold.fact_customer_profile_audit.event_source_ts IS 
-'Business timestamp when source system recorded the change';
-
-COMMENT ON COLUMN gold.fact_customer_profile_audit.event_detected_ts IS 
-'Timestamp when ETL process detected the change';
-
-COMMENT ON COLUMN gold.fact_customer_profile_audit.effective_start_ts_new IS 
-'Effective start timestamp of new version (copied from dimension for convenience)';
-
-COMMENT ON COLUMN gold.fact_customer_profile_audit.processing_latency_seconds IS 
-'Seconds between event_source_ts and event_detected_ts (may be negative for backdated corrections)';
-
-COMMENT ON COLUMN gold.fact_customer_profile_audit.initiated_by_system IS 
-'Source system code that initiated change (e.g., CRM, KYC_PORTAL, SURVEY_APP, ETL_CORRECTION)';
-
-COMMENT ON COLUMN gold.fact_customer_profile_audit.initiated_by_user_id IS 
-'User identifier if manual correction/update (NULL for automated processes)';
+COMMENT ON COLUMN gold.fact_customer_profile_audit.event_ts IS 
+    'UTC timestamp when the change event occurred (from source last_modified_ts).';
 
 COMMENT ON COLUMN gold.fact_customer_profile_audit.load_ts IS 
-'ETL ingestion timestamp for this audit event';
+    'UTC timestamp when audit record was created in Gold layer.';
 
--- Grant permissions
-GRANT SELECT ON gold.fact_customer_profile_audit TO dw_etl_service;
-GRANT INSERT ON gold.fact_customer_profile_audit TO dw_etl_service;
-GRANT SELECT ON gold.fact_customer_profile_audit TO dw_privileged;
-GRANT SELECT ON gold.fact_customer_profile_audit TO dw_analyst;
-
-GRANT USAGE, SELECT ON SEQUENCE gold.seq_customer_profile_audit_event_id TO dw_etl_service;
-
--- =====================================================================
--- Example Queries
--- =====================================================================
-
--- Query 1: Get all changes for a customer
-/*
-SELECT 
-    audit_event_id,
-    version_num_new,
-    change_reason,
-    changed_scalar_attributes,
-    changed_set_names,
-    event_source_ts,
-    initiated_by_system
-FROM gold.fact_customer_profile_audit
-WHERE customer_id = 12345
-ORDER BY event_source_ts;
-*/
-
--- Query 2: Get change details for specific version
-/*
-SELECT 
-    a.*,
-    p_new.firstname AS new_firstname,
-    p_new.occupation AS new_occupation,
-    p_old.firstname AS old_firstname,
-    p_old.occupation AS old_occupation
-FROM gold.fact_customer_profile_audit a
-JOIN gold.dim_customer_profile p_new 
-    ON a.customer_profile_version_sk_new = p_new.customer_profile_version_sk
-LEFT JOIN gold.dim_customer_profile p_old 
-    ON a.customer_profile_version_sk_old = p_old.customer_profile_version_sk
-WHERE a.customer_id = 12345
-    AND a.version_num_new = 3;
-*/
-
--- Query 3: Summary of changes by reason
-/*
-SELECT 
-    change_reason,
-    COUNT(*) AS event_count,
-    AVG(processing_latency_seconds) AS avg_latency_seconds,
-    COUNT(DISTINCT customer_id) AS affected_customers
-FROM gold.fact_customer_profile_audit
-WHERE event_source_ts >= CURRENT_DATE - INTERVAL '30 days'
-GROUP BY change_reason
-ORDER BY event_count DESC;
-*/
-
--- Query 4: Recent changes with high latency
-/*
-SELECT 
-    customer_id,
-    version_num_new,
-    change_reason,
-    processing_latency_seconds,
-    event_source_ts,
-    event_detected_ts
-FROM gold.fact_customer_profile_audit
-WHERE processing_latency_seconds > 3600  -- More than 1 hour
-    AND event_source_ts >= CURRENT_DATE - INTERVAL '7 days'
-ORDER BY processing_latency_seconds DESC;
-*/
-
--- Query 5: Attribute change frequency analysis
-/*
-SELECT 
-    jsonb_array_elements_text(changed_scalar_attributes::jsonb) AS attribute_name,
-    COUNT(*) AS change_count
-FROM gold.fact_customer_profile_audit
-WHERE change_reason = 'SOURCE_UPDATE'
-    AND event_source_ts >= CURRENT_DATE - INTERVAL '90 days'
-GROUP BY attribute_name
-ORDER BY change_count DESC;
-*/
+-- ================================================================
+-- NOTES
+-- ================================================================
+-- 1. Append-only audit trail - no updates or deletes
+-- 2. Generated during SCD2 merge in dim_customer_profile dbt model
+-- 3. JSON columns allow flexible change tracking without schema changes
+-- 4. Hash tracking enables validation of change detection logic
+-- 5. DQ tracking enables monitoring of data quality trends over time
+-- 6. For initial load: version_num_new = 1, version_num_old = NULL
+-- 7. For subsequent versions: version_num_new = version_num_old + 1
+-- 8. Use for impact analysis, audit reporting, and debugging SCD2 logic
