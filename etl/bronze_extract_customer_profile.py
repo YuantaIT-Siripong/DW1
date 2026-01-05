@@ -20,6 +20,8 @@ from dotenv import load_dotenv
 # Load environment variables
 load_dotenv()
 
+os.makedirs('logs', exist_ok=True)
+
 # Configure logging
 logging.basicConfig(
     level=logging.INFO,
@@ -166,12 +168,13 @@ class PostgresLoader:
     def get_last_load_timestamp(self) -> datetime:
         """
         Get last successful load timestamp from Bronze layer
+        Uses MAX(last_modified_ts) to track source changes, not load time
         
         Returns: 
             Watermark timestamp (defaults to 1900-01-01 if table empty)
         """
         query = f"""
-            SELECT COALESCE(MAX(_bronze_load_ts), '1900-01-01':: TIMESTAMP) 
+            SELECT COALESCE(MAX(last_modified_ts), '1900-01-01':: TIMESTAMP) 
             FROM {TARGET_TABLE}
         """
         
@@ -230,19 +233,32 @@ class PostgresLoader:
             )
             ON CONFLICT (customer_id, last_modified_ts) 
             DO NOTHING
+            RETURNING customer_id
         """
         
         try:
-            with self.conn.cursor() as cur:
+            with self.conn. cursor() as cur:
                 # Append metadata to each row
                 rows_with_metadata = [
                     tuple(row) + (SOURCE_VIEW, batch_id) 
                     for row in rows
                 ]
                 
-                execute_batch(cur, insert_sql, rows_with_metadata, page_size=BATCH_SIZE)
+                # Track inserted vs conflicted rows
+                inserted_count = 0
+                for row_data in rows_with_metadata: 
+                    cur.execute(insert_sql, row_data)
+                    if cur.fetchone():  # RETURNING clause returns row if inserted
+                        inserted_count += 1
+                
+                conflicted_count = len(rows) - inserted_count
+                
                 self.conn.commit()
-                logger.info(f"?? Loaded batch:  {len(rows)} rows")
+                
+                # Log results
+                logger.info(f"✅ Loaded batch:  {inserted_count} rows inserted")
+                if conflicted_count > 0:
+                    logger.warning(f"⚠️  Skipped {conflicted_count} duplicate rows (ON CONFLICT)")
                 
         except Exception as e:
             self.conn.rollback()
