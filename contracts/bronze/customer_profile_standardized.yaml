@@ -249,8 +249,8 @@ attributes:
     etl_metadata: true
 
 data_quality_rules:
-  - rule: unique_customer_id
-    description: customer_id must be unique (no duplicates in single batch)
+  - rule: unique_customer_per_timestamp
+    description: (customer_id, last_modified_ts) must be unique within batch
     
   - rule: customer_id_not_null
     description: customer_id is required
@@ -284,8 +284,9 @@ transformation_rules:
 
 immutability_policy: |
   Bronze records are immutable once landed. 
-  Never UPDATE or DELETE Bronze records.
+  Never UPDATE or DELETE Bronze records. 
   Append-only pattern for historical audit trail. 
+  Composite PK (customer_id, last_modified_ts) ensures temporal history.
 
 retention_policy: 7_years_minimum
 
@@ -295,6 +296,11 @@ indexes:
     columns: [customer_id, last_modified_ts]
     description: Composite key for append-only temporal history
         
+  - name: idx_bronze_customer_lookup  # ← ADD THIS
+    type: non_unique
+    columns: [customer_id]
+    description: Fast lookup by customer (all versions)
+
   - name: idx_bronze_load_ts
     type: non_unique
     columns: [_bronze_load_ts]
