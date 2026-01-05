@@ -18,12 +18,12 @@ natural_keys:
 attributes:
   # Natural Key (TYPE CONVERTED)
   - name: customer_id
-    datatype: BIGINT
-    business_definition: Unique business key (converted from VARCHAR to BIGINT)
+    datatype: VARCHAR(50)
+    business_definition: Unique business key from operational system
     nullable: false
     primary_key: true
     source_field: customer_id
-    transformation: CAST(customer_id AS BIGINT)
+    transformation: TRIM(customer_id)
 
   # Identity Evidence (PII)
   - name: evidence_unique_key

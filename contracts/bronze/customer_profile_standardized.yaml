@@ -27,8 +27,8 @@ attributes:
     primary_key: true
     source_field: customer_id
     transformation_note: |
-      Silver layer will CAST to BIGINT for downstream processing. 
-      Bronze preserves VARCHAR(50) as received from IT operational view. 
+        Preserved as VARCHAR(50) across all layers (Bronze → Silver → Gold).
+        No type conversion applied - maintains source format from IT operational view.
       
   # Identity Evidence (PII)
   - name: evidence_unique_key
