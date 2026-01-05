@@ -11,7 +11,7 @@ WITH source AS (
     SELECT *
     FROM {{ source('bronze', 'customer_profile_standardized') }}
     {% if is_incremental() %}
-    WHERE _bronze_load_ts > (SELECT MAX(_bronze_load_ts) FROM {{ this }})
+    WHERE last_modified_ts > (SELECT MAX(last_modified_ts) FROM {{ this }})
     {% endif %}
 ),
 
