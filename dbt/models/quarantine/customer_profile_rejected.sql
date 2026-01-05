@@ -1,8 +1,8 @@
 {{
     config(
         materialized='incremental',
-		incremental_strategy='append',
         unique_key=['customer_id', 'last_modified_ts', 'rejection_code'],
+        on_schema_change='fail',
         schema='quarantine',
         tags=['quarantine', 'data_quality']
     )
@@ -12,20 +12,21 @@
 -- Quarantine Model: Extract records that failed Silver validation
 -- ====================================================================
 -- Strategy: Process AFTER Silver, extract records with critical DQ issues
--- This is a post-processing audit trail, not a filter
+-- Source: silver.customer_profile_standardized (all records including bad)
+-- Rejection Rules: dbt/models/silver/rejection_rules.yml
 -- ====================================================================
 
 WITH silver_all_records AS (
     SELECT 
         *,
-        _silver_load_ts AS silver_load_ts,
-        _bronze_batch_id AS bronze_batch_id
+        _silver_load_ts AS silver_load_attempt_ts,
+        _bronze_batch_id
     FROM {{ ref('customer_profile_standardized') }}
     
     {% if is_incremental() %}
     -- Only check new Silver records
     WHERE _silver_load_ts > (
-        SELECT COALESCE(MAX(silver_load_attempt_ts), '1900-01-01'::timestamp)
+        SELECT COALESCE(MAX(silver_load_attempt_ts), '1900-01-01':: TIMESTAMP)
         FROM {{ this }}
     )
     {% endif %}
@@ -50,113 +51,105 @@ critical_errors AS (
     -- Rule 2: DQ Score below critical threshold
     SELECT 
         *,
-        'DQ_CRITICAL_THRESHOLD' AS rejection_code,
-        'Data quality score (' || dq_score:: text || '%) is below critical threshold (50%)' AS rejection_reason,
+        'DQ_THRESHOLD_FAILED' AS rejection_code,
+        'Data quality score (' || data_quality_score:: TEXT || '%) is below critical threshold (50%)' AS rejection_reason,
         'CRITICAL' AS rejection_severity
     FROM silver_all_records
-    WHERE dq_score < 50
+    WHERE data_quality_score < 50
     
     UNION ALL
     
-    -- Rule 3: Invalid DQ status
+    -- Rule 3: Multiple validation failures
     SELECT 
         *,
-        'DQ_STATUS_INVALID' AS rejection_code,
-        'Data quality status is INVALID - multiple validation failures' AS rejection_reason,
+        'MULTIPLE_VALIDATION_FAILURES' AS rejection_code,
+        'Multiple critical validations failed (' || 
+            (12 - (
+                CASE WHEN is_valid_person_title THEN 1 ELSE 0 END +
+                CASE WHEN is_valid_marital_status THEN 1 ELSE 0 END +
+                CASE WHEN is_valid_nationality THEN 1 ELSE 0 END +
+                CASE WHEN is_valid_occupation THEN 1 ELSE 0 END +
+                CASE WHEN is_valid_education_level THEN 1 ELSE 0 END +
+                CASE WHEN is_valid_business_type THEN 1 ELSE 0 END +
+                CASE WHEN is_valid_total_asset THEN 1 ELSE 0 END +
+                CASE WHEN is_valid_monthly_income THEN 1 ELSE 0 END +
+                CASE WHEN is_valid_income_country THEN 1 ELSE 0 END +
+                CASE WHEN is_valid_birthdate THEN 1 ELSE 0 END +
+                CASE WHEN is_valid_source_of_income_list THEN 1 ELSE 0 END +
+                CASE WHEN is_valid_purpose_of_investment_list THEN 1 ELSE 0 END
+            ))::TEXT || ' of 12 validations failed)' AS rejection_reason,
         'ERROR' AS rejection_severity
     FROM silver_all_records
-    WHERE dq_status = 'INVALID'
+    WHERE (
+        CASE WHEN is_valid_person_title THEN 1 ELSE 0 END +
+        CASE WHEN is_valid_marital_status THEN 1 ELSE 0 END +
+        CASE WHEN is_valid_nationality THEN 1 ELSE 0 END +
+        CASE WHEN is_valid_occupation THEN 1 ELSE 0 END +
+        CASE WHEN is_valid_education_level THEN 1 ELSE 0 END +
+        CASE WHEN is_valid_business_type THEN 1 ELSE 0 END +
+        CASE WHEN is_valid_total_asset THEN 1 ELSE 0 END +
+        CASE WHEN is_valid_monthly_income THEN 1 ELSE 0 END +
+        CASE WHEN is_valid_income_country THEN 1 ELSE 0 END +
+        CASE WHEN is_valid_birthdate THEN 1 ELSE 0 END +
+        CASE WHEN is_valid_source_of_income_list THEN 1 ELSE 0 END +
+        CASE WHEN is_valid_purpose_of_investment_list THEN 1 ELSE 0 END
+    ) < 9
     
     UNION ALL
     
-    -- Rule 4: Missing required fields
+    -- Rule 4: Invalid birthdate
     SELECT 
         *,
-        'MISSING_REQUIRED_FIELDS' AS rejection_code,
-        'Required fields are missing: ' || 
-            CASE WHEN firstname IS NULL THEN 'firstname ' ELSE '' END ||
-            CASE WHEN lastname IS NULL THEN 'lastname ' ELSE '' END ||
-            CASE WHEN birthdate IS NULL THEN 'birthdate ' ELSE '' END AS rejection_reason,
+        'INVALID_BIRTHDATE' AS rejection_code,
+        'Birthdate is invalid:  ' || 
+            CASE 
+                WHEN birthdate IS NULL THEN 'NULL'
+                WHEN birthdate > CURRENT_DATE THEN 'future date (' || birthdate::TEXT || ')'
+                WHEN DATE_PART('year', AGE(birthdate)) < 18 THEN 'age < 18'
+                WHEN DATE_PART('year', AGE(birthdate)) > 120 THEN 'age > 120'
+                ELSE 'unknown'
+            END AS rejection_reason,
         'ERROR' AS rejection_severity
     FROM silver_all_records
-    WHERE firstname IS NULL 
-       OR lastname IS NULL 
-       OR birthdate IS NULL
+    WHERE NOT is_valid_birthdate
     
     UNION ALL
     
     -- Rule 5: Person title validation failed
     SELECT 
         *,
-        'PERSON_TITLE_VALIDATION_FAILED' AS rejection_code,
-        'Person title validation failed (dq_person_title_valid = FALSE or dq_person_title_other_complete = FALSE)' AS rejection_reason,
+        'INVALID_PERSON_TITLE' AS rejection_code,
+        'Person title validation failed: ' ||
+            CASE 
+                WHEN person_title = 'OTHER' AND (person_title_other IS NULL OR TRIM(person_title_other) = '')
+                    THEN 'OTHER selected but person_title_other is empty'
+                ELSE 'Invalid person_title value:  ' || COALESCE(person_title, 'NULL')
+            END AS rejection_reason,
         'ERROR' AS rejection_severity
     FROM silver_all_records
-    WHERE NOT dq_person_title_valid 
-       OR NOT dq_person_title_other_complete
-    
+    WHERE NOT is_valid_person_title
+),
+
+warnings AS (
+    -- Rule:  Low DQ score (but above threshold)
+    SELECT 
+        *,
+        'LOW_DQ_SCORE' AS rejection_code,
+        'Data quality score is low (' || data_quality_score:: TEXT || '%) but acceptable' AS rejection_reason,
+        'WARNING' AS rejection_severity
+    FROM silver_all_records
+    WHERE data_quality_score BETWEEN 50 AND 75
+),
+
+all_rejections AS (
+    SELECT * FROM critical_errors
     UNION ALL
-    
-    -- Rule 6: Multiple critical validations failed
-    SELECT 
-        *,
-        'MULTIPLE_VALIDATIONS_FAILED' AS rejection_code,
-        'Multiple critical validations failed (3 or more)' AS rejection_reason,
-        'ERROR' AS rejection_severity
-    FROM silver_all_records
-    WHERE (
-        CASE WHEN NOT dq_person_title_valid THEN 1 ELSE 0 END +
-        CASE WHEN NOT dq_marital_status_valid THEN 1 ELSE 0 END +
-        CASE WHEN NOT dq_nationality_valid THEN 1 ELSE 0 END +
-        CASE WHEN NOT dq_occupation_valid THEN 1 ELSE 0 END +
-        CASE WHEN NOT dq_total_asset_valid THEN 1 ELSE 0 END +
-        CASE WHEN NOT dq_monthly_income_valid THEN 1 ELSE 0 END
-    ) >= 3
+    SELECT * FROM warnings
 ),
 
--- Build failed validations JSON
-with_failed_validations AS (
-    SELECT 
-        *,
-        jsonb_build_object(
-            'dq_person_title_valid', dq_person_title_valid,
-            'dq_person_title_other_complete', dq_person_title_other_complete,
-            'dq_marital_status_valid', dq_marital_status_valid,
-            'dq_nationality_valid', dq_nationality_valid,
-            'dq_occupation_valid', dq_occupation_valid,
-            'dq_education_level_valid', dq_education_level_valid,
-            'dq_business_type_valid', dq_business_type_valid,
-            'dq_total_asset_valid', dq_total_asset_valid,
-            'dq_monthly_income_valid', dq_monthly_income_valid,
-            'dq_income_country_valid', dq_income_country_valid,
-            'dq_score', dq_score,
-            'dq_status', dq_status
-        ) AS failed_validations_json
-    FROM critical_errors
-),
-
--- Format for quarantine table
 final AS (
     SELECT 
-        CURRENT_TIMESTAMP AS rejection_timestamp,
-        rejection_reason,
-        rejection_code,
-        rejection_severity,
-        
-        -- Source tracking
-        'MSSQL_CORE' AS source_system,
-        bronze_batch_id,
-        _bronze_load_ts AS bronze_load_ts,
-        silver_load_ts AS silver_load_attempt_ts,
-        
-        -- Resolution tracking
-        'PENDING' AS resolution_status,
-        NULL:: timestamp AS resolved_timestamp,
-        NULL AS resolved_by,
-        NULL AS resolution_notes,
-        0 AS retry_count,
-        
-        -- All original columns
+        -- Surrogate key will be generated by DDL BIGSERIAL
         customer_id,
         evidence_unique_key,
         firstname,
@@ -183,12 +176,33 @@ final AS (
         purpose_of_investment_list,
         last_modified_ts,
         
-        -- DQ scores
-        dq_score,
-        dq_status,
-        failed_validations_json AS failed_validations
+        -- Data Quality flags
+        is_valid_person_title,
+        is_valid_marital_status,
+        is_valid_nationality,
+        is_valid_occupation,
+        is_valid_education_level,
+        is_valid_business_type,
+        is_valid_total_asset,
+        is_valid_monthly_income,
+        is_valid_income_country,
+        is_valid_birthdate,
+        is_valid_source_of_income_list,
+        is_valid_purpose_of_investment_list,
         
-    FROM with_failed_validations
+        -- Rejection metadata
+        rejection_code,
+        rejection_reason,
+        rejection_severity,
+        data_quality_score,
+        _silver_dq_status AS data_quality_status,
+        
+        -- Lineage
+        silver_load_attempt_ts,
+        CURRENT_TIMESTAMP AS rejection_ts,
+        _bronze_batch_id
+        
+    FROM all_rejections
 )
 
 SELECT * FROM final

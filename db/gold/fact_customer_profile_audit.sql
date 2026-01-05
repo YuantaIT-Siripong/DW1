@@ -115,9 +115,9 @@ CREATE TABLE gold.fact_customer_profile_audit (
     -- Hash format validation
     CONSTRAINT chk_hash_format
         CHECK (
-            old_profile_hash IS NULL OR old_profile_hash ~ '^[a-f0-9]{64}$'
-        ) AND (
-            new_profile_hash ~ '^[a-f0-9]{64}$'
+            (old_profile_hash IS NULL OR old_profile_hash ~ '^[a-f0-9]{64}$')
+            AND
+            (new_profile_hash ~ '^[a-f0-9]{64}$')
         ),
     
     -- Data quality score range

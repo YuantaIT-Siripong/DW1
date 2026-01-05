@@ -1,0 +1,94 @@
+entity_name: customer_profile_rejected
+domain: customer
+table_type: quarantine
+layer:  quarantine
+grain_description: One row per rejection event for customer profile records that failed validation
+
+upstream_source: 
+  layer: silver
+  table_name: silver.customer_profile_standardized
+  transformation_type: rejection_filter
+  rejection_rules: dbt/models/silver/rejection_rules.yml
+
+primary_keys:
+  - rejection_id
+
+natural_keys:
+  - customer_id
+  - last_modified_ts
+  - rejection_code
+
+attributes:
+  - name: rejection_id
+    datatype:  BIGSERIAL
+    business_definition:  Surrogate key for rejection event
+    nullable: false
+    primary_key:  true
+    
+  - name: customer_id
+    datatype: VARCHAR(50)
+    business_definition: Customer identifier from source
+    nullable: false
+    
+  - name: rejection_code
+    datatype: VARCHAR(100)
+    business_definition: Categorized rejection reason code
+    nullable:  false
+    enumeration_ref: rejection_rules.yml
+    
+  - name: rejection_reason
+    datatype: TEXT
+    business_definition: Human-readable explanation
+    nullable: false
+    
+  - name: rejection_severity
+    datatype: VARCHAR(20)
+    business_definition: CRITICAL, ERROR, or WARNING
+    nullable: false
+    valid_values: [CRITICAL, ERROR, WARNING]
+    
+  - name: data_quality_score
+    datatype:  NUMERIC(5,2)
+    business_definition: DQ score from Silver (0-100)
+    nullable: true
+    
+  - name: silver_load_attempt_ts
+    datatype: TIMESTAMP
+    business_definition: When Silver tried to process
+    nullable: false
+    
+  - name: rejection_ts
+    datatype: TIMESTAMP
+    business_definition: When moved to quarantine
+    nullable: false
+
+materialization_strategy: 
+  approach: incremental
+  reason: Append-only audit trail
+  unique_key: [customer_id, last_modified_ts, rejection_code]
+
+retention_policy:  1_year_then_archive
+
+data_quality_rules:
+  - rule: valid_severity
+    description: rejection_severity must be CRITICAL, ERROR, or WARNING
+    
+  - rule: valid_rejection_code
+    description: rejection_code must exist in rejection_rules.yml
+
+indexes:
+  - name: idx_quarantine_customer_id
+    type: non_unique
+    columns: [customer_id]
+    
+  - name: idx_quarantine_rejection_code
+    type: non_unique
+    columns:  [rejection_code]
+    
+  - name: idx_quarantine_rejection_ts
+    type: non_unique
+    columns: [rejection_ts]
+
+version: 1.0
+last_updated: 2026-01-05
+owner: Data Architecture Team
