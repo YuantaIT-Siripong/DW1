@@ -167,5 +167,4 @@ change_control:
     - "Update this manifest"
     - "Migration plan for existing modules"
 
-last_updated: "2026-01-05"
 maintained_by: "Data Architecture Team" 

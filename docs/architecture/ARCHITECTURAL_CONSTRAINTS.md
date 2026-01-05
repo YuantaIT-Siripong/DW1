@@ -951,7 +951,7 @@ If circular relationship exists in business domain, break cycle by:
 
 The following patterns are STRICTLY PROHIBITED without ADR approval:
 
-1. ❌ **Using 'curated' schema** (use 'gold' schema)
+1. ❌ **Using `curated` schema** (use `gold` schema)
 2. ❌ **Creating lookup dimensions for enumerations** (use direct codes)
 3. ❌ **Using STRING/VARCHAR for entity IDs** (use BIGINT)
 4. ❌ **Using DEFAULT '9999-12-31' for effective_end_ts** (use NULL)
