@@ -1,0 +1,85 @@
+# Investor Category Enumeration
+# Domain: Investment Profile
+# Description: Regulatory investor classification for product access
+
+enumeration_name: investment_investor_category
+domain: investment
+description: Regulatory investor classification determining product eligibility and investor protection level
+version: 1.0
+last_updated: 2025-01-05
+
+values:
+  - code: RETAIL
+    description: Retail investor with standard investor protection
+    sort_order: 1
+    thailand_context: Standard individual investors, full SEC protection
+    protection_level: Full investor protection, suitability required for complex products
+    
+  - code: GENERAL
+    description: General investor (Thailand SEC classification)
+    sort_order: 2
+    thailand_context: Retail investor category under Thai regulations
+    protection_level: Standard protections apply
+    
+  - code: HIGH_NET_WORTH
+    description: High Net Worth individual investor
+    sort_order: 3
+    thailand_context: Meets SEC HNW criteria (assets/income thresholds)
+    protection_level: Reduced restrictions, broader product access
+    eligibility_th: Total assets ≥ 30M THB or annual income ≥ 3M THB
+    
+  - code: INSTITUTIONAL
+    description: Institutional investor (corporate, fund, foundation)
+    sort_order: 4
+    thailand_context: Legal entities, pension funds, mutual funds
+    protection_level: Sophisticated investor, minimal restrictions
+    
+  - code: PROFESSIONAL
+    description: Professional investor with specialized knowledge
+    sort_order: 5
+    thailand_context: Licensed professionals, financial institutions
+    protection_level: Sophisticated investor treatment, broad product access
+    
+  - code: ULTRA_HIGH_NET_WORTH
+    description: Ultra High Net Worth investor
+    sort_order: 6
+    thailand_context: Meets UHNW criteria, private banking clients
+    protection_level: Minimal restrictions, alternative investments permitted
+    eligibility_th: Total assets ≥ 100M THB
+    
+  - code: ACCREDITED
+    description: Accredited investor (qualified institutional/individual)
+    sort_order: 7
+    thailand_context: Qualifies under SEC accredited investor criteria
+    protection_level: Sophisticated investor, access to private placements
+    
+  - code: UNKNOWN
+    description: Investor category not yet determined
+    sort_order: 99
+    thailand_context: Pending classification assessment
+
+notes: |
+  - Thailand SEC defines specific thresholds for HNW and institutional categories
+  - RETAIL investors have strongest protections and suitability requirements
+  - HNW/UHNW investors access broader product range (private equity, hedge funds)
+  - Category determines minimum investment amounts for certain products
+  - Complex products require different disclosure levels by category
+  - Private banking services typically serves HNW and UHNW segments
+  - Investment platforms may have category-specific product offerings
+  - Reclassification requires updated financial documentation
+  
+validation_rules:
+  - Category must be supported by financial documentation
+  - HNW status requires verified assets ≥ 30M THB or income ≥ 3M THB
+  - UHNW status requires verified assets ≥ 100M THB
+  - RETAIL category requires full suitability assessment for complex products
+  - Category influences margin limits and leverage allowance
+  - INSTITUTIONAL requires entity documentation and authorization
+  - Periodic re-verification required for HNW/UHNW status
+  
+regulatory_references:
+  - Thailand SEC Notification on Offering Newly Issued Securities
+  - SEC Guidelines on Accredited Investor and HNW Investor
+  - SET member firm client categorization standards
+  - Private placement regulations
+  - Alternative investment fund regulations

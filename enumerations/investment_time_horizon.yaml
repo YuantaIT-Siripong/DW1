@@ -1,0 +1,58 @@
+# Investment Time Horizon Enumeration
+# Domain: Investment Profile
+# Description: Expected investment holding period
+
+enumeration_name: investment_time_horizon
+domain: investment
+description: Client-declared investment time horizon or expected holding period for portfolio strategy
+version: 1.0
+last_updated: 2025-01-05
+
+values:
+  - code: SHORT_TERM
+    description: Less than 1 year holding period
+    sort_order: 1
+    typical_range: 0-12 months
+    thailand_context: Money market, short-term bonds, trading accounts
+    
+  - code: MEDIUM_TERM
+    description: 1-5 years holding period
+    sort_order: 2
+    typical_range: 1-5 years
+    thailand_context: Balanced funds, medium-term bonds, mixed portfolios
+    
+  - code: LONG_TERM
+    description: 5-10 years holding period
+    sort_order: 3
+    typical_range: 5-10 years
+    thailand_context: Equity funds, growth stocks, long-term bonds
+    
+  - code: VERY_LONG_TERM
+    description: More than 10 years holding period
+    sort_order: 4
+    typical_range: 10+ years
+    thailand_context: Retirement funds (RMF, SSF), estate planning, pension
+    
+  - code: UNKNOWN
+    description: Time horizon not yet determined or declared
+    sort_order: 99
+    thailand_context: Requires assessment for proper portfolio allocation
+
+notes: |
+  - Time horizon influences asset allocation and product suitability
+  - SHORT_TERM typically paired with CONSERVATIVE risk levels
+  - VERY_LONG_TERM suitable for RETIREMENT objectives and higher risk tolerance
+  - Thailand retirement funds (RMF, SSF) require minimum holding periods
+  - May remain UNKNOWN initially; should be collected during suitability assessment
+  - Brokerage advisory uses horizon for liquidity planning
+  
+validation_rules:
+  - Time horizon should align with investment objectives
+  - SHORT_TERM + AGGRESSIVE risk level may trigger suitability warning
+  - RETIREMENT objective should typically have LONG_TERM or VERY_LONG_TERM horizon
+  - Liquidity needs should be consistent with time horizon
+  
+regulatory_references:
+  - SEC suitability assessment standards
+  - SET member firm investment planning guidelines
+  - Thailand provident fund regulations (for retirement accounts)

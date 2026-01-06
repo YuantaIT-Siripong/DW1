@@ -1,0 +1,78 @@
+# KYC Status Enumeration
+# Domain: Investment Profile
+# Description: Know Your Customer (KYC) verification lifecycle status
+
+enumeration_name: investment_kyc_status
+domain: investment
+description: KYC verification status indicating compliance stage and customer onboarding lifecycle
+version: 1.0
+last_updated: 2025-01-05
+
+values:
+  - code: NOT_STARTED
+    description: KYC process not initiated
+    sort_order: 1
+    thailand_context: Initial state, no trading permitted
+    
+  - code: IN_PROGRESS
+    description: KYC documentation collection and verification in progress
+    sort_order: 2
+    thailand_context: Partial documents received, pending completion
+    
+  - code: PENDING_REVIEW
+    description: KYC documents submitted, awaiting compliance review
+    sort_order: 3
+    thailand_context: Documents under review by compliance team
+    
+  - code: VERIFIED
+    description: KYC completed and verified, customer fully onboarded
+    sort_order: 4
+    thailand_context: Full trading and investment access granted
+    
+  - code: REJECTED
+    description: KYC verification failed, application rejected
+    sort_order: 5
+    thailand_context: Cannot open account, reasons documented
+    
+  - code: EXPIRED
+    description: KYC information expired, re-verification required
+    sort_order: 6
+    thailand_context: Annual or periodic update required per regulations
+    
+  - code: SUSPENDED
+    description: KYC status suspended pending investigation or updates
+    sort_order: 7
+    thailand_context: Temporary suspension, trading restricted
+    
+  - code: INCOMPLETE
+    description: KYC documents incomplete or insufficient
+    sort_order: 8
+    thailand_context: Additional documentation required
+    
+  - code: UNKNOWN
+    description: KYC status not determined or legacy data
+    sort_order: 99
+    thailand_context: Data migration or integration pending
+
+notes: |
+  - Thailand SEC requires annual KYC updates for active investors
+  - SET member firms must maintain current KYC for all clients
+  - Banking Act and Anti-Money Laundering regulations mandate KYC
+  - Financial institutions require periodic re-verification
+  - Only VERIFIED status permits full investment access
+  - EXPIRED status triggers automatic trading restrictions
+  - Brokerage systems enforce KYC gating for transactions
+  
+validation_rules:
+  - Trading and investment activities require VERIFIED status
+  - EXPIRED status must trigger notification and update workflow
+  - SUSPENDED or REJECTED blocks all transactions
+  - Transition from NOT_STARTED to VERIFIED requires compliance approval
+  - Annual review date tracked separately for VERIFIED customers
+  
+regulatory_references:
+  - Thailand SEC KYC and investor protection regulations
+  - SET member firm KYC/CDD requirements
+  - Bank of Thailand KYC standards
+  - Anti-Money Laundering Act B.E. 2542 (1999) and amendments
+  - AMLO and OFAC compliance requirements

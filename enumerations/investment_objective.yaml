@@ -1,0 +1,82 @@
+# Investment Objective Enumeration
+# Domain: Investment Profile
+# Description: Investment objective/goal category for portfolio alignment
+
+enumeration_name: investment_objective
+domain: investment
+description: Primary investment objective or goal category for portfolio strategy and product recommendations
+version: 1.0
+last_updated: 2025-01-05
+
+values:
+  - code: CAPITAL_PRESERVATION
+    description: Preserve principal, minimal risk, liquidity priority
+    sort_order: 1
+    thailand_context: Money market, government bonds, savings products
+    
+  - code: INCOME
+    description: Generate regular income stream from investments
+    sort_order: 2
+    thailand_context: Dividend stocks, corporate bonds, income funds, REITs
+    
+  - code: GROWTH
+    description: Long-term capital appreciation, accept higher volatility
+    sort_order: 3
+    thailand_context: Equity funds, growth stocks, SET listed securities
+    
+  - code: BALANCED
+    description: Balance between income and growth objectives
+    sort_order: 4
+    thailand_context: Balanced funds, mixed portfolios
+    
+  - code: SPECULATION
+    description: Short-term trading, high risk/return, active management
+    sort_order: 5
+    thailand_context: Day trading, derivatives, leveraged products
+    
+  - code: RETIREMENT
+    description: Long-term retirement planning and accumulation
+    sort_order: 6
+    thailand_context: RMF, SSF, LTF, retirement mutual funds
+    
+  - code: EDUCATION
+    description: Savings for education expenses (self or dependents)
+    sort_order: 7
+    thailand_context: Education savings plans, unit trusts
+    
+  - code: TAX_PLANNING
+    description: Tax-advantaged investment strategies
+    sort_order: 8
+    thailand_context: RMF, SSF for tax deductions per Revenue Code
+    
+  - code: WEALTH_PRESERVATION
+    description: Protect and maintain existing wealth across generations
+    sort_order: 9
+    thailand_context: Estate planning, trust structures, conservative portfolios
+    
+  - code: OTHER
+    description: Other investment objective not categorized above
+    sort_order: 98
+    thailand_context: Custom objectives documented in notes
+    
+  - code: UNKNOWN
+    description: Investment objective not yet determined or declared
+    sort_order: 99
+    thailand_context: Requires assessment before personalized recommendations
+
+notes: |
+  - Client may have multiple objectives; bridge table supports many-to-many relationship
+  - Primary objective drives asset allocation recommendations
+  - Thailand-specific retirement vehicles (RMF, SSF, LTF) align with RETIREMENT/TAX_PLANNING
+  - Brokerage advisory services use objectives for portfolio construction
+  - Investment time horizon and risk level should align with objectives
+  
+validation_rules:
+  - At least one objective should be specified for active investors
+  - SPECULATION objective requires risk level of MODERATE_AGGRESSIVE or AGGRESSIVE
+  - RETIREMENT/EDUCATION typically align with longer time horizons
+  
+regulatory_references:
+  - SEC investment advisory standards
+  - Brokerage suitability assessment guidelines
+  - Thailand Revenue Code (tax-advantaged products)

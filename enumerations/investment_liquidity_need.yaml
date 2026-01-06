@@ -1,0 +1,59 @@
+# Investment Liquidity Need Enumeration
+# Domain: Investment Profile
+# Description: Liquidity requirement level for portfolio management
+
+enumeration_name: investment_liquidity_need
+domain: investment
+description: Client liquidity need level indicating urgency of access to invested funds
+version: 1.0
+last_updated: 2025-01-05
+
+values:
+  - code: IMMEDIATE
+    description: Need immediate access to funds, highest liquidity priority
+    sort_order: 1
+    thailand_context: Money market, savings accounts, T-bills, demand deposits
+    
+  - code: HIGH
+    description: May need funds within weeks, high liquidity required
+    sort_order: 2
+    thailand_context: Short-term bonds, liquid funds, exchange-traded products
+    
+  - code: MEDIUM
+    description: Moderate liquidity needs, can wait months if necessary
+    sort_order: 3
+    thailand_context: Balanced funds, listed securities with good volume
+    
+  - code: LOW
+    description: Low liquidity needs, comfortable with less liquid investments
+    sort_order: 4
+    thailand_context: Long-term bonds, equity funds, illiquid but higher-return products
+    
+  - code: VERY_LOW
+    description: Minimal liquidity needs, can lock funds for extended periods
+    sort_order: 5
+    thailand_context: Provident funds, long-term structured products, private equity
+    
+  - code: UNKNOWN
+    description: Liquidity needs not yet assessed or declared
+    sort_order: 99
+    thailand_context: Requires assessment for product eligibility
+
+notes: |
+  - Liquidity need influences product eligibility and portfolio construction
+  - IMMEDIATE/HIGH liquidity needs restrict illiquid product access
+  - VERY_LOW liquidity suitable for locked retirement funds (RMF, SSF)
+  - Thailand market has specific liquidity requirements for structured products
+  - Brokerage risk assessment evaluates liquidity for margin and leverage
+  - Should align with investment time horizon and financial situation
+  
+validation_rules:
+  - IMMEDIATE liquidity need incompatible with illiquid structured products
+  - VERY_LOW liquidity appropriate for retirement accounts with lock-up periods
+  - Margin trading typically requires MEDIUM or better liquidity
+  - Complex products with redemption restrictions require LOW or VERY_LOW liquidity tolerance
+  
+regulatory_references:
+  - SEC guidelines on illiquid product suitability
+  - SET member firm liquidity assessment standards
+  - Banking liquidity risk management requirements

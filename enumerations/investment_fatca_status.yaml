@@ -1,0 +1,75 @@
+# FATCA Status Enumeration
+# Domain: Investment Profile
+# Description: Foreign Account Tax Compliance Act status
+
+enumeration_name: investment_fatca_status
+domain: investment
+description: FATCA (Foreign Account Tax Compliance Act) compliance status for U.S. person identification
+version: 1.0
+last_updated: 2025-01-05
+
+values:
+  - code: NOT_APPLICABLE
+    description: Customer not subject to FATCA (non-U.S. person)
+    sort_order: 1
+    thailand_context: Thai nationals with no U.S. indicia
+    
+  - code: PENDING_DETERMINATION
+    description: FATCA status under review, U.S. indicia being evaluated
+    sort_order: 2
+    thailand_context: Pending documentation review
+    
+  - code: US_PERSON_COMPLIANT
+    description: U.S. person with compliant W-9 documentation
+    sort_order: 3
+    thailand_context: U.S. citizens, green card holders with W-9 on file
+    reporting_required: Yes, report to IRS via Thai financial institutions
+    
+  - code: US_PERSON_NON_COMPLIANT
+    description: U.S. person without proper documentation
+    sort_order: 4
+    thailand_context: U.S. person without W-9 or IRS documentation
+    implications: Account restrictions, withholding tax may apply
+    
+  - code: RECALCITRANT
+    description: Customer refuses to provide FATCA documentation
+    sort_order: 5
+    thailand_context: Refuses to confirm or deny U.S. person status
+    implications: Enhanced withholding, account restrictions, possible closure
+    
+  - code: CLOSED_ACCOUNT
+    description: Account closed due to FATCA non-compliance
+    sort_order: 6
+    thailand_context: Account terminated for FATCA reasons
+    
+  - code: UNKNOWN
+    description: FATCA status not yet determined
+    sort_order: 99
+    thailand_context: Initial status during onboarding
+
+notes: |
+  - Thailand financial institutions must comply with FATCA reporting
+  - Thai government has FATCA IGA (Intergovernmental Agreement) with U.S.
+  - Banks and brokerages must identify U.S. persons
+  - U.S. indicia: U.S. birth place, U.S. address, U.S. phone, U.S. power of attorney
+  - W-9 form required from U.S. persons for FATCA compliance
+  - W-8BEN form required from non-U.S. persons with U.S. investments
+  - Non-compliant accounts subject to 30% withholding on U.S. source income
+  - Annual reporting to U.S. IRS via Thai government for U.S. persons
+  - FATCA status affects product eligibility (some products unavailable to U.S. persons)
+  
+validation_rules:
+  - U.S. indicia triggers mandatory FATCA determination
+  - US_PERSON_COMPLIANT requires W-9 on file with valid TIN
+  - US_PERSON_NON_COMPLIANT triggers account restriction workflow
+  - RECALCITRANT status requires escalation and potential account closure
+  - Annual self-certification required from account holders
+  - Status change requires new documentation
+  - Thai financial institutions must maintain FATCA classification
+  
+regulatory_references:
+  - U.S. Foreign Account Tax Compliance Act (FATCA)
+  - Thailand-U.S. FATCA Intergovernmental Agreement (IGA)
+  - Bank of Thailand FATCA compliance guidelines
+  - SEC requirements for FATCA compliance by Thai securities firms
+  - Revenue Department guidance on FATCA reporting

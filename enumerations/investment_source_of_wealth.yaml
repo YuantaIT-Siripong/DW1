@@ -1,0 +1,101 @@
+# Source of Wealth Enumeration
+# Domain: Investment Profile
+# Description: Origin of customer's wealth for AML compliance
+
+enumeration_name: investment_source_of_wealth
+domain: investment
+description: Primary source or origin of customer's accumulated wealth for AML/KYC compliance and risk assessment
+version: 1.0
+last_updated: 2025-01-05
+
+values:
+  - code: EMPLOYMENT_SALARY
+    description: Employment salary and wages from employer
+    sort_order: 1
+    thailand_context: Most common for retail investors, documented by payslips
+    
+  - code: BUSINESS_INCOME
+    description: Income from owned or operated business
+    sort_order: 2
+    thailand_context: SME owners, entrepreneurs, requires business documentation
+    
+  - code: INVESTMENT_INCOME
+    description: Returns from existing investments (dividends, interest, capital gains)
+    sort_order: 3
+    thailand_context: Portfolio income, passive investment returns
+    
+  - code: INHERITANCE
+    description: Inherited wealth from estate or family transfer
+    sort_order: 4
+    thailand_context: Estate documentation, inheritance tax considerations
+    
+  - code: PROPERTY_SALE
+    description: Sale of real estate or property assets
+    sort_order: 5
+    thailand_context: Land title documentation, transfer records required
+    
+  - code: SAVINGS
+    description: Accumulated savings over time from various sources
+    sort_order: 6
+    thailand_context: Long-term accumulation, bank statements as evidence
+    
+  - code: RETIREMENT_BENEFITS
+    description: Pension, provident fund, or retirement account distributions
+    sort_order: 7
+    thailand_context: Provident Fund, GPF, Social Security benefits
+    
+  - code: GIFT_DONATION
+    description: Gift or donation from family or other party
+    sort_order: 8
+    thailand_context: Gift documentation, donor identification for AML
+    
+  - code: BUSINESS_SALE
+    description: Sale of business or equity stake in company
+    sort_order: 9
+    thailand_context: M&A transaction, business valuation documentation
+    
+  - code: WINDFALL
+    description: Windfall gains (lottery, legal settlement, etc.)
+    sort_order: 10
+    thailand_context: Lottery documentation, legal settlement records
+    
+  - code: FAMILY_WEALTH
+    description: Family wealth and intergenerational transfer
+    sort_order: 11
+    thailand_context: Family business, trust structures, generational wealth
+    
+  - code: OTHER
+    description: Other documented source of wealth not listed above
+    sort_order: 98
+    thailand_context: Requires detailed documentation and explanation
+    
+  - code: UNKNOWN
+    description: Source of wealth not yet declared or verified
+    sort_order: 99
+    thailand_context: Pending documentation, KYC incomplete
+
+notes: |
+  - Critical for AML compliance and enhanced due diligence
+  - Thailand AMLO requires documented source of wealth for large accounts
+  - High-value customers (HNW/UHNW) require detailed wealth verification
+  - Multiple sources possible; primary source captured here
+  - Major financial institutions and brokerages require documentation supporting declared source
+  - Inconsistency between source of wealth and transaction patterns triggers alerts
+  - Enhanced due diligence required for INHERITANCE, WINDFALL, GIFT_DONATION
+  - PEP customers require extra scrutiny on source of wealth
+  
+validation_rules:
+  - Source must be documented and verified during KYC process
+  - Large account balances require proportionate wealth documentation
+  - UNKNOWN status acceptable only during initial onboarding
+  - HNW/UHNW classifications require verified wealth documentation
+  - Enhanced due diligence for high-risk sources (INHERITANCE from foreign sources)
+  - Transaction patterns should be consistent with declared source
+  - Updates require new documentation and compliance review
+  
+regulatory_references:
+  - Thailand Anti-Money Laundering Act and AMLO guidelines
+  - SEC KYC and due diligence requirements
+  - Bank of Thailand Enhanced Due Diligence standards
+  - FATF Recommendations on source of wealth verification
+  - Proceeds of Crime Act (money laundering prevention)

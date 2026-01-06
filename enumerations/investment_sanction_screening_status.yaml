@@ -1,0 +1,85 @@
+# Sanction Screening Status Enumeration
+# Domain: Investment Profile
+# Description: Sanction screening result status
+
+enumeration_name: investment_sanction_screening_status
+domain: investment
+description: Sanction screening status indicating result of checks against international sanctions lists
+version: 1.0
+last_updated: 2025-01-05
+
+values:
+  - code: NOT_SCREENED
+    description: Sanction screening not yet performed
+    sort_order: 1
+    thailand_context: Initial status, screening pending
+    
+  - code: CLEAR
+    description: No sanctions matches, customer cleared
+    sort_order: 2
+    thailand_context: No hits on OFAC, UN, EU, or other sanctions lists
+    
+  - code: POTENTIAL_MATCH
+    description: Possible match detected, under review
+    sort_order: 3
+    thailand_context: Name similarity to sanctioned entity, manual review required
+    implications: Account opening/transactions suspended during review
+    
+  - code: FALSE_POSITIVE
+    description: Initial match confirmed as false positive
+    sort_order: 4
+    thailand_context: Similarity resolved, customer cleared after review
+    
+  - code: CONFIRMED_MATCH
+    description: Confirmed match to sanctioned individual/entity
+    sort_order: 5
+    thailand_context: Positive match confirmed after investigation
+    implications: Account rejected/closed, cannot maintain customer relationship
+    
+  - code: RESTRICTED
+    description: Country/jurisdiction restrictions apply
+    sort_order: 6
+    thailand_context: Customer from restricted jurisdiction (not personally sanctioned)
+    implications: Enhanced due diligence, product restrictions
+    
+  - code: REVIEW_REQUIRED
+    description: Periodic review due or risk factors require re-screening
+    sort_order: 7
+    thailand_context: Scheduled re-screening or risk-triggered review
+    
+  - code: UNKNOWN
+    description: Screening status not determined
+    sort_order: 99
+    thailand_context: Legacy data or status not established
+
+notes: |
+  - Thailand financial institutions must comply with UN Security Council sanctions
+  - OFAC (U.S. Treasury) sanctions widely adopted by Thai banks and brokerages
+  - EU sanctions lists monitored for compliance
+  - Thai AMLO maintains national sanctions lists
+  - Real-time screening at transaction level for high-risk customers
+  - Sanctions lists include: SDN (Specially Designated Nationals), PEP lists
+  - Screening covers individual names, entities, addresses, identification numbers
+  - Name matching algorithms consider phonetic similarity and transliteration
+  - Major banks use automated sanctions screening systems
+  - Positive match requires immediate transaction block and regulatory reporting
+  - False positive resolution documented and retained
+  
+validation_rules:
+  - CLEAR status required before account activation
+  - POTENTIAL_MATCH blocks transactions until resolved
+  - CONFIRMED_MATCH requires immediate account closure and reporting
+  - Periodic re-screening required (quarterly for high-risk, annually for others)
+  - PEP customers require enhanced screening frequency
+  - Cross-border transactions trigger real-time screening
+  - Screening must cover beneficial owners and authorized signatories
+  - Status change triggers compliance notification
+  
+regulatory_references:
+  - UN Security Council Consolidated Sanctions List
+  - OFAC SDN (Specially Designated Nationals) List
+  - EU Consolidated Financial Sanctions List
+  - Thailand AMLO sanctions and restricted lists
+  - Anti-Money Laundering Act B.E. 2542
+  - SEC compliance requirements for sanctions screening
+  - Bank of Thailand sanctions compliance guidelines

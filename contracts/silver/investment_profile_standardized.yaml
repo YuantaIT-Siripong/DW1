@@ -1,0 +1,359 @@
+entity_name: investment_profile_standardized
+domain: investment
+table_type: cleansed
+layer: silver
+grain_description: One record per investment profile per last_modified_ts with cleaned, validated, and enriched data. Append-only pattern preserves history with computed profile hash for SCD2 change detection. Still flat table (not dimensional model yet).
+
+upstream_source:
+  layer: bronze
+  table_name: bronze.investment_profile_standardized
+  transformation_type: enrichment_and_validation
+
+primary_keys:
+  - investment_profile_id
+  - last_modified_ts
+  
+natural_keys:
+  - investment_profile_id
+
+# Silver layer includes all Bronze attributes with:
+# 1. TRIM and UPPER normalization on enumeration codes
+# 2. Computed profile_hash for SCD2 change detection  
+# 3. Data quality validation flags for all attributes
+# 4. Overall data_quality_score
+
+attributes_inherited_from_bronze:
+  note: |
+    All 47 attributes from Bronze layer are inherited with the following transformations:
+    - Enumeration codes: UPPER(TRIM())
+    - Text fields: TRIM()
+    - Timestamps and numerics: preserved as-is
+    - Boolean flags: preserved as-is
+    
+  # See contracts/bronze/investment_profile_standardized.yaml for complete attribute list:
+  # - investment_profile_id, scope_type, customer_id, customer_code
+  # - risk_level_code, suitability_score, ability_to_bear_loss_tier
+  # - investment_objective_category, investment_time_horizon, liquidity_need_level
+  # - investment_experience_years
+  # - high_net_worth_status_code
+  # - kyc_status, kyc_risk_rating, aml_risk_rating
+  # - pep_flag, sanction_screening_status, fatca_status
+  # - investor_category, source_of_wealth_code
+  # - complex_product_acknowledged_flag, derivative_risk_acknowledged_flag, fx_risk_acknowledged_flag
+  # - complex_product_allowed, ipo_participation_allowed
+  # - margin_agreement_status, leverage_tolerance
+  # - advisory_discretion_flag
+  # - vulnerable_investor_flag, vulnerability_reason_code, vulnerability_assessment_ts
+  # - review_cycle, next_review_due_ts, last_risk_review_ts
+  # - last_modified_ts
+  # - _bronze_load_ts, _bronze_source_file, _bronze_batch_id
+
+computed_columns:
+  # Profile Hash for SCD2 Change Detection
+  - name: profile_hash
+    datatype: VARCHAR(64)
+    business_definition: SHA256 hash of all version-driving attributes for SCD2 change detection
+    nullable: false
+    computed: true
+    computation_logic: |
+      Per ADR-INV-001 and Hashing Standards, canonical string assembly with "|" delimiter:
+      
+      Ordered attributes (40 fields - all versioned attributes):
+      1. scope_type (UPPER(TRIM))
+      2. customer_id (TRIM)
+      3. customer_code (TRIM) - nullable
+      4. risk_level_code (UPPER(TRIM))
+      5. suitability_score (numeric as-is or __NULL__)
+      6. ability_to_bear_loss_tier (UPPER(TRIM))
+      7. investment_objective_category (UPPER(TRIM))
+      8. investment_time_horizon (UPPER(TRIM))
+      9. liquidity_need_level (UPPER(TRIM))
+      10. investment_experience_years (numeric as-is or __NULL__)
+      11. high_net_worth_status_code (UPPER(TRIM))
+      12. kyc_status (UPPER(TRIM))
+      13. kyc_risk_rating (UPPER(TRIM))
+      14. aml_risk_rating (UPPER(TRIM))
+      15. pep_flag (true/false or __NULL__)
+      16. sanction_screening_status (UPPER(TRIM))
+      17. fatca_status (UPPER(TRIM))
+      18. investor_category (UPPER(TRIM))
+      19. source_of_wealth_code (UPPER(TRIM))
+      20. complex_product_acknowledged_flag (true/false or __NULL__)
+      21. derivative_risk_acknowledged_flag (true/false or __NULL__)
+      22. fx_risk_acknowledged_flag (true/false or __NULL__)
+      23. complex_product_allowed (true/false or __NULL__)
+      24. ipo_participation_allowed (true/false or __NULL__)
+      25. margin_agreement_status (UPPER(TRIM))
+      26. leverage_tolerance (UPPER(TRIM))
+      27. advisory_discretion_flag (true/false or __NULL__)
+      28. vulnerable_investor_flag (true/false or __NULL__)
+      29. vulnerability_reason_code (UPPER(TRIM))
+      30. vulnerability_assessment_ts (ISO 8601 format or __NULL__)
+      31. review_cycle (UPPER(TRIM))
+      32. next_review_due_ts (ISO 8601 format or __NULL__)
+      33. last_risk_review_ts (ISO 8601 format or __NULL__)
+      
+      NULL handling: "__NULL__" token
+      Boolean: lowercase "true" or "false"
+      Timestamps: ISO 8601 UTC format
+      
+      SHA256(concatenated_string) → lowercase hex (64 chars)
+      
+      IMPORTANT EXCLUSIONS per ADR-INV-001 and Hashing Standards:
+      - Surrogate keys (investment_profile_version_sk)
+      - Derived scores (data_quality_score, profile_reliability_score) - NOT persisted in SCD2
+      - ETL metadata fields (_bronze_*, _silver_*, load_ts)
+      - Type 1 / lineage fields (created_by, ingestion_batch_id, source_system)
+      
+      Reference: docs/data-modeling/hashing_standards.md
+      Reference: docs/adr/ADR-INV-001-investment-profile.md
+
+  # Data Quality Validation Flags
+  - name: is_valid_risk_level
+    datatype: BOOLEAN
+    business_definition: TRUE if risk_level_code is in enumeration
+    nullable: false
+    computed: true
+    default: false
+    computation_logic: Check against enumerations/investment_risk_level.yaml
+
+  - name: is_valid_ability_to_bear_loss
+    datatype: BOOLEAN
+    business_definition: TRUE if ability_to_bear_loss_tier is in enumeration
+    nullable: false
+    computed: true
+    default: false
+    computation_logic: Check against enumerations/investment_ability_to_bear_loss.yaml
+
+  - name: is_valid_investment_objective
+    datatype: BOOLEAN
+    business_definition: TRUE if investment_objective_category is in enumeration
+    nullable: false
+    computed: true
+    default: false
+    computation_logic: Check against enumerations/investment_objective.yaml
+
+  - name: is_valid_time_horizon
+    datatype: BOOLEAN
+    business_definition: TRUE if investment_time_horizon is in enumeration
+    nullable: false
+    computed: true
+    default: false
+    computation_logic: Check against enumerations/investment_time_horizon.yaml
+
+  - name: is_valid_liquidity_need
+    datatype: BOOLEAN
+    business_definition: TRUE if liquidity_need_level is in enumeration
+    nullable: false
+    computed: true
+    default: false
+    computation_logic: Check against enumerations/investment_liquidity_need.yaml
+
+  - name: is_valid_kyc_status
+    datatype: BOOLEAN
+    business_definition: TRUE if kyc_status is in enumeration
+    nullable: false
+    computed: true
+    default: false
+    computation_logic: Check against enumerations/investment_kyc_status.yaml
+
+  - name: is_valid_kyc_risk_rating
+    datatype: BOOLEAN
+    business_definition: TRUE if kyc_risk_rating is in enumeration
+    nullable: false
+    computed: true
+    default: false
+    computation_logic: Check against enumerations/investment_kyc_risk_rating.yaml
+
+  - name: is_valid_aml_risk_rating
+    datatype: BOOLEAN
+    business_definition: TRUE if aml_risk_rating is in enumeration
+    nullable: false
+    computed: true
+    default: false
+    computation_logic: Check against enumerations/investment_aml_risk_rating.yaml
+
+  - name: is_valid_investor_category
+    datatype: BOOLEAN
+    business_definition: TRUE if investor_category is in enumeration
+    nullable: false
+    computed: true
+    default: false
+    computation_logic: Check against enumerations/investment_investor_category.yaml
+
+  - name: is_valid_source_of_wealth
+    datatype: BOOLEAN
+    business_definition: TRUE if source_of_wealth_code is in enumeration
+    nullable: false
+    computed: true
+    default: false
+    computation_logic: Check against enumerations/investment_source_of_wealth.yaml
+
+  - name: is_valid_suitability_score
+    datatype: BOOLEAN
+    business_definition: TRUE if suitability_score is between 0 and 100 or NULL
+    nullable: false
+    computed: true
+    default: false
+    computation_logic: suitability_score IS NULL OR (suitability_score >= 0 AND suitability_score <= 100)
+
+  - name: is_consistent_complex_product_acknowledgement
+    datatype: BOOLEAN
+    business_definition: TRUE if complex_product_allowed implies complex_product_acknowledged_flag
+    nullable: false
+    computed: true
+    default: false
+    computation_logic: complex_product_allowed IS NOT TRUE OR complex_product_acknowledged_flag IS TRUE
+
+  - name: is_consistent_margin_prerequisites
+    datatype: BOOLEAN
+    business_definition: TRUE if margin_agreement_status=ACTIVE meets prerequisites
+    nullable: false
+    computed: true
+    default: false
+    computation_logic: |
+      margin_agreement_status != 'ACTIVE' OR 
+      (leverage_tolerance != 'NONE' AND 
+       ability_to_bear_loss_tier NOT IN ('VERY_LOW', 'LOW') AND
+       vulnerable_investor_flag IS NOT TRUE)
+
+  - name: is_consistent_vulnerability_reason
+    datatype: BOOLEAN
+    business_definition: TRUE if vulnerable_investor_flag implies proper reason code
+    nullable: false
+    computed: true
+    default: false
+    computation_logic: vulnerable_investor_flag IS NOT TRUE OR vulnerability_reason_code NOT IN ('NONE', 'UNKNOWN')
+
+  # Overall Data Quality Score
+  - name: data_quality_score
+    datatype: NUMERIC(5,2)
+    business_definition: Overall data quality score (0-100) based on validation and consistency checks
+    nullable: false
+    computed: true
+    default: 0.00
+    computation_logic: |
+      (Count of TRUE validation/consistency flags / Total flags) * 100
+      Range: 0.00 to 100.00
+      
+      Total flags: 14
+      1. is_valid_risk_level
+      2. is_valid_ability_to_bear_loss
+      3. is_valid_investment_objective
+      4. is_valid_time_horizon
+      5. is_valid_liquidity_need
+      6. is_valid_kyc_status
+      7. is_valid_kyc_risk_rating
+      8. is_valid_aml_risk_rating
+      9. is_valid_investor_category
+      10. is_valid_source_of_wealth
+      11. is_valid_suitability_score
+      12. is_consistent_complex_product_acknowledgement
+      13. is_consistent_margin_prerequisites
+      14. is_consistent_vulnerability_reason
+
+  - name: data_quality_status
+    datatype: VARCHAR(20)
+    business_definition: Categorical quality classification
+    nullable: false
+    computed: true
+    computation_logic: |
+      CASE
+        WHEN data_quality_score = 100 THEN 'VALID'
+        WHEN data_quality_score >= 80 THEN 'WARNING'
+        ELSE 'INVALID'
+      END
+
+  # Silver ETL Metadata
+  - name: _silver_load_ts
+    datatype: TIMESTAMP
+    business_definition: UTC timestamp when processed to Silver
+    nullable: false
+    default: CURRENT_TIMESTAMP
+    etl_metadata: true
+
+data_quality_rules:
+  - rule: unique_profile_per_timestamp
+    description: (investment_profile_id, last_modified_ts) must be unique
+    
+  - rule: scope_consistency
+    description: If scope_type=CUSTOMER_CODE then customer_code must be populated
+    
+  - rule: profile_hash_not_null
+    description: profile_hash must be computed for all records
+    
+  - rule: dq_score_range
+    description: data_quality_score must be between 0 and 100
+    
+  - rule: consistency_checks
+    description: All business rule consistency flags should be validated
+
+transformation_rules:
+  - Applied by dbt Silver model:
+    - TRIM all text fields
+    - UPPER(TRIM) all enumeration codes
+    - Validate all enumeration values against YAML files
+    - Compute profile_hash per canonical order
+    - Calculate all validation and consistency flags
+    - Compute overall data_quality_score
+    - Set data_quality_status based on score
+    - Add _silver_load_ts timestamp
+
+immutability_policy: |
+  Silver records follow append-only pattern like Bronze.
+  Composite PK (investment_profile_id, last_modified_ts) ensures temporal history.
+  Records are not updated or deleted - new versions are appended.
+
+retention_policy: 7_years_minimum
+
+indexes:
+  - name: pk_silver_investment_profile
+    type: primary_key
+    columns: [investment_profile_id, last_modified_ts]
+    description: Composite key for append-only temporal history
+      
+  - name: idx_silver_investment_lookup
+    type: non_unique
+    columns: [investment_profile_id]
+    description: Fast lookup by investment profile (all versions)
+    
+  - name: idx_silver_investment_customer
+    type: non_unique
+    columns: [customer_id]
+    description: Fast lookup by customer
+    
+  - name: idx_silver_investment_hash
+    type: non_unique
+    columns: [profile_hash]
+    description: Support change detection in Gold layer
+    
+  - name: idx_silver_investment_load_ts
+    type: non_unique
+    columns: [_silver_load_ts]
+    description: Query by silver load timestamp
+
+pii_policy:
+  columns_raw_pii: []
+  columns_pseudonymous:
+    - investment_profile_id
+    - customer_id
+    - customer_code
+  access_control:
+    - role: dw_etl_service
+      access: read_write
+    - role: dw_privileged
+      access: read_only
+    - role: dw_analyst
+      access: read_only
+  notes: |
+    Investment profile contains sensitive financial suitability and compliance information.
+    Access should be controlled according to data governance policies.
+
+version: 1.0
+last_updated: 2025-01-05
+owner: Data Warehouse Team
+upstream_owner: Data Warehouse ETL
+thailand_regulatory_alignment: |
+  Silver layer transformations maintain alignment with Thailand regulatory requirements.
+  Data quality validations ensure compliance with SEC, SET, AMLO standards.
+  Hash computation follows ADR-INV-001 for proper SCD2 version management.

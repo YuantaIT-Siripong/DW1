@@ -1,0 +1,59 @@
+# Investment Risk Level Enumeration
+# Domain: Investment Profile
+# Description: Risk appetite classification for suitability assessment
+# Aligns with: Thailand SEC regulations, SET guidelines, brokerage standards
+
+enumeration_name: investment_risk_level
+domain: investment
+description: Investment risk appetite/tolerance level for suitability assessment and product eligibility
+version: 1.0
+last_updated: 2025-01-05
+
+values:
+  - code: CONSERVATIVE
+    description: Low risk tolerance, capital preservation focus, minimal volatility acceptance
+    sort_order: 1
+    thailand_context: Suitable for fixed income, money market, conservative funds
+    
+  - code: MODERATE_CONSERVATIVE
+    description: Below-average risk tolerance, stability preferred over growth
+    sort_order: 2
+    thailand_context: Suitable for balanced funds with fixed income bias
+    
+  - code: BALANCED
+    description: Balanced risk-return profile, moderate volatility acceptance
+    sort_order: 3
+    thailand_context: Suitable for mixed equity/fixed income, balanced funds
+    
+  - code: MODERATE_AGGRESSIVE
+    description: Above-average risk tolerance, growth focus with volatility acceptance
+    sort_order: 4
+    thailand_context: Suitable for equity funds, growth stocks, higher volatility products
+    
+  - code: AGGRESSIVE
+    description: High risk tolerance, maximum growth focus, high volatility acceptance
+    sort_order: 5
+    thailand_context: Suitable for derivatives, leveraged products, speculative investments
+    
+  - code: UNKNOWN
+    description: Risk level not yet assessed or questionnaire not completed
+    sort_order: 99
+    thailand_context: Requires suitability assessment before product access
+
+notes: |
+  - No "OTHER" option - must select from defined risk levels
+  - Assessment should be refreshed annually or on major life events per SEC guidelines
+  - Used in suitability calculations and investment recommendations
+  - Risk level determines product eligibility and trading limits
+  - Thailand SEC requires documented risk assessment for complex products
+  - Brokerage firms Brokerage firms use this for client segmentation
+
+validation_rules:
+  - Risk level must be assessed before complex product access
+  - Annual review required for AGGRESSIVE and MODERATE_AGGRESSIVE levels
+  - Changes require updated suitability questionnaire
+  
+regulatory_references:
+  - Thailand SEC suitability assessment guidelines
+  - SET member firm suitability requirements
+  - Banking and brokerage KYC standards
