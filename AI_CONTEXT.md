@@ -407,20 +407,41 @@ GROUP BY p.customer_profile_version_sk;
 
 ### Core Documentation
 - [Customer Module Spec](docs/business/modules/customer_module.md) - Section 5 (Attributes), Section 8 (Hashing), Section 18 (IT View Spec)
-- [Enumeration Standards](docs/standards/enumeration_standards.md)
+- [Investment Profile Module Spec](docs/business/modules/investment_profile_module.md) - Section 8 (Attributes), Section 20 (Audit Events)
+- [Enumeration Standards](docs/data-modeling/enumeration_standards. md)
 - [Hashing Standards](docs/data-modeling/hashing_standards.md)
-- [SCD2 Policy](contracts/scd2/STANDARD_SCD2_POLICY.md)
+- [SCD2 Policy](contracts/scd2/STANDARD_SCD2_POLICY. md)
 
-### Contracts (Gold)
-- [Dimension: Customer Profile](contracts/gold/dim_customer_profile.yaml) - 31 attributes, complete
-- [Bridge: Source of Income](contracts/gold/bridge_customer_income_source_version.yaml) - complete
-- [Bridge: Investment Purpose](contracts/gold/bridge_customer_investment_purpose_version.yaml) - complete
-- [Fact: Profile Audit](contracts/gold/fact_customer_profile_audit.yaml) - complete
+### Contracts: Customer Profile (Complete ✅)
 
-### Contracts (Pending)
-- contracts/bronze/customer_profile_standardized.yaml - placeholder (needs generation)
-- contracts/silver/customer_profile_standardized.yaml - placeholder (needs generation)
+**Bronze Layer**:
+- [Bronze Contract](contracts/bronze/customer_profile_standardized.yaml) - Raw landing (12,348 bytes)
 
+**Silver Layer**:
+- [Silver Contract](contracts/silver/customer_profile_standardized.yaml) - Cleaned + validated (24,406 bytes)
+
+**Gold Layer**:
+- [Dimension: Customer Profile](contracts/gold/dim_customer_profile.yaml) - 31 attributes, SCD2 (19,886 bytes)
+- [Bridge: Source of Income](contracts/gold/bridge_customer_income_source_version.yaml) - Multi-valued set (4,849 bytes)
+- [Bridge: Investment Purpose](contracts/gold/bridge_customer_investment_purpose_version.yaml) - Multi-valued set (5,013 bytes)
+- [Fact: Profile Audit](contracts/gold/fact_customer_profile_audit.yaml) - Change tracking (11,505 bytes)
+
+### Contracts: Investment Profile (Partial ⚠️)
+
+**Bronze Layer**:
+- [Bronze Contract](contracts/bronze/investment_profile_standardized.yaml) - ✅ Complete (16,534 bytes)
+
+**Silver Layer**:
+- [Silver Contract](contracts/silver/investment_profile_standardized.yaml) - ✅ Complete (13,320 bytes)
+
+**Gold Layer**:
+- [Dimension: Investment Profile](contracts/gold/dim_investment_profile.yaml) - ✅ Complete (17,677 bytes)
+- Audit Fact Contracts - ⚠️ **Pending Creation** (per module spec Section 20):
+  - `fact_investment_acknowledgement.yaml` - ❌ Not yet created
+  - `fact_vulnerability_assessment.yaml` - ❌ Not yet created
+  - `fact_supervisory_override.yaml` - ❌ Not yet created
+  - `fact_investment_profile_audit.yaml` - ❌ Not yet created
+  
 ### Enumeration Files (Complete)
 All in `enumerations/` folder:
 - customer_person_title.yaml - MR, MRS, MS, MISS, DR, PROF, REV, OTHER
