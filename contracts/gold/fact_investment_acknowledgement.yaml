@@ -1,0 +1,322 @@
+entity_name: fact_investment_acknowledgement
+domain: investment
+table_type: fact_audit
+layer: gold
+grain_description: One row per risk disclosure acknowledgement event.  Tracks acceptance of DERIVATIVE_RISK, FX_RISK, and COMPLEX_PRODUCT disclosures with expiry dates and evidence details. 
+
+upstream_source:
+  layer: bronze
+  table_name:  bronze. acknowledgement_events
+  transformation_type: event_capture_and_audit_logging
+  note: Captured from acknowledgement workflow system
+
+primary_keys:
+  - acknowledgement_event_id
+
+surrogate_keys:
+  - acknowledgement_event_id
+
+natural_keys:
+  - investment_profile_id
+  - acknowledgement_type
+  - accepted_ts
+
+foreign_keys:
+  - column: investment_profile_version_sk
+    references: dim_investment_profile. investment_profile_version_sk
+    description: Investment profile version at time of acknowledgement
+    relationship: many_to_one
+    nullable: true
+    note: Nullable for acknowledgements received before profile version created
+
+attributes:
+  # ===================================================================
+  # SURROGATE KEY
+  # ===================================================================
+  
+  - name: acknowledgement_event_id
+    datatype:  BIGINT
+    business_definition:  Surrogate identifier for the acknowledgement event (auto-increment)
+    nullable: false
+    primary_key: true
+    generation:  auto_increment
+
+  # ===================================================================
+  # FOREIGN KEYS
+  # ===================================================================
+  
+  - name: investment_profile_id
+    datatype:  VARCHAR(50)
+    business_definition: Investment profile identifier (CUSTOMER or CUSTOMER_CODE scope)
+    nullable: false
+
+  - name: investment_profile_version_sk
+    datatype: BIGINT
+    business_definition:  Surrogate key of investment profile version (NULL if acknowledgement before profile created)
+    nullable: true
+    foreign_key: true
+    references: dim_investment_profile.investment_profile_version_sk
+
+  - name: customer_id
+    datatype: VARCHAR(50)
+    business_definition: Customer identifier for convenience queries
+    nullable: false
+
+  - name: customer_code
+    datatype: VARCHAR(50)
+    business_definition: Customer code if acknowledgement at code level
+    nullable: true
+
+  # ===================================================================
+  # ACKNOWLEDGEMENT DETAILS
+  # ===================================================================
+  
+  - name: acknowledgement_type
+    datatype:  VARCHAR(50)
+    business_definition: Type of risk disclosure acknowledged
+    nullable: false
+    enumeration_ref: enumerations/investment_acknowledgement_type.yaml
+    valid_values: [DERIVATIVE_RISK, FX_RISK, COMPLEX_PRODUCT]
+
+  - name: accepted_ts
+    datatype: TIMESTAMP
+    business_definition: UTC timestamp when acknowledgement was accepted
+    nullable: false
+    note: Business-effective timestamp
+
+  - name:  expires_ts
+    datatype:  TIMESTAMP
+    business_definition: UTC timestamp when acknowledgement expires (NULL = no expiry)
+    nullable: true
+    note: Typically 12 or 24 months from acceptance
+
+  - name: is_active
+    datatype: BOOLEAN
+    business_definition: TRUE if acknowledgement is currently valid (not expired, not revoked)
+    nullable: false
+    default: true
+
+  - name: revoked_ts
+    datatype:  TIMESTAMP
+    business_definition:  UTC timestamp when acknowledgement was revoked (NULL = not revoked)
+    nullable: true
+
+  - name: revocation_reason
+    datatype: VARCHAR(200)
+    business_definition: Reason for revocation if applicable
+    nullable: true
+
+  # ===================================================================
+  # CAPTURE DETAILS
+  # ===================================================================
+  
+  - name: capture_channel
+    datatype: VARCHAR(50)
+    business_definition: Channel through which acknowledgement was captured
+    nullable: false
+    valid_values: [WEB_PORTAL, MOBILE_APP, BRANCH, CALL_CENTER, EMAIL, PAPER_FORM]
+
+  - name: capture_ip_address
+    datatype:  VARCHAR(50)
+    business_definition: IP address from which acknowledgement was submitted
+    nullable: true
+    pii:  true
+    pii_category: network_identifier
+
+  - name: capture_device_type
+    datatype: VARCHAR(100)
+    business_definition: Device type used for acknowledgement
+    nullable: true
+    example: "iOS 16.2 / Safari 16.0"
+
+  - name: capture_session_id
+    datatype: VARCHAR(100)
+    business_definition: Session identifier for audit trail
+    nullable: true
+
+  # ===================================================================
+  # DISCLOSURE DETAILS
+  # ===================================================================
+  
+  - name: disclosure_version
+    datatype: VARCHAR(50)
+    business_definition: Version of disclosure document shown to customer
+    nullable: false
+    note: Links to disclosure document repository
+
+  - name: disclosure_language
+    datatype: VARCHAR(10)
+    business_definition: Language in which disclosure was presented
+    nullable: false
+    valid_values: [EN, TH]
+
+  - name: customer_consent_text
+    datatype: TEXT
+    business_definition:  Exact consent text accepted by customer
+    nullable: true
+    note: Stored for regulatory compliance
+
+  # ===================================================================
+  # VERIFICATION
+  # ===================================================================
+  
+  - name: verification_method
+    datatype: VARCHAR(50)
+    business_definition: How acknowledgement was verified
+    nullable: false
+    valid_values: [DIGITAL_SIGNATURE, OTP, PASSWORD, BIOMETRIC, BRANCH_WITNESS, NOTARIZED]
+
+  - name: verified_by_user_id
+    datatype: VARCHAR(100)
+    business_definition: User ID of person who verified (for branch/call center)
+    nullable: true
+
+  - name: verification_reference
+    datatype: VARCHAR(200)
+    business_definition: External verification reference (e.g., OTP transaction ID)
+    nullable: true
+
+  # ===================================================================
+  # LINKAGE TO FLAGS
+  # ===================================================================
+  
+  - name: sets_flag_in_dimension
+    datatype: VARCHAR(100)
+    business_definition: Which boolean flag in dim_investment_profile this acknowledgement enables
+    nullable: false
+    valid_values: [complex_product_acknowledged_flag, derivative_risk_acknowledged_flag, fx_risk_acknowledged_flag]
+    note: Maps acknowledgement type to dimension flag
+
+  # ===================================================================
+  # EVENT HASH
+  # ===================================================================
+  
+  - name: event_hash
+    datatype: VARCHAR(64)
+    business_definition: SHA256 hash of event content for integrity verification
+    nullable: false
+    computation: SHA256(acknowledgement_type||accepted_ts||customer_id||disclosure_version)
+
+  # ===================================================================
+  # AUDIT METADATA
+  # ===================================================================
+  
+  - name: event_detected_ts
+    datatype:  TIMESTAMP
+    business_definition: UTC timestamp when event was ingested into warehouse
+    nullable: false
+    default:  CURRENT_TIMESTAMP
+
+  - name: load_ts
+    datatype: TIMESTAMP
+    business_definition: UTC timestamp when record was loaded into Gold layer
+    nullable: false
+    default: CURRENT_TIMESTAMP
+    etl_metadata: true
+
+  - name: source_system
+    datatype: VARCHAR(100)
+    business_definition: Source system that generated acknowledgement event
+    nullable: false
+    default: ACKNOWLEDGEMENT_WORKFLOW
+
+  - name: etl_batch_id
+    datatype:  BIGINT
+    business_definition:  ETL batch identifier for lineage
+    nullable: true
+
+materialization_strategy:
+  approach: table
+  reason: Audit trail - insert only, immutable
+  refresh_pattern: append_on_event_capture
+  append_only: true
+
+data_quality_rules:
+  - rule:  no_duplicates
+    description: No duplicate acknowledgement_event_id
+    
+  - rule: fk_integrity
+    description: investment_profile_version_sk must exist in dim_investment_profile (if not NULL)
+    
+  - rule: expiry_after_acceptance
+    description: expires_ts > accepted_ts (if not NULL)
+    
+  - rule: active_not_expired
+    description: If is_active=TRUE, then expires_ts IS NULL OR expires_ts > CURRENT_TIMESTAMP
+    
+  - rule:  revocation_implies_inactive
+    description: If revoked_ts IS NOT NULL, then is_active=FALSE
+    
+  - rule:  hash_integrity
+    description: event_hash must be valid SHA256 format (64 hex characters)
+
+indexes:
+  - name: pk_acknowledgement_event
+    type: primary_key
+    columns: [acknowledgement_event_id]
+    
+  - name: idx_investment_profile_id
+    type: non_unique
+    columns: [investment_profile_id]
+    description: Lookup all acknowledgements for a profile
+    
+  - name: idx_customer_id
+    type: non_unique
+    columns: [customer_id]
+    description: Lookup all acknowledgements for a customer
+    
+  - name: idx_accepted_ts
+    type: non_unique
+    columns: [accepted_ts]
+    description: Time-based queries
+    
+  - name: idx_acknowledgement_type
+    type: non_unique
+    columns: [acknowledgement_type]
+    description:  Filter by acknowledgement type
+    
+  - name: idx_is_active
+    type: non_unique
+    columns: [is_active, expires_ts]
+    description: Find active/expiring acknowledgements
+    
+  - name: idx_version_sk
+    type: non_unique
+    columns: [investment_profile_version_sk]
+    description:  Link to specific version
+
+adr_refs:
+  - ADR-INV-001-investment-profile-scd2.md
+  - ADR-AUDIT-001-audit-artifacts-standard.md
+
+related_contracts:
+  - contracts/gold/dim_investment_profile.yaml
+  - contracts/gold/fact_investment_profile_audit.yaml
+
+sample_rows:
+  - acknowledgement_event_id: 700001
+    investment_profile_id:  "IP-CODE-111111"
+    investment_profile_version_sk: 500123
+    customer_id: "CUST-12345"
+    customer_code:  "111111"
+    acknowledgement_type: "COMPLEX_PRODUCT"
+    accepted_ts: "2025-11-19T14:30:00Z"
+    expires_ts: "2026-11-19T14:30:00Z"
+    is_active: true
+    revoked_ts: null
+    revocation_reason: null
+    capture_channel: "WEB_PORTAL"
+    capture_ip_address:  "203.154.12.45"
+    capture_device_type: "Windows 11 / Chrome 120.0"
+    capture_session_id:  "sess_abc123xyz"
+    disclosure_version: "COMPLEX_PROD_DISC_v3.2"
+    disclosure_language: "EN"
+    verification_method: "OTP"
+    verified_by_user_id: null
+    verification_reference: "OTP_TXN_98765"
+    sets_flag_in_dimension: "complex_product_acknowledged_flag"
+    event_hash: "7f3a9b2c1d4e..."
+    event_detected_ts:  "2025-11-19T14:30:15Z"
+    load_ts:  "2025-11-19T14:31:00Z"
+    source_system: "ACKNOWLEDGEMENT_WORKFLOW"
+    etl_batch_id: 45678

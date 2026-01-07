@@ -1,0 +1,418 @@
+entity_name: fact_supervisory_override
+domain: investment
+table_type: fact_audit
+layer: gold
+grain_description: One row per supervisory override decision for suitability exceptions. Tracks override approvals/denials for complex product access, margin exceptions, and vulnerable investor exceptions.
+
+upstream_source:
+  layer: bronze
+  table_name: bronze.supervisory_override_events
+  transformation_type:  event_capture_and_audit_logging
+  note: Captured from supervisory override workflow
+
+primary_keys:
+  - supervisory_override_id
+
+surrogate_keys:
+  - supervisory_override_id
+
+natural_keys:
+  - investment_profile_id
+  - override_request_ts
+
+foreign_keys: 
+  - column: investment_profile_version_sk
+    references: dim_investment_profile.investment_profile_version_sk
+    description:  Investment profile version at time of override
+    relationship: many_to_one
+    nullable: false
+
+attributes:
+  # ===================================================================
+  # SURROGATE KEY
+  # ===================================================================
+  
+  - name: supervisory_override_id
+    datatype:  BIGINT
+    business_definition: Surrogate identifier for the supervisory override event (auto-increment)
+    nullable: false
+    primary_key: true
+    generation:  auto_increment
+
+  # ===================================================================
+  # FOREIGN KEYS
+  # ===================================================================
+  
+  - name: investment_profile_id
+    datatype: VARCHAR(50)
+    business_definition: Investment profile identifier subject to override
+    nullable: false
+
+  - name: investment_profile_version_sk
+    datatype:  BIGINT
+    business_definition: Surrogate key of investment profile version at time of override
+    nullable: false
+    foreign_key:  true
+    references: dim_investment_profile.investment_profile_version_sk
+
+  - name: customer_id
+    datatype: VARCHAR(50)
+    business_definition: Customer identifier for convenience queries
+    nullable: false
+
+  - name:  customer_code
+    datatype: VARCHAR(50)
+    business_definition: Customer code if override at code level
+    nullable: true
+
+  # ===================================================================
+  # OVERRIDE REQUEST
+  # ===================================================================
+  
+  - name: override_request_ts
+    datatype:  TIMESTAMP
+    business_definition: UTC timestamp when override was requested
+    nullable: false
+
+  - name: override_type
+    datatype: VARCHAR(100)
+    business_definition: Type of suitability exception requiring override
+    nullable: false
+    enumeration_ref: enumerations/investment_override_type.yaml
+    valid_values: [COMPLEX_PRODUCT_VULNERABLE, MARGIN_EXCEPTION, LEVERAGE_TOLERANCE_OVERRIDE, IPO_RESTRICTION_WAIVER, UNSUITABLE_PRODUCT_EXCEPTION, EXPERIENCE_REQUIREMENT_WAIVER]
+
+  - name: requested_by_user_id
+    datatype: VARCHAR(100)
+    business_definition:  User ID of person requesting override
+    nullable: false
+
+  - name: requested_by_role
+    datatype: VARCHAR(100)
+    business_definition: Role of person requesting override
+    nullable:  false
+    valid_values: [RELATIONSHIP_MANAGER, BRANCH_MANAGER, ADVISOR, TRADER]
+
+  - name: request_reason
+    datatype: TEXT
+    business_definition: Detailed reason for override request
+    nullable:  false
+    note: Business justification provided by requester
+
+  - name: supporting_documentation
+    datatype: TEXT
+    business_definition: References to supporting documentation
+    nullable: true
+    example: "Customer financial statements, external advisor recommendation letter"
+
+  # ===================================================================
+  # OVERRIDE DECISION
+  # ===================================================================
+  
+  - name: override_decision
+    datatype: VARCHAR(50)
+    business_definition: Final decision on override request
+    nullable: false
+    valid_values: [APPROVED, DENIED, CONDITIONAL_APPROVED, ESCALATED, WITHDRAWN]
+
+  - name:  decision_ts
+    datatype: TIMESTAMP
+    business_definition: UTC timestamp when decision was made
+    nullable: false
+
+  - name: decision_latency_hours
+    datatype:  NUMERIC(10,2)
+    business_definition: Hours between request and decision
+    nullable: false
+    computation: (decision_ts - override_request_ts) in hours
+
+  - name: supervisor_user_id
+    datatype: VARCHAR(100)
+    business_definition: User ID of supervisor who made decision
+    nullable: false
+
+  - name: supervisor_role
+    datatype: VARCHAR(100)
+    business_definition: Role of supervisor
+    nullable: false
+    valid_values: [COMPLIANCE_OFFICER, HEAD_OF_COMPLIANCE, CHIEF_RISK_OFFICER, BRANCH_DIRECTOR, REGIONAL_MANAGER]
+
+  - name: supervisor_level
+    datatype: INT
+    business_definition:  Approval level (1=branch, 2=regional, 3=corporate)
+    nullable: false
+    valid_values: [1, 2, 3]
+
+  - name: decision_rationale
+    datatype: TEXT
+    business_definition: Detailed rationale for decision
+    nullable: false
+    note: Required for regulatory compliance
+
+  # ===================================================================
+  # APPROVAL CONDITIONS
+  # ===================================================================
+  
+  - name: approval_conditions
+    datatype: TEXT
+    business_definition: JSON array of conditions attached to approval
+    nullable: true
+    format: JSON array
+    example: '["MANDATORY_ADVISOR_CONSULTATION","ENHANCED_DISCLOSURE_REQUIRED","POSITION_LIMIT_10_PERCENT"]'
+    note: NULL if denied or no conditions
+
+  - name: effective_from_ts
+    datatype:  TIMESTAMP
+    business_definition: UTC timestamp when override becomes effective
+    nullable: true
+    note: NULL if denied
+
+  - name: effective_until_ts
+    datatype:  TIMESTAMP
+    business_definition: UTC timestamp when override expires (NULL = permanent)
+    nullable: true
+    note: Time-bound overrides must be reviewed at expiry
+
+  - name: review_required_frequency_months
+    datatype: INT
+    business_definition: Frequency of mandatory review in months
+    nullable: true
+    valid_values: [3, 6, 12]
+    note: More frequent for vulnerable investors
+
+  # ===================================================================
+  # CUSTOMER CONSENT
+  # ===================================================================
+  
+  - name: customer_informed
+    datatype: BOOLEAN
+    business_definition: TRUE if customer was informed of override and conditions
+    nullable: false
+
+  - name: customer_consent_received
+    datatype: BOOLEAN
+    business_definition: TRUE if customer explicitly consented to override conditions
+    nullable: false
+    note: Required for most override types
+
+  - name: customer_consent_ts
+    datatype:  TIMESTAMP
+    business_definition: UTC timestamp when customer consent was obtained
+    nullable: true
+
+  - name: customer_consent_method
+    datatype: VARCHAR(50)
+    business_definition: Method by which consent was obtained
+    nullable: true
+    valid_values: [DIGITAL_SIGNATURE, WET_SIGNATURE, VERBAL_RECORDED, EMAIL_CONFIRMATION]
+
+  # ===================================================================
+  # RISK ASSESSMENT
+  # ===================================================================
+  
+  - name: suitability_mismatch_severity
+    datatype: VARCHAR(20)
+    business_definition:  Severity of suitability mismatch being overridden
+    nullable: false
+    valid_values: [LOW, MODERATE, HIGH, CRITICAL]
+
+  - name: potential_loss_amount
+    datatype: NUMERIC(15,2)
+    business_definition:  Estimated potential loss amount if investment goes wrong
+    nullable: true
+    note: Used in risk assessment
+
+  - name: customer_net_worth
+    datatype:  NUMERIC(15,2)
+    business_definition: Customer's net worth at time of override
+    nullable:  true
+    pii: true
+    pii_category: financial_data
+
+  - name: investment_as_percent_of_portfolio
+    datatype: NUMERIC(5,2)
+    business_definition: Proposed investment as percentage of customer's portfolio
+    nullable: true
+
+  # ===================================================================
+  # REGULATORY COMPLIANCE
+  # ===================================================================
+  
+  - name: regulatory_framework
+    datatype: VARCHAR(100)
+    business_definition: Regulatory framework governing override
+    nullable: true
+    example: "SEC Regulation Best Interest, FINRA Rule 2111"
+
+  - name: exception_category
+    datatype: VARCHAR(50)
+    business_definition:  Regulatory exception category
+    nullable: true
+    valid_values: [SOPHISTICATED_INVESTOR, INSTITUTIONAL_CLIENT, WAIVER_ON_FILE, GRANDFATHER_CLAUSE]
+
+  - name: must_report_to_regulator
+    datatype: BOOLEAN
+    business_definition: TRUE if override must be reported to regulator
+    nullable:  false
+
+  - name: reported_to_regulator_ts
+    datatype: TIMESTAMP
+    business_definition: UTC timestamp when reported to regulator (NULL if not required or not yet reported)
+    nullable: true
+
+  # ===================================================================
+  # EVENT HASH
+  # ===================================================================
+  
+  - name: event_hash
+    datatype: VARCHAR(64)
+    business_definition: SHA256 hash of event content for integrity verification
+    nullable: false
+    computation: SHA256(override_request_ts||investment_profile_id||override_type||override_decision)
+
+  # ===================================================================
+  # AUDIT METADATA
+  # ===================================================================
+  
+  - name: event_detected_ts
+    datatype: TIMESTAMP
+    business_definition: UTC timestamp when event was ingested into warehouse
+    nullable: false
+    default: CURRENT_TIMESTAMP
+
+  - name:  load_ts
+    datatype:  TIMESTAMP
+    business_definition:  UTC timestamp when record was loaded into Gold layer
+    nullable: false
+    default: CURRENT_TIMESTAMP
+    etl_metadata: true
+
+  - name: source_system
+    datatype: VARCHAR(100)
+    business_definition: Source system that generated override event
+    nullable:  false
+    default: SUPERVISORY_OVERRIDE_WORKFLOW
+
+  - name: etl_batch_id
+    datatype:  BIGINT
+    business_definition: ETL batch identifier for lineage
+    nullable: true
+
+materialization_strategy:
+  approach: table
+  reason: Audit trail - insert only, immutable
+  refresh_pattern: append_on_event_capture
+  append_only:  true
+
+data_quality_rules: 
+  - rule: no_duplicates
+    description: No duplicate supervisory_override_id
+    
+  - rule: fk_integrity
+    description: investment_profile_version_sk must exist in dim_investment_profile
+    
+  - rule: decision_after_request
+    description: decision_ts >= override_request_ts
+    
+  - rule: approved_requires_conditions
+    description: If override_decision='APPROVED', then effective_from_ts IS NOT NULL
+    
+  - rule:  denied_no_conditions
+    description: If override_decision='DENIED', then approval_conditions IS NULL AND effective_from_ts IS NULL
+    
+  - rule: consent_required_for_approval
+    description: If override_decision IN ('APPROVED','CONDITIONAL_APPROVED'), then customer_consent_received=TRUE
+    
+  - rule:  expiry_after_effective
+    description: If effective_until_ts IS NOT NULL, then effective_until_ts > effective_from_ts
+    
+  - rule: hash_integrity
+    description: event_hash must be valid SHA256 format (64 hex characters)
+
+indexes:
+  - name: pk_supervisory_override
+    type:  primary_key
+    columns: [supervisory_override_id]
+    
+  - name: idx_investment_profile_id
+    type: non_unique
+    columns:  [investment_profile_id]
+    description: Lookup all overrides for a profile
+    
+  - name: idx_customer_id
+    type: non_unique
+    columns: [customer_id]
+    description: Lookup all overrides for a customer
+    
+  - name: idx_override_request_ts
+    type: non_unique
+    columns: [override_request_ts]
+    description:  Time-based queries
+    
+  - name: idx_override_type
+    type: non_unique
+    columns: [override_type, override_decision]
+    description:  Filter by override type and decision
+    
+  - name:  idx_supervisor
+    type: non_unique
+    columns: [supervisor_user_id, decision_ts]
+    description: Track supervisor activity
+    
+  - name: idx_expiry
+    type: non_unique
+    columns: [effective_until_ts]
+    description: Find expiring overrides
+    
+  - name: idx_version_sk
+    type: non_unique
+    columns: [investment_profile_version_sk]
+    description: Link to specific version
+
+adr_refs:
+  - ADR-INV-001-investment-profile-scd2.md
+  - ADR-AUDIT-001-audit-artifacts-standard.md
+
+related_contracts:
+  - contracts/gold/dim_investment_profile.yaml
+  - contracts/gold/fact_investment_profile_audit.yaml
+
+sample_rows:
+  - supervisory_override_id: 900001
+    investment_profile_id:  "IP-CODE-111111"
+    investment_profile_version_sk: 500125
+    customer_id: "CUST-12345"
+    customer_code: "111111"
+    override_request_ts: "2025-11-20T10:00:00Z"
+    override_type: "COMPLEX_PRODUCT_VULNERABLE"
+    requested_by_user_id: "rm_john_doe"
+    requested_by_role: "RELATIONSHIP_MANAGER"
+    request_reason: "Customer has extensive investment experience despite vulnerability classification.  Professional advisor on record."
+    supporting_documentation: "Financial advisor letter dated 2025-11-18, customer portfolio statements"
+    override_decision: "CONDITIONAL_APPROVED"
+    decision_ts: "2025-11-20T15:30:00Z"
+    decision_latency_hours: 5.50
+    supervisor_user_id:  "compliance_head_001"
+    supervisor_role:  "HEAD_OF_COMPLIANCE"
+    supervisor_level: 2
+    decision_rationale: "Approved with conditions:  mandatory advisor consultation and position limits."
+    approval_conditions: '["MANDATORY_ADVISOR_CONSULTATION","POSITION_LIMIT_10_PERCENT","QUARTERLY_REVIEW_REQUIRED"]'
+    effective_from_ts:  "2025-11-21T00:00:00Z"
+    effective_until_ts: "2026-05-21T00:00:00Z"
+    review_required_frequency_months: 6
+    customer_informed: true
+    customer_consent_received: true
+    customer_consent_ts: "2025-11-20T16:00:00Z"
+    customer_consent_method: "DIGITAL_SIGNATURE"
+    suitability_mismatch_severity: "MODERATE"
+    potential_loss_amount: 500000.00
+    customer_net_worth: 5000000.00
+    investment_as_percent_of_portfolio: 10.00
+    regulatory_framework: "SEC Regulation Best Interest"
+    exception_category: "SOPHISTICATED_INVESTOR"
+    must_report_to_regulator: true
+    reported_to_regulator_ts: "2025-11-21T09:00:00Z"
+    event_hash:  "1a2b3c4d..."
+    event_detected_ts: "2025-11-20T15:35:00Z"
+    load_ts: "2025-11-20T16:00:00Z"
+    source_system: "SUPERVISORY_OVERRIDE_WORKFLOW"
+    etl_batch_id: 67890

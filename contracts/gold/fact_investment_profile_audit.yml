@@ -1,0 +1,395 @@
+entity_name: fact_investment_profile_audit
+domain: investment
+table_type: fact_audit
+layer: gold
+grain_description: One row per profile change event that created a new SCD2 version in dim_investment_profile. Tracks what changed, when, why, and regulatory impact.
+
+upstream_source:
+  layer: silver
+  table_name: silver.investment_profile_standardized
+  transformation_type: change_detection_and_audit_logging
+  note: Generated during SCD2 merge process in dim_investment_profile
+
+primary_keys:
+  - audit_event_id
+
+surrogate_keys: 
+  - audit_event_id
+
+natural_keys:
+  - investment_profile_id
+  - version_num_new
+
+foreign_keys:
+  - column: investment_profile_version_sk_new
+    references: dim_investment_profile.investment_profile_version_sk
+    description:  Newly created profile version
+    relationship: many_to_one
+    
+  - column: investment_profile_version_sk_old
+    references: dim_investment_profile.investment_profile_version_sk
+    description: Previous profile version (nullable for initial load)
+    relationship: many_to_one
+    nullable: true
+
+attributes:
+  # ===================================================================
+  # SURROGATE KEY
+  # ===================================================================
+  
+  - name: audit_event_id
+    datatype: BIGINT
+    business_definition:  Surrogate identifier for the audit event (auto-increment)
+    nullable: false
+    primary_key: true
+    generation:  auto_increment
+
+  # ===================================================================
+  # FOREIGN KEYS
+  # ===================================================================
+  
+  - name: investment_profile_id
+    datatype: VARCHAR(50)
+    business_definition: Investment profile identifier affected by this change
+    nullable: false
+
+  - name: investment_profile_version_sk_new
+    datatype:  BIGINT
+    business_definition:  Surrogate key of newly created profile version
+    nullable: false
+    foreign_key: true
+    references: dim_investment_profile.investment_profile_version_sk
+
+  - name: investment_profile_version_sk_old
+    datatype: BIGINT
+    business_definition: Surrogate key of previous profile version (NULL for INITIAL_LOAD)
+    nullable: true
+    foreign_key:  true
+    references: dim_investment_profile.investment_profile_version_sk
+
+  - name: customer_id
+    datatype: VARCHAR(50)
+    business_definition: Customer identifier for convenience queries
+    nullable: false
+
+  - name: customer_code
+    datatype: VARCHAR(50)
+    business_definition: Customer code if profile at code level
+    nullable: true
+
+  # ===================================================================
+  # VERSION TRACKING
+  # ===================================================================
+  
+  - name: version_num_new
+    datatype: INT
+    business_definition:  Version number of new profile version
+    nullable: false
+    source: dim_investment_profile. version_num
+
+  - name: version_num_old
+    datatype: INT
+    business_definition: Version number of old profile version (NULL for initial)
+    nullable: true
+    source: dim_investment_profile.version_num
+
+  # ===================================================================
+  # CHANGE METADATA
+  # ===================================================================
+  
+  - name: change_reason
+    datatype: VARCHAR(50)
+    business_definition:  Categorized reason for profile version creation
+    nullable: false
+    enumeration_ref: enumerations/investment_profile_audit_change_reason.yaml
+    valid_values: [INITIAL_LOAD, QUESTIONNAIRE_UPDATE, KYC_STATUS_CHANGE, ACKNOWLEDGEMENT_RECEIVED, VULNERABILITY_CLASSIFIED, SUPERVISORY_OVERRIDE, REGULATORY_REQUIREMENT, CORRECTION, RECOMPUTE_HASH]
+
+  - name: changed_scalar_attributes
+    datatype: TEXT
+    business_definition: JSON array of scalar attribute names that changed
+    nullable: false
+    format: JSON array
+    example: '["risk_level_code","kyc_status","vulnerable_investor_flag"]'
+    note: Empty array [] if no scalar changes
+
+  - name: scalar_attribute_old_values
+    datatype: TEXT
+    business_definition: JSON object with old values of changed scalar attributes only
+    nullable: true
+    format: JSON object
+    example: '{"risk_level_code":"MODERATE","kyc_status":"PENDING"}'
+    note: NULL for INITIAL_LOAD
+
+  - name: scalar_attribute_new_values
+    datatype: TEXT
+    business_definition: JSON object with new values of changed scalar attributes only
+    nullable: false
+    format: JSON object
+    example: '{"risk_level_code":"BALANCED","kyc_status":"VERIFIED"}'
+
+  # ===================================================================
+  # HASH TRACKING
+  # ===================================================================
+  
+  - name: old_profile_hash
+    datatype: VARCHAR(64)
+    business_definition: Profile hash of previous version (NULL for initial load)
+    nullable: true
+    source: dim_investment_profile.profile_hash
+
+  - name: new_profile_hash
+    datatype: VARCHAR(64)
+    business_definition: Profile hash of new version
+    nullable: false
+    source: dim_investment_profile.profile_hash
+
+  # ===================================================================
+  # SUITABILITY IMPACT
+  # ===================================================================
+  
+  - name: old_risk_level_code
+    datatype: VARCHAR(50)
+    business_definition: Risk level before change (NULL for initial)
+    nullable: true
+
+  - name: new_risk_level_code
+    datatype:  VARCHAR(50)
+    business_definition: Risk level after change
+    nullable: false
+
+  - name: old_suitability_score
+    datatype: NUMERIC(5,2)
+    business_definition: Suitability score before change (NULL for initial)
+    nullable: true
+
+  - name: new_suitability_score
+    datatype: NUMERIC(5,2)
+    business_definition: Suitability score after change
+    nullable: true
+
+  - name: suitability_tier_changed
+    datatype:  BOOLEAN
+    business_definition: TRUE if suitability tier changed (CONSERVATIVE↔BALANCED↔AGGRESSIVE)
+    nullable: false
+
+  # ===================================================================
+  # COMPLIANCE IMPACT
+  # ===================================================================
+  
+  - name: old_kyc_status
+    datatype: VARCHAR(50)
+    business_definition: KYC status before change (NULL for initial)
+    nullable: true
+
+  - name: new_kyc_status
+    datatype: VARCHAR(50)
+    business_definition: KYC status after change
+    nullable: false
+
+  - name: old_vulnerable_investor_flag
+    datatype: BOOLEAN
+    business_definition:  Vulnerability flag before change (NULL for initial)
+    nullable: true
+
+  - name: new_vulnerable_investor_flag
+    datatype: BOOLEAN
+    business_definition: Vulnerability flag after change
+    nullable: false
+
+  - name: vulnerability_status_changed
+    datatype:  BOOLEAN
+    business_definition: TRUE if vulnerability flag changed
+    nullable: false
+
+  - name: old_complex_product_allowed
+    datatype: BOOLEAN
+    business_definition: Complex product eligibility before change (NULL for initial)
+    nullable: true
+
+  - name:  new_complex_product_allowed
+    datatype: BOOLEAN
+    business_definition: Complex product eligibility after change
+    nullable: false
+
+  - name: product_eligibility_changed
+    datatype:  BOOLEAN
+    business_definition:  TRUE if any product eligibility flag changed
+    nullable: false
+
+  # ===================================================================
+  # TEMPORAL TRACKING
+  # ===================================================================
+  
+  - name: event_ts
+    datatype: TIMESTAMP
+    business_definition: UTC timestamp when the change event occurred
+    nullable: false
+    source: silver.investment_profile_standardized.last_modified_ts
+
+  - name: effective_start_ts_new
+    datatype: TIMESTAMP
+    business_definition:  Effective start timestamp of new version
+    nullable: false
+    source: dim_investment_profile.effective_start_ts
+
+  - name: effective_end_ts_old
+    datatype: TIMESTAMP
+    business_definition: Effective end timestamp set on old version (NULL for initial)
+    nullable: true
+    source:  dim_investment_profile.effective_end_ts
+
+  - name:  load_ts
+    datatype: TIMESTAMP
+    business_definition: UTC timestamp when audit record was created
+    nullable: false
+    default: CURRENT_TIMESTAMP
+    etl_metadata: true
+
+  # ===================================================================
+  # LINEAGE
+  # ===================================================================
+  
+  - name: source_system
+    datatype: VARCHAR(100)
+    business_definition: Source system that generated the change
+    nullable: true
+    valid_values: [SUITABILITY_ENGINE, KYC_SYSTEM, ACKNOWLEDGEMENT_WORKFLOW, VULNERABILITY_ASSESSMENT, SUPERVISORY_OVERRIDE]
+
+  - name: etl_batch_id
+    datatype:  BIGINT
+    business_definition: ETL batch identifier for lineage
+    nullable: true
+    source: silver.investment_profile_standardized._bronze_batch_id
+
+  # ===================================================================
+  # LINKED EVENTS
+  # ===================================================================
+  
+  - name: linked_acknowledgement_event_id
+    datatype: BIGINT
+    business_definition: FK to fact_investment_acknowledgement if change triggered by acknowledgement
+    nullable: true
+    foreign_key: true
+    references:  fact_investment_acknowledgement.acknowledgement_event_id
+
+  - name: linked_vulnerability_assessment_id
+    datatype: BIGINT
+    business_definition: FK to fact_vulnerability_assessment if change triggered by assessment
+    nullable: true
+    foreign_key: true
+    references:  fact_vulnerability_assessment.vulnerability_assessment_id
+
+  - name:  linked_supervisory_override_id
+    datatype: BIGINT
+    business_definition: FK to fact_supervisory_override if change triggered by override
+    nullable: true
+    foreign_key: true
+    references: fact_supervisory_override.supervisory_override_id
+
+materialization_strategy:
+  approach:  table
+  reason: Audit trail - insert only, no updates
+  refresh_pattern: insert_on_scd2_version_creation
+  append_only: true
+
+data_quality_rules:
+  - rule:  no_duplicates
+    description:  No duplicate audit_event_id
+    
+  - rule: fk_integrity_new
+    description: investment_profile_version_sk_new must exist in dim_investment_profile
+    
+  - rule:  fk_integrity_old
+    description: investment_profile_version_sk_old must exist in dim_investment_profile (if not NULL)
+    
+  - rule: version_sequence
+    description: version_num_new = version_num_old + 1 (except INITIAL_LOAD where old is NULL)
+    
+  - rule: hash_change
+    description: new_profile_hash != old_profile_hash (except for INITIAL_LOAD)
+    
+  - rule: json_validity
+    description: All JSON columns must contain valid JSON
+
+indexes:
+  - name: pk_audit_event
+    type: primary_key
+    columns: [audit_event_id]
+    
+  - name:  idx_investment_profile_id
+    type: non_unique
+    columns: [investment_profile_id]
+    description: Lookup all changes for a profile
+    
+  - name: idx_customer_id
+    type: non_unique
+    columns: [customer_id]
+    description: Lookup all changes for a customer
+    
+  - name: idx_event_ts
+    type: non_unique
+    columns: [event_ts]
+    description: Time-based queries
+    
+  - name: idx_version_new
+    type: non_unique
+    columns: [investment_profile_version_sk_new]
+    description: Lookup audit for specific version
+    
+  - name:  idx_change_reason
+    type: non_unique
+    columns: [change_reason]
+    description: Filter by change reason
+    
+  - name: idx_vulnerability_changed
+    type: non_unique
+    columns: [vulnerability_status_changed, event_ts]
+    description: Find vulnerability status changes
+
+adr_refs:
+  - ADR-INV-001-investment-profile-scd2.md
+  - ADR-AUDIT-001-audit-artifacts-standard.md
+
+related_contracts:
+  - contracts/gold/dim_investment_profile.yaml
+  - contracts/gold/fact_investment_acknowledgement.yaml
+  - contracts/gold/fact_vulnerability_assessment.yaml
+  - contracts/gold/fact_supervisory_override.yaml
+
+sample_rows:
+  - audit_event_id: 600001
+    investment_profile_id: "IP-CODE-111111"
+    investment_profile_version_sk_new: 500125
+    investment_profile_version_sk_old: 500124
+    customer_id: "CUST-12345"
+    customer_code:  "111111"
+    version_num_new: 8
+    version_num_old:  7
+    change_reason:  "VULNERABILITY_CLASSIFIED"
+    changed_scalar_attributes: '["vulnerable_investor_flag","vulnerability_reason_code","next_review_due_ts"]'
+    scalar_attribute_old_values: '{"vulnerable_investor_flag": false,"vulnerability_reason_code":"NONE","next_review_due_ts":"2026-11-18T00:00:00Z"}'
+    scalar_attribute_new_values: '{"vulnerable_investor_flag":true,"vulnerability_reason_code":"LOW_FINANCIAL_LITERACY","next_review_due_ts":"2026-05-18T00:00:00Z"}'
+    old_profile_hash: "abc123def456..."
+    new_profile_hash:  "ghi789jkl012..."
+    old_risk_level_code: "BALANCED"
+    new_risk_level_code: "BALANCED"
+    old_suitability_score: 76.00
+    new_suitability_score: 76.00
+    suitability_tier_changed: false
+    old_kyc_status: "VERIFIED"
+    new_kyc_status: "VERIFIED"
+    old_vulnerable_investor_flag:  false
+    new_vulnerable_investor_flag: true
+    vulnerability_status_changed: true
+    old_complex_product_allowed: true
+    new_complex_product_allowed: false
+    product_eligibility_changed: true
+    event_ts: "2025-11-18T09:30:00Z"
+    effective_start_ts_new: "2025-11-18T09:30:00Z"
+    effective_end_ts_old: "2025-11-18T09:29:59. 999999Z"
+    load_ts: "2025-11-18T10:00:00Z"
+    source_system: "VULNERABILITY_ASSESSMENT"
+    etl_batch_id: 56789
+    linked_acknowledgement_event_id: null
+    linked_vulnerability_assessment_id: 800001
+    linked_supervisory_override_id: null
